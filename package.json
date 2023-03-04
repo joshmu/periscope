@@ -16,6 +16,10 @@
       {
         "command": "scope.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "scope.rootFiles",
+        "title": "Show root files"
       }
     ]
   },
