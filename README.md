@@ -1,4 +1,4 @@
-# Periscope
+# ![icon](https://github.com/joshmu/periscope/blob/master/assets/icon.png) Periscope
 
 ## Features
 
