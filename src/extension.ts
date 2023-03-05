@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import { Periscope } from './periscope';
+import { periscope } from './periscope';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('<<PERISCOPE>> is now active.');
 
   const disposable = vscode.commands.registerCommand(
     'periscope.search',
-    () => new Periscope().register()
+    () => periscope().register()
   );
   context.subscriptions.push(disposable);
 }

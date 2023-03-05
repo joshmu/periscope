@@ -12,91 +12,88 @@ interface QuickPickItemCustom extends vscode.QuickPickItem {
   }
 }
 
-export class Periscope {
-  activeEditor: vscode.TextEditor | undefined;
-  quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>;
-  spawnProcess: ChildProcessWithoutNullStreams | undefined;
+export const periscope = () => {
+  let activeEditor: vscode.TextEditor | undefined;
+  let quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>;
+  let spawnProcess: ChildProcessWithoutNullStreams | undefined;
 
-  constructor() {
+  function register() {
     console.log('Periscope instantiated');
-    this.activeEditor = vscode.window.activeTextEditor;
-    this.quickPick = vscode.window.createQuickPick();
-  }
+    activeEditor = vscode.window.activeTextEditor;
+    quickPick = vscode.window.createQuickPick();
 
-  public async register() {
-    this.quickPick.placeholder = 'Enter a search query';
-    this.quickPick.canSelectMany = false;
-    this.onDidChangeValue();
-    this.onDidChangeActive();
-    this.onDidAccept();
-    this.onDidHide();
-    this.quickPick.show();
+    quickPick.placeholder = 'Enter a search query';
+    quickPick.canSelectMany = false;
+    onDidChangeValue();
+    onDidChangeActive();
+    onDidAccept();
+    onDidHide();
+    quickPick.show();
   }
 
   // when input query 'CHANGES'
-  private onDidChangeValue() {
-    this.quickPick.onDidChangeValue(value => {
+  function onDidChangeValue() {
+    quickPick.onDidChangeValue(value => {
       if (value) {
-        // todo: swap out search engine
-        this.search(value);
+        search(value);
       } else {
-        this.quickPick.items = [];
+        quickPick.items = [];
       }
     });
   }
 
   // when item is 'FOCUSSED'
-  private onDidChangeActive() {
-    this.quickPick.onDidChangeActive(items => {
-      this.peekItem(items as readonly QuickPickItemCustom[]);
+  function onDidChangeActive() {
+    quickPick.onDidChangeActive(items => {
+      peekItem(items as readonly QuickPickItemCustom[]);
     });
   }
 
   // when item is 'SELECTED'
-  private onDidAccept() {
-    this.quickPick.onDidAccept(() => {
-      this.accept();
+  function onDidAccept() {
+    quickPick.onDidAccept(() => {
+      accept();
     });
   }
 
   // when prompt is 'CANCELLED'
-  private onDidHide() {
-    this.checkKillProcess();
+  function onDidHide() {
+    checkKillProcess();
 
-    this.quickPick.onDidHide(() => {
-      if (!this.quickPick.selectedItems[0]) {
-        if (this.activeEditor) {
+    quickPick.onDidHide(() => {
+      if (!quickPick.selectedItems[0]) {
+        if (activeEditor) {
           vscode.window.showTextDocument(
-            this.activeEditor.document,
-            this.activeEditor.viewColumn
+            activeEditor.document,
+            activeEditor.viewColumn
           );
         }
       }
     });
   }
 
-  private search(value: string) {
-    // const rgCmd = this.rgCommand(value);
-    const rgCmd = this.rgCommand(value);
+  function search(value: string) {
+    // const rgCmd = rgCommand(value);
+    const rgCmd = rgCommand(value);
     console.log('Periscope > search > rgCmd:', rgCmd);
 
-    this.checkKillProcess();
-    this.spawnProcess = spawn(rgCmd, [], { shell: true });
+    checkKillProcess();
+    spawnProcess = spawn(rgCmd, [], { shell: true });
 
     let searchResultLines: string[] = [];
-    this.spawnProcess.stdout.on('data', (data: Buffer) => {
+    spawnProcess.stdout.on('data', (data: Buffer) => {
       const lines = data.toString().split('\n').filter(Boolean);
       searchResultLines = [...searchResultLines, ...lines];
     });
-    this.spawnProcess.stderr.on('data', (data: Buffer) => {
+    spawnProcess.stderr.on('data', (data: Buffer) => {
       console.error(data.toString());
     });
-    this.spawnProcess.on('exit', (code: number) => {
+    spawnProcess.on('exit', (code: number) => {
       if (code === null) {
         return;
       }
       if (code === 0 && searchResultLines.length) {
-        this.quickPick.items = searchResultLines
+        quickPick.items = searchResultLines
           .map(searchResult => {
             // break the filename via regext ':line:col:'
             const [filePath, linePos, colPos, fileContents] =
@@ -107,7 +104,7 @@ export class Periscope {
               return false;
             }
 
-            return this.createResultItem(
+            return createResultItem(
               filePath,
               fileContents,
               parseInt(linePos),
@@ -117,7 +114,9 @@ export class Periscope {
           })
           .filter(Boolean) as QuickPickItemCustom[];
       } else if (code === 127) {
-        vscode.window.showErrorMessage(`Periscope: Exited with code ${code}, ripgrep not found.`);
+        vscode.window.showErrorMessage(
+          `Periscope: Exited with code ${code}, ripgrep not found.`
+        );
       } else if (code === 1) {
         console.error(`rg error with code ${code}`);
       } else if (code === 2) {
@@ -128,14 +127,14 @@ export class Periscope {
     });
   }
 
-  private checkKillProcess() {
-    if (this.spawnProcess) {
+  function checkKillProcess() {
+    if (spawnProcess) {
       // Kill the previous spawn process if it exists
-      this.spawnProcess.kill();
+      spawnProcess.kill();
     }
   }
 
-  private rgCommand(value: string, excludes: string[] = []) {
+  function rgCommand(value: string, excludes: string[] = []) {
     const rgRequiredFlags = [
       '--line-number',
       '--column',
@@ -150,7 +149,10 @@ export class Periscope {
       : [];
 
     const config = vscode.workspace.getConfiguration('periscope');
-    const rgOptions = config.get<string[]>('rgOptions', ['--smart-case', '--sort path']);
+    const rgOptions = config.get<string[]>('rgOptions', [
+      '--smart-case',
+      '--sort path',
+    ]);
 
     const rgFlags = [
       ...rgRequiredFlags,
@@ -162,37 +164,37 @@ export class Periscope {
     return `rg '${value}' ${rgFlags.join(' ')}`;
   }
 
-  private peekItem(items: readonly QuickPickItemCustom[]) {
-    if (items.length > 0) {
-      const currentItem = items[0];
-      const { filePath, linePos, colPos } = currentItem.data;
-      vscode.workspace.openTextDocument(filePath).then(document => {
-        vscode.window
-          .showTextDocument(document, {
-            preview: true,
-            preserveFocus: true,
-          })
-          .then(editor => {
-            this.setPos(editor, linePos, colPos);
-          });
-      });
-    }
+  function peekItem(items: readonly QuickPickItemCustom[]) {
+    if (items.length === 0) {return;};
+
+    const currentItem = items[0];
+    const { filePath, linePos, colPos } = currentItem.data;
+    vscode.workspace.openTextDocument(filePath).then(document => {
+      vscode.window
+        .showTextDocument(document, {
+          preview: true,
+          preserveFocus: true,
+        })
+        .then(editor => {
+          setPos(editor, linePos, colPos);
+        });
+    });
   }
 
-  private accept() {
+  function accept() {
     const { filePath, linePos, colPos } = (
-      this.quickPick.selectedItems[0] as QuickPickItemCustom
+      quickPick.selectedItems[0] as QuickPickItemCustom
     ).data;
     vscode.workspace.openTextDocument(filePath).then(document => {
       vscode.window.showTextDocument(document).then(editor => {
-        this.setPos(editor, linePos, colPos);
-        this.quickPick.dispose();
+        setPos(editor, linePos, colPos);
+        quickPick.dispose();
       });
     });
   }
 
   // set cursor & view position
-  private setPos(editor: vscode.TextEditor, linePos: number, colPos: number) {
+  function setPos(editor: vscode.TextEditor, linePos: number, colPos: number) {
     const selection = new vscode.Selection(0, 0, 0, 0);
     editor.selection = selection;
 
@@ -212,7 +214,7 @@ export class Periscope {
   }
 
   // required to update the quick pick item with result information
-  private createResultItem(
+  function createResultItem(
     filePath: string,
     fileContents: string,
     linePos: number,
@@ -239,4 +241,8 @@ export class Periscope {
       // detail: `${folders.join(path.sep)}`,
     };
   }
-}
+
+  return {
+    register,
+  };
+};
