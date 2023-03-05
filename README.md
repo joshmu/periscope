@@ -16,7 +16,7 @@ Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim)
 
 ## Requirements
 
-[ripgrep]( https://github.com/BurntSushi/ripgrep#installation )
+[ripgrep]( https://github.com/BurntSushi/ripgrep#installation ) installed on your local system.
 
 ## Extension Settings
 

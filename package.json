@@ -19,8 +19,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "periscope.periscope",
-        "title": "Periscope"
+        "command": "periscope.search",
+        "title": "Periscope: Search"
       }
     ]
   },
