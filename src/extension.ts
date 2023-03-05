@@ -6,7 +6,7 @@ import { spawn } from 'child_process';
 import * as fs from 'fs';
 
 // todo: save active editor document and position
-// todo: move 'scope' to own service class
+// todo: move 'periscope' to own service class
 // todo: include cursor position
 // todo: bring cursor position in to view always, vertically centered
 
@@ -24,10 +24,10 @@ interface QuickPickItemCustom extends vscode.QuickPickItem {
 export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
-  console.log('<<SCOPE>> is now active.');
+  console.log('<<PERISCOPE>> is now active.');
 
   const disposable = vscode.commands.registerCommand(
-    'scope.scope',
+    'periscope.periscope',
     async () => {
       const activeEditor = vscode.window.activeTextEditor;
       const quickPick = vscode.window.createQuickPick();

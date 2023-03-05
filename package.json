@@ -1,6 +1,6 @@
 {
-  "name": "scope",
-  "displayName": "scope",
+  "name": "periscope",
+  "displayName": "periscope",
   "description": "telescope inspired peek functionality utilising ripgrep",
   "version": "0.0.1",
   "engines": {
@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "scope.scope",
-        "title": "Scope"
+        "command": "periscope.periscope",
+        "title": "Periscope"
       }
     ]
   },
