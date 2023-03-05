@@ -4,7 +4,7 @@
 
 Periscope is a Vscode extension for high powered workspace contents search utilising [ripgrep](https://github.com/BurntSushi/ripgrep) with on the fly peek across all suggestions.
 
-Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim) 
+Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim)
 
 ## Instructions
 
@@ -33,3 +33,11 @@ Users appreciate release notes as you update your extension.
 ### 1.0.0
 
 Initial release of Periscope
+
+## TODO
+
+* [ ] FZF - improve the fuzzy search algorithm
+* [ ] config: define custom base path (to be able to search outside of the current workspace)
+* [ ] config: option to add additional excludes
+* [ ] config: option to update the rg command
+* [ ] search engine swap - allow for user to define their own search engine

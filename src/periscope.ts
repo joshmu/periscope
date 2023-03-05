@@ -9,15 +9,10 @@ interface QuickPickItemCustom extends vscode.QuickPickItem {
     filePath: string
     relativePath: string
     linePos: number
+    colPos: number
     rawResult: string
   }
 }
-
-// todo: FZF
-// todo: config: define base path
-// todo: config: additional excludes
-// todo: config: rg command
-// todo: search engine swap
 
 export class Periscope {
   activeEditor: vscode.TextEditor | undefined;
@@ -84,31 +79,10 @@ export class Periscope {
   }
 
   private search(value: string) {
-    const ignoreFile = path.join(this.rootPath, '.gitignore');
-    let excludes: string[] = [];
-    if (fs.existsSync(ignoreFile)) {
-      const ignorePatterns = fs
-        .readFileSync(ignoreFile)
-        .toString()
-        .split('\n')
-        .filter(Boolean);
+    // const ignoreList = this.getIgnoreList();
+    // const excludes = ignoreList.map(pattern => `--glob !${pattern}`);
+    const rgCmd = this.rgCommand(value);
 
-      // const ignorePatterns = [
-      //   'node_modules',
-      //   '.git',
-      //   '.next',
-      //   '.vercel',
-      //   'dist',
-      //   'out',
-      //   'yarn.lock',
-      // ];
-
-      excludes = ignorePatterns.map(pattern => `--glob !${pattern}`);
-    }
-
-    const rgCmd = `rg -n '${value}' --no-ignore --hidden -S "${
-      this.rootPath
-    }" ${excludes.join(' ')}`;
     const rgProc = spawn(rgCmd, [], { shell: true });
     let searchResultLines: string[] = [];
     rgProc.stdout.on('data', (data: Buffer) => {
@@ -121,12 +95,14 @@ export class Periscope {
     rgProc.on('exit', (code: number) => {
       if (code === 0 && searchResultLines.length) {
         this.quickPick.items = searchResultLines.map(searchResult => {
-          // break the filename via regext ':number:'
-          const [filePath, linePos, fileContents] = searchResult.split(':');
+          // break the filename via regext ':line:col:'
+          const [filePath, linePos, colPos, fileContents] = searchResult.split(':');
           return this.createResultItem(
             filePath,
             fileContents,
-            parseInt(linePos)
+            parseInt(linePos),
+            parseInt(colPos),
+            searchResult
           );
         });
       } else if (code === 1) {
@@ -139,10 +115,45 @@ export class Periscope {
     });
   }
 
+  private getIgnoreList() {
+    const ignoreFile = path.join(this.rootPath, '.gitignore');
+    let ignoreList: string[] = [];
+    if (fs.existsSync(ignoreFile)) {
+      // ignoreList = fs
+      //   .readFileSync(ignoreFile)
+      //   .toString()
+      //   .split('\n')
+      //   .filter(Boolean)
+      //   // remove comments
+      //   .filter(line => !line.startsWith('#'))
+
+      // hardcoded version for testing
+      // ignoreList = [
+      //   'node_modules',
+      //   '.git',
+      //   '.next',
+      //   '.vercel',
+      //   'dist',
+      //   'out',
+      //   'yarn.lock',
+      // ];
+    }
+    return ignoreList;
+  }
+
+  private rgCommand(value: string, excludes: string[] = []) {
+    const requiredFlags = ['--line-number', '--column'];
+    const optionalFlags = ['--smart-case'];
+    // const options = ['--smart-case', '--no-ignore', '--no-ignore-vsc'];
+    return `rg '${value}' ${requiredFlags.join(' ')} ${optionalFlags.join(' ')} "${
+      this.rootPath
+    }" ${excludes.join(' ')}`;
+  }
+
   private peekItem(items: readonly QuickPickItemCustom[]) {
     if (items.length > 0) {
       const currentItem = items[0];
-      const { filePath, linePos } = currentItem.data;
+      const { filePath, linePos, colPos } = currentItem.data;
       vscode.workspace.openTextDocument(filePath).then(document => {
         vscode.window
           .showTextDocument(document, {
@@ -150,38 +161,38 @@ export class Periscope {
             preserveFocus: true,
           })
           .then(editor => {
-            this.setPos(editor, linePos);
+            this.setPos(editor, linePos, colPos);
           });
       });
     }
   }
 
   private accept() {
-    const { filePath, linePos } = (
+    const { filePath, linePos, colPos } = (
       this.quickPick.selectedItems[0] as QuickPickItemCustom
     ).data;
     vscode.workspace.openTextDocument(filePath).then(document => {
       vscode.window.showTextDocument(document).then(editor => {
-        this.setPos(editor, linePos);
+        this.setPos(editor, linePos, colPos);
         this.quickPick.dispose();
       });
     });
   }
 
   // set cursor & view position
-  private setPos(editor: vscode.TextEditor, linePos: number) {
+  private setPos(editor: vscode.TextEditor, linePos: number, colPos: number) {
     const selection = new vscode.Selection(0, 0, 0, 0);
     editor.selection = selection;
 
     const lineNumber = linePos ? linePos - 1 : 0;
+    const charNumber = colPos ? colPos - 1 : 0;
 
     editor
       .edit(editBuilder => {
         editBuilder.insert(selection.active, '');
       })
       .then(() => {
-        const character = selection.active.character;
-        const newPosition = new vscode.Position(lineNumber, character);
+        const newPosition = new vscode.Position(lineNumber, charNumber);
         const range = editor.document.lineAt(newPosition).range;
         editor.selection = new vscode.Selection(newPosition, newPosition);
         editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
@@ -193,6 +204,7 @@ export class Periscope {
     filePath: string,
     fileContents: string,
     linePos: number,
+    colPos: number,
     rawResult?: string
   ): QuickPickItemCustom {
     const relativePath = path.relative(this.rootPath, filePath);
@@ -210,6 +222,7 @@ export class Periscope {
         filePath,
         relativePath,
         linePos,
+        colPos,
         rawResult: rawResult ?? '',
       },
       description: `${folders.join(path.sep)}`,
