@@ -151,7 +151,7 @@ export const periscope = () => {
     const config = vscode.workspace.getConfiguration('periscope');
     const rgOptions = config.get<string[]>('rgOptions', [
       '--smart-case',
-      '--sort path',
+      '--sortr path',
     ]);
     const addSrcPaths = config.get<string[]>('addSrcPaths', []);
 
