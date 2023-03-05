@@ -2,7 +2,7 @@
   "name": "periscope",
   "displayName": "Periscope",
   "description": "ripgrep workspace search with file peek",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "publisher": "JoshMu",
   "icon": "assets/icon.png",
   "repository": {
@@ -29,7 +29,10 @@
       "properties": {
         "periscope.rgOptions": {
           "type": "array",
-          "default": ["--smart-case", "--sort path"],
+          "default": [
+            "--smart-case",
+            "--sort path"
+          ],
           "items": {
             "type": "string"
           },
