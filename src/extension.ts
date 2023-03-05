@@ -29,6 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand(
     'scope.scope',
     async () => {
+      const activeEditor = vscode.window.activeTextEditor;
       const quickPick = vscode.window.createQuickPick();
       quickPick.placeholder = 'Enter a search query';
       quickPick.canSelectMany = false;
@@ -48,6 +49,13 @@ export function activate(context: vscode.ExtensionContext) {
       quickPick.onDidAccept(() => {
         accept(quickPick as vscode.QuickPick<QuickPickItemCustom>);
       });
+      quickPick.onDidHide(() => {
+        if (!quickPick.selectedItems[0]) {
+            if (activeEditor) {
+                vscode.window.showTextDocument(activeEditor.document, activeEditor.viewColumn);
+            }
+        }
+    });
       quickPick.show();
     }
   );
