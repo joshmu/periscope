@@ -13,6 +13,12 @@ interface QuickPickItemCustom extends vscode.QuickPickItem {
   }
 }
 
+// todo: FZF
+// todo: config: define base path
+// todo: config: additional excludes
+// todo: config: rg command
+// todo: search engine swap
+
 export class Periscope {
   activeEditor: vscode.TextEditor | undefined;
   quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>;
@@ -81,21 +87,21 @@ export class Periscope {
     const ignoreFile = path.join(this.rootPath, '.gitignore');
     let excludes: string[] = [];
     if (fs.existsSync(ignoreFile)) {
-      // const ignorePatterns = fs
-      //   .readFileSync(ignoreFile)
-      //   .toString()
-      //   .split('\n')
-      //   .filter(Boolean);
+      const ignorePatterns = fs
+        .readFileSync(ignoreFile)
+        .toString()
+        .split('\n')
+        .filter(Boolean);
 
-      const ignorePatterns = [
-        'node_modules',
-        '.git',
-        '.next',
-        '.vercel',
-        'dist',
-        'out',
-        'yarn.lock',
-      ];
+      // const ignorePatterns = [
+      //   'node_modules',
+      //   '.git',
+      //   '.next',
+      //   '.vercel',
+      //   'dist',
+      //   'out',
+      //   'yarn.lock',
+      // ];
 
       excludes = ignorePatterns.map(pattern => `--glob !${pattern}`);
     }
