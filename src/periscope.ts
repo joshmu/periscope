@@ -7,7 +7,6 @@ interface QuickPickItemCustom extends vscode.QuickPickItem {
   // custom payload
   data: {
     filePath: string
-    relativePath: string
     linePos: number
     colPos: number
     rawResult: string
@@ -17,15 +16,11 @@ interface QuickPickItemCustom extends vscode.QuickPickItem {
 export class Periscope {
   activeEditor: vscode.TextEditor | undefined;
   quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>;
-  workspaceFolder: vscode.WorkspaceFolder | undefined;
-  rootPath: string;
 
   constructor() {
     console.log('Periscope instantiated');
     this.activeEditor = vscode.window.activeTextEditor;
     this.quickPick = vscode.window.createQuickPick();
-    this.workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    this.rootPath = this.workspaceFolder?.uri.fsPath || '';
   }
 
   public async register() {
@@ -79,8 +74,6 @@ export class Periscope {
   }
 
   private search(value: string) {
-    // const ignoreList = this.getIgnoreList();
-    // const excludes = ignoreList.map(pattern => `--glob !${pattern}`);
     const rgCmd = this.rgCommand(value);
 
     const rgProc = spawn(rgCmd, [], { shell: true });
@@ -115,39 +108,14 @@ export class Periscope {
     });
   }
 
-  private getIgnoreList() {
-    const ignoreFile = path.join(this.rootPath, '.gitignore');
-    let ignoreList: string[] = [];
-    if (fs.existsSync(ignoreFile)) {
-      // ignoreList = fs
-      //   .readFileSync(ignoreFile)
-      //   .toString()
-      //   .split('\n')
-      //   .filter(Boolean)
-      //   // remove comments
-      //   .filter(line => !line.startsWith('#'))
-
-      // hardcoded version for testing
-      // ignoreList = [
-      //   'node_modules',
-      //   '.git',
-      //   '.next',
-      //   '.vercel',
-      //   'dist',
-      //   'out',
-      //   'yarn.lock',
-      // ];
-    }
-    return ignoreList;
-  }
-
   private rgCommand(value: string, excludes: string[] = []) {
     const requiredFlags = ['--line-number', '--column'];
     const optionalFlags = ['--smart-case'];
-    // const options = ['--smart-case', '--no-ignore', '--no-ignore-vsc'];
-    return `rg '${value}' ${requiredFlags.join(' ')} ${optionalFlags.join(' ')} "${
-      this.rootPath
-    }" ${excludes.join(' ')}`;
+
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    const rootPaths = workspaceFolders ? workspaceFolders.map(folder => folder.uri.fsPath) : [];
+
+    return `rg '${value}' ${requiredFlags.join(' ')} ${optionalFlags.join(' ')} ${ rootPaths.join(' ') } ${excludes.join(' ')}`;
   }
 
   private peekItem(items: readonly QuickPickItemCustom[]) {
@@ -207,8 +175,7 @@ export class Periscope {
     colPos: number,
     rawResult?: string
   ): QuickPickItemCustom {
-    const relativePath = path.relative(this.rootPath, filePath);
-    const folders = relativePath.split(path.sep);
+    const folders = filePath.split(path.sep);
 
     // abbreviate path if too long
     if (folders.length > 2) {
@@ -220,7 +187,6 @@ export class Periscope {
       label: fileContents.trim(),
       data: {
         filePath,
-        relativePath,
         linePos,
         colPos,
         rawResult: rawResult ?? '',
