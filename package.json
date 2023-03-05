@@ -37,6 +37,14 @@
             "type": "string"
           },
           "description": "Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'."
+        },
+        "periscope.addSrcPaths": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional source paths to include in the rg search.  You may want to add this as a workspace specific setting."
         }
       }
     }

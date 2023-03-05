@@ -153,11 +153,13 @@ export const periscope = () => {
       '--smart-case',
       '--sort path',
     ]);
+    const addSrcPaths = config.get<string[]>('addSrcPaths', []);
 
     const rgFlags = [
       ...rgRequiredFlags,
       ...rgOptions,
       ...rootPaths,
+      ...addSrcPaths,
       ...excludes,
     ];
 
