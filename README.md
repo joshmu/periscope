@@ -4,6 +4,8 @@
 
 Periscope is a Vscode extension for high powered workspace contents search utilising [ripgrep](https://github.com/BurntSushi/ripgrep) with on the fly peek across all suggestions.
 
+![Demo](https://github.com/joshmu/periscope/blob/master/assets/demo.gif?raw=true)
+
 Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim)
 
 ## Instructions

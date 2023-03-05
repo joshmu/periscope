@@ -1,9 +1,9 @@
 {
   "name": "periscope",
   "displayName": "periscope",
-  "description": "telescope inspired peek functionality utilising ripgrep",
+  "description": "ripgrep workspace content search with file peek",
   "version": "0.0.1",
-  "icon": "images/periscope-icon.png",
+  "icon": "assets/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/joshmu/periscope"
