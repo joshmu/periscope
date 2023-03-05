@@ -1,8 +1,16 @@
-# Periscope 🔭
+# Periscope (VSCode Extension) 🔭
 
 ## Features
 
-[RG](https://github.com/BurntSushi/ripgrep) powered contents search with on the fly peek.
+Periscope is a Vscode extension for high powered workspace contents search utilising [ripgrep](https://github.com/BurntSushi/ripgrep) with on the fly peek across all suggestions.
+
+Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim) 
+
+## Instructions
+
+1. Ideally assign a keybindind such as `super + p` or use the command prompt and search for _periscope_.`
+2. Input your query and move through the suggested results, the editor will reflect the current highlighted suggested item.
+3. Hit enter to open the file or cancel to return to your original active editor
 
 ## Requirements
 
