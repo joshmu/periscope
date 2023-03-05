@@ -2,7 +2,7 @@
   "name": "periscope",
   "displayName": "periscope",
   "description": "ripgrep workspace content search with file peek",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "JoshMu",
   "icon": "assets/icon.png",
   "repository": {
