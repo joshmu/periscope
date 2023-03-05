@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { spawn } from 'child_process';
-import * as fs from 'fs';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 
 interface QuickPickItemCustom extends vscode.QuickPickItem {
   // custom payload
@@ -16,6 +15,7 @@ interface QuickPickItemCustom extends vscode.QuickPickItem {
 export class Periscope {
   activeEditor: vscode.TextEditor | undefined;
   quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>;
+  spawnProcess: ChildProcessWithoutNullStreams | undefined;
 
   constructor() {
     console.log('Periscope instantiated');
@@ -74,36 +74,47 @@ export class Periscope {
   }
 
   private search(value: string) {
+    // const rgCmd = this.rgCommand(value);
     const rgCmd = this.rgCommand(value);
+    console.log("Periscope > search > rgCmd:", rgCmd);
 
-    const rgProc = spawn(rgCmd, [], { shell: true });
+    if (this.spawnProcess) {
+        // Kill the previous spawn process if it exists
+        this.spawnProcess.kill();
+    }
+    this.spawnProcess = spawn(rgCmd, [], { shell: true });
+
     let searchResultLines: string[] = [];
-    rgProc.stdout.on('data', (data: Buffer) => {
+    this.spawnProcess.stdout.on('data', (data: Buffer) => {
       const lines = data.toString().split('\n').filter(Boolean);
       searchResultLines = [...searchResultLines, ...lines];
     });
-    rgProc.stderr.on('data', (data: Buffer) => {
+    this.spawnProcess.stderr.on('data', (data: Buffer) => {
       console.error(data.toString());
     });
-    rgProc.on('exit', (code: number) => {
+    this.spawnProcess.on('exit', (code: number) => {
+      if (code === null) { return; }
       if (code === 0 && searchResultLines.length) {
-        this.quickPick.items = searchResultLines.map(searchResult => {
-          // break the filename via regext ':line:col:'
-          const [filePath, linePos, colPos, fileContents] = searchResult.split(':');
+        this.quickPick.items = searchResultLines
+          .map(searchResult => {
+            // break the filename via regext ':line:col:'
+            const [filePath, linePos, colPos, fileContents] =
+              searchResult.split(':');
 
-          // if all data is not available then remove the item
-          if (!filePath || !linePos || !colPos || !fileContents) {
-            return false;
-          }
+            // if all data is not available then remove the item
+            if (!filePath || !linePos || !colPos || !fileContents) {
+              return false;
+            }
 
-          return this.createResultItem(
-            filePath,
-            fileContents,
-            parseInt(linePos),
-            parseInt(colPos),
-            searchResult
-          );
-        }).filter(Boolean) as QuickPickItemCustom[];
+            return this.createResultItem(
+              filePath,
+              fileContents,
+              parseInt(linePos),
+              parseInt(colPos),
+              searchResult
+            );
+          })
+          .filter(Boolean) as QuickPickItemCustom[];
       } else if (code === 1) {
         console.error(`rg error with code ${code}`);
       } else if (code === 2) {
@@ -119,9 +130,11 @@ export class Periscope {
     const optionalFlags = ['--smart-case'];
 
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    const rootPaths = workspaceFolders ? workspaceFolders.map(folder => folder.uri.fsPath) : [];
+    const rootPaths = workspaceFolders
+      ? workspaceFolders.map(folder => folder.uri.fsPath)
+      : [];
 
-    return `rg '${value}' ${requiredFlags.join(' ')} ${optionalFlags.join(' ')} ${ rootPaths.join(' ') } ${excludes.join(' ')}`;
+    return `rg '${value}' ${requiredFlags.join(' ')} ${optionalFlags.join(' ')} ${rootPaths.join(' ')} ${excludes.join(' ')}`;
   }
 
   private peekItem(items: readonly QuickPickItemCustom[]) {
