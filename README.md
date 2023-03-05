@@ -10,13 +10,13 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 
 ## Instructions
 
-1. Ideally assign a keybinding such as `super + p` or use the command prompt and search for __periscope__.
+1. Ideally assign a keybinding such as `<super> + p` to invoke the `periscope.search` command.  Otherwise you can use the command prompt and search for __periscope__.
 2. Input your query and move through the suggested results, the editor will reflect the current highlighted suggested item.
 3. Hit enter to open the file or cancel to return to your original active editor
 
 ## Requirements
 
-[ripgrep]( https://github.com/BurntSushi/ripgrep#installation ) installed on your local system.
+[install ripgrep](https://github.com/BurntSushi/ripgrep#installation)
 
 ## Extension Settings
 
@@ -35,11 +35,3 @@ Users appreciate release notes as you update your extension.
 ### 1.0.0
 
 Initial release of Periscope
-
-## TODO
-
-* [ ] FZF - improve the fuzzy search algorithm
-* [ ] config: define custom base path (to be able to search outside of the current workspace)
-* [ ] config: option to add additional excludes
-* [ ] config: option to update the rg command
-* [ ] search engine swap - allow for user to define their own search engine
