@@ -23,7 +23,20 @@
         "command": "periscope.search",
         "title": "Periscope: Search"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Periscope",
+      "properties": {
+        "periscope.rgOptions": {
+          "type": "array",
+          "default": ["--smart-case", "--sort path"],
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

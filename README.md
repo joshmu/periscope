@@ -16,7 +16,7 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 
 ## Requirements
 
-[install ripgrep](https://github.com/BurntSushi/ripgrep#installation)
+[Install ripgrep](https://github.com/BurntSushi/ripgrep#installation)
 
 ## Extension Settings
 
@@ -35,3 +35,7 @@ Users appreciate release notes as you update your extension.
 ### 1.0.0
 
 Initial release of Periscope
+
+## Todo
+
+* [ ] Support fuzzy search (fzf)
