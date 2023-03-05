@@ -2,7 +2,7 @@
 
 ## Features
 
-Periscope is a Vscode extension for high powered workspace contents search utilising [ripgrep](https://github.com/BurntSushi/ripgrep) with on the fly peek across all suggestions.
+Periscope is a Vscode extension for high powered workspace contents search utilising [ripgrep](https://github.com/BurntSushi/ripgrep) with on the fly peek across result suggestions.
 
 ![Demo](https://github.com/joshmu/periscope/blob/master/assets/demo.gif?raw=true)
 
