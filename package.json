@@ -3,6 +3,11 @@
   "displayName": "periscope",
   "description": "telescope inspired peek functionality utilising ripgrep",
   "version": "0.0.1",
+  "icon": "images/periscope-icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joshmu/periscope"
+  },
   "engines": {
     "vscode": "^1.76.0"
   },
