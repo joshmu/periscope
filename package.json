@@ -3,6 +3,7 @@
   "displayName": "periscope",
   "description": "ripgrep workspace content search with file peek",
   "version": "0.0.1",
+  "publisher": "JoshMu",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
