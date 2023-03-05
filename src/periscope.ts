@@ -90,6 +90,12 @@ export class Periscope {
         this.quickPick.items = searchResultLines.map(searchResult => {
           // break the filename via regext ':line:col:'
           const [filePath, linePos, colPos, fileContents] = searchResult.split(':');
+
+          // if all data is not available then remove the item
+          if (!filePath || !linePos || !colPos || !fileContents) {
+            return false;
+          }
+
           return this.createResultItem(
             filePath,
             fileContents,
@@ -97,7 +103,7 @@ export class Periscope {
             parseInt(colPos),
             searchResult
           );
-        });
+        }).filter(Boolean) as QuickPickItemCustom[];
       } else if (code === 1) {
         console.error(`rg error with code ${code}`);
       } else if (code === 2) {
