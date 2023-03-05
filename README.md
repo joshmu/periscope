@@ -10,7 +10,7 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 
 ## Instructions
 
-1. Ideally assign a keybinding such as `super + p` or use the command prompt and search for _periscope_.`
+1. Ideally assign a keybinding such as `super + p` or use the command prompt and search for __periscope__.
 2. Input your query and move through the suggested results, the editor will reflect the current highlighted suggested item.
 3. Hit enter to open the file or cancel to return to your original active editor
 
