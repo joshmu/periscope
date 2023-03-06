@@ -15,11 +15,14 @@ interface QuickPickItemCustom extends vscode.QuickPickItem {
 export const periscope = () => {
   let activeEditor: vscode.TextEditor | undefined;
   let quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>;
+  let workspaceFolders = vscode.workspace.workspaceFolders;
+
   let spawnProcess: ChildProcessWithoutNullStreams | undefined;
   const config = vscode.workspace.getConfiguration('periscope');
 
   function register() {
     console.log('Periscope instantiated');
+    workspaceFolders = vscode.workspace.workspaceFolders;
     activeEditor = vscode.window.activeTextEditor;
     // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
     quickPick = vscode.window.createQuickPick();
@@ -95,26 +98,27 @@ export const periscope = () => {
         return;
       }
       if (code === 0 && searchResultLines.length) {
-        quickPick.items = searchResultLines.map(searchResult => {
-          // break the filename via regext ':line:col:'
-          const [filePath, linePos, colPos, ...textResult] =
-            searchResult.split(':');
-          const fileContents = textResult.join(':');
+        quickPick.items = searchResultLines
+          .map(searchResult => {
+            // break the filename via regext ':line:col:'
+            const [filePath, linePos, colPos, ...textResult] =
+              searchResult.split(':');
+            const fileContents = textResult.join(':');
 
-          // if all data is not available then remove the item
-          if (!filePath || !linePos || !colPos || !fileContents) {
-            return false;
-          }
+            // if all data is not available then remove the item
+            if (!filePath || !linePos || !colPos || !fileContents) {
+              return false;
+            }
 
-          return createResultItem(
-            filePath,
-            fileContents,
-            parseInt(linePos),
-            parseInt(colPos),
-            searchResult
-          );
-        }).filter(Boolean) as QuickPickItemCustom[];
-
+            return createResultItem(
+              filePath,
+              fileContents,
+              parseInt(linePos),
+              parseInt(colPos),
+              searchResult
+            );
+          })
+          .filter(Boolean) as QuickPickItemCustom[];
       } else if (code === 127) {
         vscode.window.showErrorMessage(
           `Periscope: Exited with code ${code}, ripgrep not found.`
@@ -145,7 +149,6 @@ export const periscope = () => {
       '--color=never',
     ];
 
-    const workspaceFolders = vscode.workspace.workspaceFolders;
     const rootPaths = workspaceFolders
       ? workspaceFolders.map(folder => folder.uri.fsPath)
       : [];
@@ -233,15 +236,6 @@ export const periscope = () => {
     colPos: number,
     rawResult?: string
   ): QuickPickItemCustom {
-    const folders = filePath.split(path.sep);
-
-    // abbreviate path if too long
-    const folderDisplayDepth = config.get<number>('folderDisplayDepth', 4);
-    if (folders.length > folderDisplayDepth) {
-      folders.splice(0, folders.length - folderDisplayDepth);
-      folders.unshift('...');
-    }
-
     return {
       label: fileContents?.trim(),
       data: {
@@ -251,10 +245,37 @@ export const periscope = () => {
         rawResult: rawResult ?? '',
       },
       // description: `${folders.join(path.sep)}`,
-      detail: `${folders.join(path.sep)}`,
+      detail: formatPathLabel(filePath),
       // ! required to support regex, otherwise quick pick will automatically remove results that don't have an exact match
       alwaysShow: true,
     };
+  }
+
+  function formatPathLabel(filePath: string) {
+    if (!workspaceFolders) {
+      return filePath;
+    }
+
+    // find correct workspace folder
+    let workspaceFolder = workspaceFolders[0];
+    for (const folder of workspaceFolders) {
+      if (filePath.startsWith(folder.uri.fsPath)) {
+        workspaceFolder = folder;
+        break;
+      }
+    }
+
+    const workspaceFolderName = workspaceFolder.name;
+    const relativeFilePath = path.relative(workspaceFolder.uri.fsPath, filePath);
+    const folders = relativeFilePath.split(path.sep);
+    const folderDisplayDepth = config.get<number>('folderDisplayDepth', 4);
+
+    // abbreviate path if too long
+    if (folders.length > folderDisplayDepth) {
+      folders.splice(0, folders.length - folderDisplayDepth);
+      folders.unshift('...');
+    }
+    return `${workspaceFolderName}/${folders.join(path.sep)}`;
   }
 
   return {
