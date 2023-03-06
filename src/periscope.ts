@@ -16,6 +16,7 @@ export const periscope = () => {
   let activeEditor: vscode.TextEditor | undefined;
   let quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>;
   let spawnProcess: ChildProcessWithoutNullStreams | undefined;
+  const config = vscode.workspace.getConfiguration('periscope');
 
   function register() {
     console.log('Periscope instantiated');
@@ -149,7 +150,6 @@ export const periscope = () => {
       ? workspaceFolders.map(folder => folder.uri.fsPath)
       : [];
 
-    const config = vscode.workspace.getConfiguration('periscope');
     const rgOptions = config.get<string[]>('rgOptions', [
       '--smart-case',
       '--sortr path',
@@ -236,8 +236,9 @@ export const periscope = () => {
     const folders = filePath.split(path.sep);
 
     // abbreviate path if too long
-    if (folders.length > 4) {
-      folders.splice(0, folders.length - 4);
+    const folderDisplayDepth = config.get<number>('folderDisplayDepth', 4);
+    if (folders.length > folderDisplayDepth) {
+      folders.splice(0, folders.length - folderDisplayDepth);
       folders.unshift('...');
     }
 
