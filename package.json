@@ -38,6 +38,14 @@
           },
           "description": "Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'."
         },
+        "periscope.rgGlobExcludes": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional glob paths to exclude from the 'rg' search, eg: '**/dist/**'."
+        },
         "periscope.addSrcPaths": {
           "type": "array",
           "default": [],
@@ -49,7 +57,7 @@
         "periscope.folderDisplayDepth": {
           "type": "number",
           "default": 4,
-          "description": "The folder depth to display for the results"
+          "description": "The folder depth to display in the results"
         }
       }
     }

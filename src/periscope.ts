@@ -78,7 +78,6 @@ export const periscope = () => {
   }
 
   function search(value: string) {
-    // const rgCmd = rgCommand(value);
     const rgCmd = rgCommand(value);
     console.log('Periscope > search > rgCmd:', rgCmd);
 
@@ -124,7 +123,7 @@ export const periscope = () => {
           `Periscope: Exited with code ${code}, ripgrep not found.`
         );
       } else if (code === 1) {
-        console.error(`rg error with code ${code}`);
+        console.log(`rg exited with code ${code}`);
       } else if (code === 2) {
         console.error('No matches found');
       } else {
@@ -140,7 +139,7 @@ export const periscope = () => {
     }
   }
 
-  function rgCommand(value: string, excludes: string[] = []) {
+  function rgCommand(value: string) {
     const rgRequiredFlags = [
       '--line-number',
       '--column',
@@ -158,6 +157,10 @@ export const periscope = () => {
       '--sortr path',
     ]);
     const addSrcPaths = config.get<string[]>('addSrcPaths', []);
+
+    const excludes = config.get<string[]>('rgGlobExcludes', []).map(exclude => {
+      return `--glob '!${exclude}'`;
+    });
 
     const rgFlags = [
       ...rgRequiredFlags,
