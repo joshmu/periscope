@@ -167,9 +167,15 @@ export const periscope = () => {
   }
 
   function peekItem(items: readonly QuickPickItemCustom[]) {
-    if (items.length === 0) {return;};
+    if (items.length === 0) {
+      return;
+    }
 
     const currentItem = items[0];
+    if (!currentItem.data) {
+      return;
+    }
+
     const { filePath, linePos, colPos } = currentItem.data;
     vscode.workspace.openTextDocument(filePath).then(document => {
       vscode.window
@@ -184,9 +190,12 @@ export const periscope = () => {
   }
 
   function accept() {
-    const { filePath, linePos, colPos } = (
-      quickPick.selectedItems[0] as QuickPickItemCustom
-    ).data;
+    const currentItem = quickPick.selectedItems[0] as QuickPickItemCustom;
+    if (!currentItem.data) {
+      return;
+    }
+
+    const { filePath, linePos, colPos } = currentItem.data;
     vscode.workspace.openTextDocument(filePath).then(document => {
       vscode.window.showTextDocument(document).then(editor => {
         setPos(editor, linePos, colPos);
@@ -232,7 +241,7 @@ export const periscope = () => {
     }
 
     return {
-      label: fileContents.trim(),
+      label: fileContents?.trim(),
       data: {
         filePath,
         linePos,
