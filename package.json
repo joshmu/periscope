@@ -2,7 +2,7 @@
   "name": "periscope",
   "displayName": "Periscope",
   "description": "ripgrep workspace search with file peek",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "publisher": "JoshMu",
   "icon": "assets/icon.png",
   "repository": {
@@ -50,7 +50,7 @@
           "type": "number",
           "default": 4,
           "description": "The folder depth to display for the results"
-      }
+        }
       }
     }
   },
