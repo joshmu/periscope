@@ -20,6 +20,7 @@ export const periscope = () => {
   function register() {
     console.log('Periscope instantiated');
     activeEditor = vscode.window.activeTextEditor;
+    // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
     quickPick = vscode.window.createQuickPick();
 
     quickPick.placeholder = 'Enter a search query';
@@ -93,26 +94,26 @@ export const periscope = () => {
         return;
       }
       if (code === 0 && searchResultLines.length) {
-        quickPick.items = searchResultLines
-          .map(searchResult => {
-            // break the filename via regext ':line:col:'
-            const [filePath, linePos, colPos, fileContents] =
-              searchResult.split(':');
+        quickPick.items = searchResultLines.map(searchResult => {
+          // break the filename via regext ':line:col:'
+          const [filePath, linePos, colPos, ...textResult] =
+            searchResult.split(':');
+          const fileContents = textResult.join(':');
 
-            // if all data is not available then remove the item
-            if (!filePath || !linePos || !colPos || !fileContents) {
-              return false;
-            }
+          // if all data is not available then remove the item
+          if (!filePath || !linePos || !colPos || !fileContents) {
+            return false;
+          }
 
-            return createResultItem(
-              filePath,
-              fileContents,
-              parseInt(linePos),
-              parseInt(colPos),
-              searchResult
-            );
-          })
-          .filter(Boolean) as QuickPickItemCustom[];
+          return createResultItem(
+            filePath,
+            fileContents,
+            parseInt(linePos),
+            parseInt(colPos),
+            searchResult
+          );
+        }).filter(Boolean) as QuickPickItemCustom[];
+
       } else if (code === 127) {
         vscode.window.showErrorMessage(
           `Periscope: Exited with code ${code}, ripgrep not found.`
@@ -235,8 +236,8 @@ export const periscope = () => {
     const folders = filePath.split(path.sep);
 
     // abbreviate path if too long
-    if (folders.length > 2) {
-      folders.splice(0, folders.length - 2);
+    if (folders.length > 4) {
+      folders.splice(0, folders.length - 4);
       folders.unshift('...');
     }
 
@@ -248,8 +249,10 @@ export const periscope = () => {
         colPos,
         rawResult: rawResult ?? '',
       },
-      description: `${folders.join(path.sep)}`,
-      // detail: `${folders.join(path.sep)}`,
+      // description: `${folders.join(path.sep)}`,
+      detail: `${folders.join(path.sep)}`,
+      // ! required to support regex, otherwise quick pick will automatically remove results that don't have an exact match
+      alwaysShow: true,
     };
   }
 
