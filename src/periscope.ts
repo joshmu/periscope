@@ -39,6 +39,8 @@ export const periscope = () => {
   // when input query 'CHANGES'
   function onDidChangeValue() {
     quickPick.onDidChangeValue(value => {
+      checkKillProcess();
+
       if (value) {
         search(value);
       } else {
@@ -56,6 +58,8 @@ export const periscope = () => {
 
   // when item is 'SELECTED'
   function onDidAccept() {
+    checkKillProcess();
+
     quickPick.onDidAccept(() => {
       accept();
     });
