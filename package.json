@@ -52,12 +52,12 @@
           "items": {
             "type": "string"
           },
-          "description": "Additional source paths to include in the rg search.  You may want to add this as a workspace specific setting."
+          "description": "Additional source paths to include in the rg search. You may want to add this as a workspace specific setting."
         },
         "periscope.folderDisplayDepth": {
           "type": "number",
           "default": 4,
-          "description": "The folder depth to display in the results"
+          "description": "The folder depth to display in the results."
         }
       }
     }

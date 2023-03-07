@@ -24,17 +24,13 @@ This extension contributes the following settings:
 
 * `periscope.search`: Enable Periscope Search
 
-## Known Issues
+### Configuration Options
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+* `rgOptions`: Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'.
+* `rgGlobExcludes`: Additional glob paths to exclude from the 'rg' search, eg: '**/dist/**'.
+* `addSrcPaths`: Additional source paths to include in the rg search. You may want to add this as a workspace specific setting.
+* `folderDisplayDepth`: The folder depth to display in the results.
 
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of Periscope
 
 ## Todo
 

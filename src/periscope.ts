@@ -27,7 +27,7 @@ export const periscope = () => {
     // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
     quickPick = vscode.window.createQuickPick();
 
-    quickPick.placeholder = 'Enter a search query';
+    quickPick.placeholder = 'Search...';
     quickPick.canSelectMany = false;
     onDidChangeValue();
     onDidChangeActive();
