@@ -27,8 +27,9 @@ export const periscope = () => {
     // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
     quickPick = vscode.window.createQuickPick();
 
-    quickPick.placeholder = 'Search...';
+    quickPick.placeholder = '🫧';
     quickPick.canSelectMany = false;
+    quickPick.value = getSelectedText();
     onDidChangeValue();
     onDidChangeActive();
     onDidAccept();
@@ -82,6 +83,7 @@ export const periscope = () => {
   }
 
   function search(value: string) {
+    quickPick.busy = true;
     const rgCmd = rgCommand(value);
     console.log('Periscope > search > rgCmd:', rgCmd);
 
@@ -133,6 +135,7 @@ export const periscope = () => {
       } else {
         vscode.window.showErrorMessage(`Ripgrep exited with code ${code}`);
       }
+      quickPick.busy = false;
     });
   }
 
@@ -283,6 +286,15 @@ export const periscope = () => {
       folders.unshift('...');
     }
     return `${workspaceFolderName}/${folders.join(path.sep)}`;
+  }
+
+  function getSelectedText() {
+    let selectedText = '';
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+      selectedText = editor.document.getText(editor.selection);
+    }
+    return selectedText;
   }
 
   return {
