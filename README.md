@@ -27,10 +27,12 @@ This extension contributes the following settings:
 ### Configuration Options
 
 * `rgOptions`: Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'.
-* `rgGlobExcludes`: Additional glob paths to exclude from the 'rg' search, eg: '**/dist/**'.
+* `rgGlobExcludes`: Additional glob paths to exclude from the 'rg' search, eg: '__/dist/__'.
 * `addSrcPaths`: Additional source paths to include in the rg search. You may want to add this as a workspace specific setting.
-* `folderDisplayDepth`: The folder depth to display in the results.
-
+* `startFolderDisplayDepth`: The folder depth to display in the results before '...'.
+* `endFolderDisplayDepth`: The folder depth to display in the results after '...'.
+* `enableGotoNativeSearch`: If true, then swap to native vscode search if the custom suffix is entered using the current query.
+* `gotoNativeSearchSuffix`: If the query ends with this suffix, then swap to the native search with the query applied.
 
 ## Todo
 

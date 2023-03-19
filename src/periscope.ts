@@ -2,6 +2,16 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 
+// CONFIG: this should match the contribution in package.json
+type ConfigItems =
+  | 'rgOptions'
+  | 'addSrcPaths'
+  | 'rgGlobExcludes'
+  | 'startFolderDisplayDepth'
+  | 'endFolderDisplayDepth'
+  | 'enableGotoNativeSearch'
+  | 'gotoNativeSearchSuffix';
+
 interface QuickPickItemCustom extends vscode.QuickPickItem {
   // custom payload
   data: {
@@ -16,12 +26,15 @@ export const periscope = () => {
   let activeEditor: vscode.TextEditor | undefined;
   let quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>;
   let workspaceFolders = vscode.workspace.workspaceFolders;
+  let query = '';
 
   let spawnProcess: ChildProcessWithoutNullStreams | undefined;
-  const config = vscode.workspace.getConfiguration('periscope');
+  let config = getConfig();
 
   function register() {
-    console.log('Periscope instantiated');
+    setActiveContext(true);
+    console.log('PERISCOPE: start');
+    config = getConfig();
     workspaceFolders = vscode.workspace.workspaceFolders;
     activeEditor = vscode.window.activeTextEditor;
     // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
@@ -37,12 +50,30 @@ export const periscope = () => {
     quickPick.show();
   }
 
+  // create vscode context for the extension for targeted keybindings
+  function setActiveContext(flag: boolean) {
+    console.log(`PERISCOPE: setContext ${flag}`);
+    vscode.commands.executeCommand('setContext', 'periscopeActive', flag);
+  }
+
   // when input query 'CHANGES'
   function onDidChangeValue() {
     quickPick.onDidChangeValue(value => {
       checkKillProcess();
 
       if (value) {
+        query = value;
+
+        // Jump to native vscode search option
+        if (
+          config.enableGotoNativeSearch &&
+          config.gotoNativeSearchSuffix &&
+          value.endsWith(config.gotoNativeSearchSuffix)
+        ) {
+          openNativeVscodeSearch();
+          return;
+        }
+
         search(value);
       } else {
         quickPick.items = [];
@@ -59,8 +90,6 @@ export const periscope = () => {
 
   // when item is 'SELECTED'
   function onDidAccept() {
-    checkKillProcess();
-
     quickPick.onDidAccept(() => {
       accept();
     });
@@ -68,8 +97,6 @@ export const periscope = () => {
 
   // when prompt is 'CANCELLED'
   function onDidHide() {
-    checkKillProcess();
-
     quickPick.onDidHide(() => {
       if (!quickPick.selectedItems[0]) {
         if (activeEditor) {
@@ -79,13 +106,15 @@ export const periscope = () => {
           );
         }
       }
+
+      finished();
     });
   }
 
   function search(value: string) {
     quickPick.busy = true;
     const rgCmd = rgCommand(value);
-    console.log('Periscope > search > rgCmd:', rgCmd);
+    console.log('PERISCOPE: rgCmd:', rgCmd);
 
     checkKillProcess();
     spawnProcess = spawn(rgCmd, [], { shell: true });
@@ -96,7 +125,7 @@ export const periscope = () => {
       searchResultLines = [...searchResultLines, ...lines];
     });
     spawnProcess.stderr.on('data', (data: Buffer) => {
-      console.error(data.toString());
+      console.error('PERISCOPE:', data.toString());
     });
     spawnProcess.on('exit', (code: number) => {
       if (code === null) {
@@ -129,9 +158,9 @@ export const periscope = () => {
           `Periscope: Exited with code ${code}, ripgrep not found.`
         );
       } else if (code === 1) {
-        console.log(`rg exited with code ${code}`);
+        console.log(`PERISCOPE: rg exited with code ${code}`);
       } else if (code === 2) {
-        console.error('No matches found');
+        console.error('PERISCOPE: No matches found');
       } else {
         vscode.window.showErrorMessage(`Ripgrep exited with code ${code}`);
       }
@@ -159,21 +188,15 @@ export const periscope = () => {
       ? workspaceFolders.map(folder => folder.uri.fsPath)
       : [];
 
-    const rgOptions = config.get<string[]>('rgOptions', [
-      '--smart-case',
-      '--sortr path',
-    ]);
-    const addSrcPaths = config.get<string[]>('addSrcPaths', []);
-
-    const excludes = config.get<string[]>('rgGlobExcludes', []).map(exclude => {
+    const excludes = config.rgGlobExcludes.map(exclude => {
       return `--glob '!${exclude}'`;
     });
 
     const rgFlags = [
       ...rgRequiredFlags,
-      ...rgOptions,
+      ...config.rgOptions,
       ...rootPaths,
-      ...addSrcPaths,
+      ...config.addSrcPaths,
       ...excludes,
     ];
 
@@ -277,15 +300,15 @@ export const periscope = () => {
 
     const workspaceFolderName = workspaceFolder.name;
     const relativeFilePath = path.relative(workspaceFolder.uri.fsPath, filePath);
-    const folders = relativeFilePath.split(path.sep);
-    const folderDisplayDepth = config.get<number>('folderDisplayDepth', 4);
+    const folders = [workspaceFolderName, ...relativeFilePath.split(path.sep)];
 
     // abbreviate path if too long
-    if (folders.length > folderDisplayDepth) {
-      folders.splice(0, folders.length - folderDisplayDepth);
-      folders.unshift('...');
+    if (folders.length > (config.startFolderDisplayDepth + config.endFolderDisplayDepth)) {
+      const initialFolders = folders.splice(0, config.startFolderDisplayDepth);
+      folders.splice(0, folders.length - config.endFolderDisplayDepth);
+      folders.unshift(...initialFolders, '...');
     }
-    return `${workspaceFolderName}/${folders.join(path.sep)}`;
+    return folders.join(path.sep);
   }
 
   function getSelectedText() {
@@ -295,6 +318,50 @@ export const periscope = () => {
       selectedText = editor.document.getText(editor.selection);
     }
     return selectedText;
+  }
+
+  // Open the native VSCode search with the provided query and enable regex
+  function openNativeVscodeSearch() {
+    // remove the config suffix from the query
+    const trimmedQuery = query.slice(
+      0,
+      query.indexOf(config.gotoNativeSearchSuffix)
+    );
+
+    vscode.commands.executeCommand('workbench.action.findInFiles', {
+      query: trimmedQuery,
+      isRegex: true,
+      isCaseSensitive: false,
+      matchWholeWord: false,
+      triggerSearch: true,
+    });
+
+    // close extension down
+    quickPick.hide();
+  }
+
+  function getConfig() {
+    const vsConfig = vscode.workspace.getConfiguration('periscope');
+
+    return {
+      rgOptions: vsConfig.get<string[]>('rgOptions', [
+        '--smart-case',
+        '--sortr path',
+      ]),
+      addSrcPaths: vsConfig.get<string[]>('addSrcPaths', []),
+      rgGlobExcludes: vsConfig.get<string[]>('rgGlobExcludes', []),
+      startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),
+      endFolderDisplayDepth: vsConfig.get<number>('endFolderDisplayDepth', 4),
+      enableGotoNativeSearch: vsConfig.get<boolean>('enableGotoNativeSearch', true),
+      gotoNativeSearchSuffix:
+        vsConfig.get<string>('gotoNativeSearchSuffix', '>>') || '>>',
+    } as const satisfies { [key in ConfigItems]: any };
+  }
+
+  function finished() {
+    checkKillProcess();
+    setActiveContext(false);
+    console.log('PERISCOPE: finished');
   }
 
   return {

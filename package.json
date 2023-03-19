@@ -54,10 +54,25 @@
           },
           "description": "Additional source paths to include in the rg search. You may want to add this as a workspace specific setting."
         },
-        "periscope.folderDisplayDepth": {
+        "periscope.startFolderDisplayDepth": {
+          "type": "number",
+          "default": 1,
+          "description": "The folder depth to display in the results before truncating with '...'."
+        },
+        "periscope.endFolderDisplayDepth": {
           "type": "number",
           "default": 4,
-          "description": "The folder depth to display in the results."
+          "description": "The folder depth to display in the results after truncating with '...'."
+        },
+        "periscope.enableGotoNativeSearch": {
+          "type": "boolean",
+          "default": true,
+          "description": "If true, then swap to native vscode search if the custom suffix is entered using the current query."
+        },
+        "periscope.gotoNativeSearchSuffix": {
+          "type": "string",
+          "default": ">>",
+          "description": "If the query ends with this suffix, then swap to the native search with the query applied."
         }
       }
     }
