@@ -31,7 +31,7 @@ export function getConfig() {
     ),
     gotoNativeSearchSuffix:
       vsConfig.get<string>('gotoNativeSearchSuffix', '>>') || '>>',
-    peekBorderColor: vsConfig.get<string>('peekBorderColor', 'rgb(0,255,246)'),
+    peekBorderColor: vsConfig.get<string>('peekBorderColor', 'rgb(255,255,255)'),
     peekBorderWidth: vsConfig.get<string>('peekBorderWidth', '2px'),
     peekBorderStyle: vsConfig.get<string>('peekBorderStyle', 'solid'),
   } as const satisfies { [key in ConfigItems]: any };
