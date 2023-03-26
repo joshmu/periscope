@@ -76,7 +76,7 @@
         },
         "periscope.peekBorderColor": {
           "type": "string",
-          "default": "rgb(255,255,255)",
+          "default": "rgb(150,200,200)",
           "description": "Change the peek color ('white', '#FFF' '#FFFFFFF', 'rgb(255,255,255)','rgba(255, 255, 255. 0.5) )"
         },
         "periscope.peekBorderWidth": {
