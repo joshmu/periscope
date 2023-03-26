@@ -33,7 +33,6 @@ This extension contributes the following settings:
 * `endFolderDisplayDepth`: The folder depth to display in the results after '...'.
 * `enableGotoNativeSearch`: If true, then swap to native vscode search if the custom suffix is entered using the current query.
 * `gotoNativeSearchSuffix`: If the query ends with this suffix, then swap to the native search with the query applied.
-
-## Todo
-
-* [ ] Support fuzzy search (fzf)
+* `peekBorderColor`: Change the peek color ('white', '#FFF' '#FFFFFFF', 'RGB(255,255,255)','RGB(255, 255, 255. 0.5) )
+* `peekBorderWidth`: Change the peek border width (px)
+* `peekBorderStyle`: Change the peek border style (solid, dashed, inset, double, groove, outset, ridge)

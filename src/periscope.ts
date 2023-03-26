@@ -1,18 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { getConfig } from './utils/getConfig';
+import { getSelectedText } from './utils/getSelectedText';
+import { highlightDecorationType } from './utils/decorationType';
 
-// CONFIG: this should match the contribution in package.json
-type ConfigItems =
-  | 'rgOptions'
-  | 'addSrcPaths'
-  | 'rgGlobExcludes'
-  | 'startFolderDisplayDepth'
-  | 'endFolderDisplayDepth'
-  | 'enableGotoNativeSearch'
-  | 'gotoNativeSearchSuffix';
-
-interface QuickPickItemCustom extends vscode.QuickPickItem {
+export interface QuickPickItemCustom extends vscode.QuickPickItem {
   // custom payload
   data: {
     filePath: string
@@ -27,6 +20,7 @@ export const periscope = () => {
   let quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>;
   let workspaceFolders = vscode.workspace.workspaceFolders;
   let query = '';
+  let highlightDecoration = highlightDecorationType();
 
   let spawnProcess: ChildProcessWithoutNullStreams | undefined;
   let config = getConfig();
@@ -222,6 +216,7 @@ export const periscope = () => {
         })
         .then(editor => {
           setPos(editor, linePos, colPos);
+
         });
     });
   }
@@ -258,6 +253,7 @@ export const periscope = () => {
         const range = editor.document.lineAt(newPosition).range;
         editor.selection = new vscode.Selection(newPosition, newPosition);
         editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+        highlightDecoration.set(editor);
       });
   }
 
@@ -303,21 +299,15 @@ export const periscope = () => {
     const folders = [workspaceFolderName, ...relativeFilePath.split(path.sep)];
 
     // abbreviate path if too long
-    if (folders.length > (config.startFolderDisplayDepth + config.endFolderDisplayDepth)) {
+    if (
+      folders.length >
+      config.startFolderDisplayDepth + config.endFolderDisplayDepth
+    ) {
       const initialFolders = folders.splice(0, config.startFolderDisplayDepth);
       folders.splice(0, folders.length - config.endFolderDisplayDepth);
       folders.unshift(...initialFolders, '...');
     }
     return folders.join(path.sep);
-  }
-
-  function getSelectedText() {
-    let selectedText = '';
-    const editor = vscode.window.activeTextEditor;
-    if (editor) {
-      selectedText = editor.document.getText(editor.selection);
-    }
-    return selectedText;
   }
 
   // Open the native VSCode search with the provided query and enable regex
@@ -340,26 +330,9 @@ export const periscope = () => {
     quickPick.hide();
   }
 
-  function getConfig() {
-    const vsConfig = vscode.workspace.getConfiguration('periscope');
-
-    return {
-      rgOptions: vsConfig.get<string[]>('rgOptions', [
-        '--smart-case',
-        '--sortr path',
-      ]),
-      addSrcPaths: vsConfig.get<string[]>('addSrcPaths', []),
-      rgGlobExcludes: vsConfig.get<string[]>('rgGlobExcludes', []),
-      startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),
-      endFolderDisplayDepth: vsConfig.get<number>('endFolderDisplayDepth', 4),
-      enableGotoNativeSearch: vsConfig.get<boolean>('enableGotoNativeSearch', true),
-      gotoNativeSearchSuffix:
-        vsConfig.get<string>('gotoNativeSearchSuffix', '>>') || '>>',
-    } as const satisfies { [key in ConfigItems]: any };
-  }
-
   function finished() {
     checkKillProcess();
+    highlightDecoration.remove();
     setActiveContext(false);
     console.log('PERISCOPE: finished');
   }

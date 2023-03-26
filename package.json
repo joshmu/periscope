@@ -73,6 +73,28 @@
           "type": "string",
           "default": ">>",
           "description": "If the query ends with this suffix, then swap to the native search with the query applied."
+        },
+        "periscope.peekBorderColor": {
+          "type": "string",
+          "default": "rgb(0,255,246)",
+          "description": "Change the peek color ('white', '#FFF' '#FFFFFFF', 'RGB(255,255,255)','RGB(255, 255, 255. 0.5) )"
+        },
+        "periscope.peekBorderWidth": {
+          "type": "string",
+          "default": "2px"
+        },
+        "periscope.peekBorderStyle": {
+          "type": "string",
+          "enum": [
+            "solid",
+            "dashed",
+            "inset",
+            "double",
+            "groove",
+            "outset",
+            "ridge"
+          ],
+          "default": "solid"
         }
       }
     }
