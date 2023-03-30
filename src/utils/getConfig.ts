@@ -5,6 +5,7 @@ type ConfigItems =
   | 'rgOptions'
   | 'addSrcPaths'
   | 'rgGlobExcludes'
+  | 'rgMenuActions'
   | 'startFolderDisplayDepth'
   | 'endFolderDisplayDepth'
   | 'enableGotoNativeSearch'
@@ -23,6 +24,7 @@ export function getConfig() {
     ]),
     addSrcPaths: vsConfig.get<string[]>('addSrcPaths', []),
     rgGlobExcludes: vsConfig.get<string[]>('rgGlobExcludes', []),
+    rgMenuActions: vsConfig.get<string[]>('rgMenuActions', []),
     startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),
     endFolderDisplayDepth: vsConfig.get<number>('endFolderDisplayDepth', 4),
     enableGotoNativeSearch: vsConfig.get<boolean>(

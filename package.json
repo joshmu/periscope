@@ -54,6 +54,14 @@
           },
           "description": "Additional source paths to include in the rg search. You may want to add this as a workspace specific setting."
         },
+        "periscope.rgMenuActions": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add  `-t js` as a menu option to only show javascript files in the results."
+        },
         "periscope.startFolderDisplayDepth": {
           "type": "number",
           "default": 1,

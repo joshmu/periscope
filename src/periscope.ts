@@ -24,6 +24,7 @@ export const periscope = () => {
 
   let spawnProcess: ChildProcessWithoutNullStreams | undefined;
   let config = getConfig();
+  let rgMenuActionsSelected: string[] = [];
 
   function register() {
     setActiveContext(true);
@@ -35,13 +36,37 @@ export const periscope = () => {
     quickPick = vscode.window.createQuickPick();
 
     quickPick.placeholder = '🫧';
+
+    // if ripgrep actions are available then open preliminary quickpick
+    config.rgMenuActions.length ? setupRgMenuActions(quickPick) : setupQuickPickForQuery(quickPick);
+
+    quickPick.onDidHide(onDidHide);
+    quickPick.show();
+  }
+
+  // when ripgrep actions are available show preliminary quickpick for those options to add to the query
+  function setupRgMenuActions(quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>) {
+    quickPick.canSelectMany = true;
+    
+    // add items from the config
+    quickPick.items = config.rgMenuActions.map(item => ({
+      label: item,
+    }));
+
+    quickPick.onDidAccept(() => {
+      rgMenuActionsSelected = quickPick.selectedItems.map(item => item.label);
+      setupQuickPickForQuery(quickPick);
+    });
+  }
+
+  // update quickpick event listeners for the query
+  function setupQuickPickForQuery(quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>) {
+    quickPick.items = [];
     quickPick.canSelectMany = false;
     quickPick.value = getSelectedText();
-    onDidChangeValue();
-    onDidChangeActive();
-    onDidAccept();
-    onDidHide();
-    quickPick.show();
+    quickPick.onDidChangeValue(onDidChangeValue);
+    quickPick.onDidChangeActive(onDidChangeActive);
+    quickPick.onDidAccept(onDidAccept);
   }
 
   // create vscode context for the extension for targeted keybindings
@@ -51,58 +76,50 @@ export const periscope = () => {
   }
 
   // when input query 'CHANGES'
-  function onDidChangeValue() {
-    quickPick.onDidChangeValue(value => {
-      checkKillProcess();
+  function onDidChangeValue(value: string) {
+    checkKillProcess();
 
-      if (value) {
-        query = value;
+    if (value) {
+      query = value;
 
-        // Jump to native vscode search option
-        if (
-          config.enableGotoNativeSearch &&
-          config.gotoNativeSearchSuffix &&
-          value.endsWith(config.gotoNativeSearchSuffix)
-        ) {
-          openNativeVscodeSearch();
-          return;
-        }
-
-        search(value);
-      } else {
-        quickPick.items = [];
+      // Jump to native vscode search option
+      if (
+        config.enableGotoNativeSearch &&
+        config.gotoNativeSearchSuffix &&
+        value.endsWith(config.gotoNativeSearchSuffix)
+      ) {
+        openNativeVscodeSearch();
+        return;
       }
-    });
+
+      search(value);
+    } else {
+      quickPick.items = [];
+    }
   }
 
   // when item is 'FOCUSSED'
-  function onDidChangeActive() {
-    quickPick.onDidChangeActive(items => {
-      peekItem(items as readonly QuickPickItemCustom[]);
-    });
+  function onDidChangeActive(items: readonly (vscode.QuickPickItem | QuickPickItemCustom)[]) {
+    peekItem(items as readonly QuickPickItemCustom[]);
   }
 
   // when item is 'SELECTED'
   function onDidAccept() {
-    quickPick.onDidAccept(() => {
-      accept();
-    });
+    accept();
   }
 
   // when prompt is 'CANCELLED'
   function onDidHide() {
-    quickPick.onDidHide(() => {
-      if (!quickPick.selectedItems[0]) {
-        if (activeEditor) {
-          vscode.window.showTextDocument(
-            activeEditor.document,
-            activeEditor.viewColumn
-          );
-        }
+    if (!quickPick.selectedItems[0]) {
+      if (activeEditor) {
+        vscode.window.showTextDocument(
+          activeEditor.document,
+          activeEditor.viewColumn
+        );
       }
+    }
 
-      finished();
-    });
+    finished();
   }
 
   function search(value: string) {
@@ -189,6 +206,7 @@ export const periscope = () => {
     const rgFlags = [
       ...rgRequiredFlags,
       ...config.rgOptions,
+      ...rgMenuActionsSelected,
       ...rootPaths,
       ...config.addSrcPaths,
       ...excludes,
