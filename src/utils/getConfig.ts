@@ -24,7 +24,7 @@ export function getConfig() {
     ]),
     addSrcPaths: vsConfig.get<string[]>('addSrcPaths', []),
     rgGlobExcludes: vsConfig.get<string[]>('rgGlobExcludes', []),
-    rgMenuActions: vsConfig.get<string[]>('rgMenuActions', []),
+    rgMenuActions: vsConfig.get<{label?: string, value: string}[]>('rgMenuActions', []),
     startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),
     endFolderDisplayDepth: vsConfig.get<number>('endFolderDisplayDepth', 4),
     enableGotoNativeSearch: vsConfig.get<boolean>(

@@ -29,7 +29,7 @@ This extension contributes the following settings:
 * `rgOptions`: Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'.
 * `rgGlobExcludes`: Additional glob paths to exclude from the 'rg' search, eg: '__/dist/__'.
 * `addSrcPaths`: Additional source paths to include in the rg search. You may want to add this as a workspace specific setting.
-* `rgMenuActions`: Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add  `-t js` as a menu option to only show javascript files in the results.
+* `rgMenuActions`: Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add  `{ label: "JS/TS", value: "--type-add 'jsts:*.{js|ts|tsx|jsx}' -t jsts" },` as a menu option to only show js & ts files in the results.
 * `startFolderDisplayDepth`: The folder depth to display in the results before '...'.
 * `endFolderDisplayDepth`: The folder depth to display in the results after '...'.
 * `enableGotoNativeSearch`: If true, then swap to native vscode search if the custom suffix is entered using the current query.

@@ -5,7 +5,11 @@ import { getConfig } from './utils/getConfig';
 import { getSelectedText } from './utils/getSelectedText';
 import { highlightDecorationType } from './utils/decorationType';
 
-export interface QuickPickItemCustom extends vscode.QuickPickItem {
+export interface QPItemDefault extends vscode.QuickPickItem {
+  _type: 'QuickPickItemDefault'
+}
+export interface QPItemQuery extends vscode.QuickPickItem {
+  _type: 'QuickPickItemQuery'
   // custom payload
   data: {
     filePath: string
@@ -14,17 +18,26 @@ export interface QuickPickItemCustom extends vscode.QuickPickItem {
     rawResult: string
   }
 }
+export interface QPItemRgMenuAction extends vscode.QuickPickItem {
+  _type: 'QuickPickItemRgMenuAction'
+  // custom payload
+  data: {
+    rgOption: string
+  }
+}
+
+type AllQPItemVariants = QPItemDefault | QPItemQuery | QPItemRgMenuAction;
 
 export const periscope = () => {
   let activeEditor: vscode.TextEditor | undefined;
-  let quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>;
+  let qp: vscode.QuickPick<AllQPItemVariants>;
   let workspaceFolders = vscode.workspace.workspaceFolders;
   let query = '';
   let highlightDecoration = highlightDecorationType();
-
   let spawnProcess: ChildProcessWithoutNullStreams | undefined;
   let config = getConfig();
   let rgMenuActionsSelected: string[] = [];
+  let disposables: vscode.Disposable[] = [];
 
   function register() {
     setActiveContext(true);
@@ -33,40 +46,56 @@ export const periscope = () => {
     workspaceFolders = vscode.workspace.workspaceFolders;
     activeEditor = vscode.window.activeTextEditor;
     // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
-    quickPick = vscode.window.createQuickPick();
-
-    quickPick.placeholder = '🫧';
+    qp = vscode.window.createQuickPick();
 
     // if ripgrep actions are available then open preliminary quickpick
-    config.rgMenuActions.length ? setupRgMenuActions(quickPick) : setupQuickPickForQuery(quickPick);
+    const rgMenuActionsExist = config.rgMenuActions.length > 0;
+    rgMenuActionsExist ? setupRgMenuActions(qp) : setupQuickPickForQuery(qp);
 
-    quickPick.onDidHide(onDidHide);
-    quickPick.show();
+    disposables.push(
+      qp.onDidHide(onDidHide)
+    );
+    qp.show();
   }
 
   // when ripgrep actions are available show preliminary quickpick for those options to add to the query
-  function setupRgMenuActions(quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>) {
-    quickPick.canSelectMany = true;
-    
-    // add items from the config
-    quickPick.items = config.rgMenuActions.map(item => ({
-      label: item,
-    }));
+  function setupRgMenuActions(qp: vscode.QuickPick<AllQPItemVariants>) {
+    qp.placeholder = '🫧 Rg Menu Actions (Space key to check/uncheck, Enter key to continue)';
+    qp.canSelectMany = true;
 
-    quickPick.onDidAccept(() => {
-      rgMenuActionsSelected = quickPick.selectedItems.map(item => item.label);
-      setupQuickPickForQuery(quickPick);
-    });
+    // add items from the config
+    qp.items = config.rgMenuActions.map(({value, label}) => ({ 
+      _type: 'QuickPickItemRgMenuAction',
+      label: label || value,
+      description: label ? value : undefined,
+      data: {
+        rgOption: value,
+      }
+     })
+    );
+
+    function next() {
+      rgMenuActionsSelected = (qp.selectedItems as QPItemRgMenuAction[]).map(item => item.data.rgOption);
+      setupQuickPickForQuery(qp as vscode.QuickPick<QPItemQuery>);
+    }
+
+    disposables.push(
+      qp.onDidTriggerButton(next),
+      qp.onDidAccept(next)
+    );
   }
 
   // update quickpick event listeners for the query
-  function setupQuickPickForQuery(quickPick: vscode.QuickPick<vscode.QuickPickItem | QuickPickItemCustom>) {
-    quickPick.items = [];
-    quickPick.canSelectMany = false;
-    quickPick.value = getSelectedText();
-    quickPick.onDidChangeValue(onDidChangeValue);
-    quickPick.onDidChangeActive(onDidChangeActive);
-    quickPick.onDidAccept(onDidAccept);
+  function setupQuickPickForQuery(qp: vscode.QuickPick<AllQPItemVariants>) {
+    qp.placeholder = '🫧';
+    qp.items = [];
+    qp.canSelectMany = false;
+    qp.value = getSelectedText();
+    disposables.push(
+      qp.onDidChangeValue(onDidChangeValue),
+      qp.onDidChangeActive(onDidChangeActive),
+      qp.onDidAccept(onDidAccept)
+    );
   }
 
   // create vscode context for the extension for targeted keybindings
@@ -94,13 +123,13 @@ export const periscope = () => {
 
       search(value);
     } else {
-      quickPick.items = [];
+      qp.items = [];
     }
   }
 
   // when item is 'FOCUSSED'
-  function onDidChangeActive(items: readonly (vscode.QuickPickItem | QuickPickItemCustom)[]) {
-    peekItem(items as readonly QuickPickItemCustom[]);
+  function onDidChangeActive(items: readonly AllQPItemVariants[]) {
+    peekItem(items as readonly QPItemQuery[]);
   }
 
   // when item is 'SELECTED'
@@ -110,7 +139,7 @@ export const periscope = () => {
 
   // when prompt is 'CANCELLED'
   function onDidHide() {
-    if (!quickPick.selectedItems[0]) {
+    if (!qp.selectedItems[0]) {
       if (activeEditor) {
         vscode.window.showTextDocument(
           activeEditor.document,
@@ -123,7 +152,7 @@ export const periscope = () => {
   }
 
   function search(value: string) {
-    quickPick.busy = true;
+    qp.busy = true;
     const rgCmd = rgCommand(value);
     console.log('PERISCOPE: rgCmd:', rgCmd);
 
@@ -143,7 +172,7 @@ export const periscope = () => {
         return;
       }
       if (code === 0 && searchResultLines.length) {
-        quickPick.items = searchResultLines
+        qp.items = searchResultLines
           .map(searchResult => {
             // break the filename via regext ':line:col:'
             const [filePath, linePos, colPos, ...textResult] =
@@ -163,7 +192,7 @@ export const periscope = () => {
               searchResult
             );
           })
-          .filter(Boolean) as QuickPickItemCustom[];
+          .filter(Boolean) as QPItemQuery[];
       } else if (code === 127) {
         vscode.window.showErrorMessage(
           `Periscope: Exited with code ${code}, ripgrep not found.`
@@ -175,7 +204,7 @@ export const periscope = () => {
       } else {
         vscode.window.showErrorMessage(`Ripgrep exited with code ${code}`);
       }
-      quickPick.busy = false;
+      qp.busy = false;
     });
   }
 
@@ -215,7 +244,7 @@ export const periscope = () => {
     return `rg '${value}' ${rgFlags.join(' ')}`;
   }
 
-  function peekItem(items: readonly QuickPickItemCustom[]) {
+  function peekItem(items: readonly QPItemQuery[]) {
     if (items.length === 0) {
       return;
     }
@@ -234,13 +263,12 @@ export const periscope = () => {
         })
         .then(editor => {
           setPos(editor, linePos, colPos);
-
         });
     });
   }
 
   function accept() {
-    const currentItem = quickPick.selectedItems[0] as QuickPickItemCustom;
+    const currentItem = qp.selectedItems[0] as QPItemQuery;
     if (!currentItem.data) {
       return;
     }
@@ -249,7 +277,7 @@ export const periscope = () => {
     vscode.workspace.openTextDocument(filePath).then(document => {
       vscode.window.showTextDocument(document).then(editor => {
         setPos(editor, linePos, colPos);
-        quickPick.dispose();
+        qp.dispose();
       });
     });
   }
@@ -282,8 +310,9 @@ export const periscope = () => {
     linePos: number,
     colPos: number,
     rawResult?: string
-  ): QuickPickItemCustom {
+  ): QPItemQuery {
     return {
+      _type: 'QuickPickItemQuery',
       label: fileContents?.trim(),
       data: {
         filePath,
@@ -345,13 +374,14 @@ export const periscope = () => {
     });
 
     // close extension down
-    quickPick.hide();
+    qp.hide();
   }
 
   function finished() {
     checkKillProcess();
     highlightDecoration.remove();
     setActiveContext(false);
+    disposables.forEach(d => d.dispose());
     console.log('PERISCOPE: finished');
   }
 

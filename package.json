@@ -58,9 +58,20 @@
           "type": "array",
           "default": [],
           "items": {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "The label of the menu item to display in the menu."
+              },
+              "value": {
+                "type": "string",
+                "description": "The value of ripgrep options you would like to include."
+              }
+            },
+            "required": ["value"]
           },
-          "description": "Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add  `-t js` as a menu option to only show javascript files in the results."
+          "description": "Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add  `{ label: \"JS/TS\", value: \"--type-add 'jsts:*.{js|ts|tsx|jsx}' -t jsts\" },` as a menu option to only show js & ts files in the results."
         },
         "periscope.startFolderDisplayDepth": {
           "type": "number",
