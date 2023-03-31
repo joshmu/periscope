@@ -2,7 +2,7 @@
   "name": "periscope",
   "displayName": "Periscope",
   "description": "ripgrep workspace search with file peek",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "publisher": "JoshMu",
   "icon": "assets/icon.png",
   "repository": {
@@ -69,7 +69,9 @@
                 "description": "The value of ripgrep options you would like to include."
               }
             },
-            "required": ["value"]
+            "required": [
+              "value"
+            ]
           },
           "description": "Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add  `{ label: \"JS/TS\", value: \"--type-add 'jsts:*.{js|ts|tsx|jsx}' -t jsts\" },` as a menu option to only show js & ts files in the results."
         },
