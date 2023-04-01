@@ -88,7 +88,7 @@ export const periscope = () => {
   function setupRgMenuActions() {
     reset();
 
-    qp.placeholder = '🫧 Rg Menu Actions (Space key to check/uncheck, Enter key to continue)';
+    qp.placeholder = '🫧 Select actions or type custom rg options (Space key to check/uncheck)';
     qp.canSelectMany = true;
 
     // add items from the config
@@ -104,6 +104,13 @@ export const periscope = () => {
 
     function next() {
       rgMenuActionsSelected = (qp.selectedItems as QPItemRgMenuAction[]).map(item => item.data.rgOption);
+
+      // if no actions selected, then use the current query as a custom command to rg
+      if (!rgMenuActionsSelected.length && qp.value) {
+        rgMenuActionsSelected.push(qp.value);
+        qp.value = '';
+      }
+
       setupQuickPickForQuery();
     }
 
@@ -119,7 +126,6 @@ export const periscope = () => {
     qp.items = [];
     qp.canSelectMany = false;
     qp.value = getSelectedText();
-    console.log('here');
     disposables.query.push(
       qp.onDidChangeValue(onDidChangeValue),
       qp.onDidChangeActive(onDidChangeActive),
