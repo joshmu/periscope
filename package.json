@@ -85,6 +85,16 @@
           "default": 4,
           "description": "The folder depth to display in the results after truncating with '...'."
         },
+        "periscope.alwaysShowRgMenuActions": {
+          "type": "boolean",
+          "default": true,
+          "description": "If true, then open rg menu actions every time the search is invoked."
+        },
+        "periscope.gotoRgMenuActionsPrefix": {
+          "type": "string",
+          "default": "<<",
+          "description": "If the query starts with this prefix, then open rg menu actions."
+        },
         "periscope.enableGotoNativeSearch": {
           "type": "boolean",
           "default": true,

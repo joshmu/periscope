@@ -28,6 +28,12 @@ export interface QPItemRgMenuAction extends vscode.QuickPickItem {
 
 type AllQPItemVariants = QPItemDefault | QPItemQuery | QPItemRgMenuAction;
 
+type DisposablesMap = {
+  general: vscode.Disposable[]
+  rgMenuActions: vscode.Disposable[]
+  query: vscode.Disposable[]
+};
+
 export const periscope = () => {
   let activeEditor: vscode.TextEditor | undefined;
   let qp: vscode.QuickPick<AllQPItemVariants>;
@@ -37,7 +43,11 @@ export const periscope = () => {
   let spawnProcess: ChildProcessWithoutNullStreams | undefined;
   let config = getConfig();
   let rgMenuActionsSelected: string[] = [];
-  let disposables: vscode.Disposable[] = [];
+  let disposables: DisposablesMap = {
+    general: [],
+    rgMenuActions: [],
+    query: [],
+  };
 
   function register() {
     setActiveContext(true);
@@ -49,17 +59,35 @@ export const periscope = () => {
     qp = vscode.window.createQuickPick();
 
     // if ripgrep actions are available then open preliminary quickpick
-    const rgMenuActionsExist = config.rgMenuActions.length > 0;
-    rgMenuActionsExist ? setupRgMenuActions(qp) : setupQuickPickForQuery(qp);
+    const openRgMenuActions = config.alwaysShowRgMenuActions && config.rgMenuActions.length > 0;
+    openRgMenuActions ? setupRgMenuActions() : setupQuickPickForQuery();
 
-    disposables.push(
+    disposables.general.push(
       qp.onDidHide(onDidHide)
     );
     qp.show();
   }
 
+  function disposeAll() {
+    disposables.general.forEach(d => d.dispose());
+    disposables.rgMenuActions.forEach(d => d.dispose());
+    disposables.query.forEach(d => d.dispose());
+  }
+
+  function reset() {
+    checkKillProcess();
+    disposables.rgMenuActions.forEach(d => d.dispose());
+    disposables.query.forEach(d => d.dispose());
+    qp.busy = false;
+    qp.value = '';
+    query = '';
+    rgMenuActionsSelected = [];
+  }
+
   // when ripgrep actions are available show preliminary quickpick for those options to add to the query
-  function setupRgMenuActions(qp: vscode.QuickPick<AllQPItemVariants>) {
+  function setupRgMenuActions() {
+    reset();
+
     qp.placeholder = '🫧 Rg Menu Actions (Space key to check/uncheck, Enter key to continue)';
     qp.canSelectMany = true;
 
@@ -76,22 +104,23 @@ export const periscope = () => {
 
     function next() {
       rgMenuActionsSelected = (qp.selectedItems as QPItemRgMenuAction[]).map(item => item.data.rgOption);
-      setupQuickPickForQuery(qp as vscode.QuickPick<QPItemQuery>);
+      setupQuickPickForQuery();
     }
 
-    disposables.push(
+    disposables.rgMenuActions.push(
       qp.onDidTriggerButton(next),
       qp.onDidAccept(next)
     );
   }
 
   // update quickpick event listeners for the query
-  function setupQuickPickForQuery(qp: vscode.QuickPick<AllQPItemVariants>) {
+  function setupQuickPickForQuery() {
     qp.placeholder = '🫧';
     qp.items = [];
     qp.canSelectMany = false;
     qp.value = getSelectedText();
-    disposables.push(
+    console.log('here');
+    disposables.query.push(
       qp.onDidChangeValue(onDidChangeValue),
       qp.onDidChangeActive(onDidChangeActive),
       qp.onDidAccept(onDidAccept)
@@ -110,6 +139,15 @@ export const periscope = () => {
 
     if (value) {
       query = value;
+
+      // Jump to rg menu actions
+      if (
+        config.gotoRgMenuActionsPrefix &&
+        value.startsWith(config.gotoRgMenuActionsPrefix)
+      ) {
+        setupRgMenuActions();
+        return;
+      }
 
       // Jump to native vscode search option
       if (
@@ -381,7 +419,7 @@ export const periscope = () => {
     checkKillProcess();
     highlightDecoration.remove();
     setActiveContext(false);
-    disposables.forEach(d => d.dispose());
+    disposeAll();
     console.log('PERISCOPE: finished');
   }
 
