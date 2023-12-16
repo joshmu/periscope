@@ -1,12 +1,16 @@
 import * as vscode from 'vscode';
-import { periscope } from './periscope';
+import { openInHorizontalSplit, periscope } from './periscope';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('<<PERISCOPE>> is now active.');
 
-  const disposable = vscode.commands.registerCommand(
-    'periscope.search',
+  const periscopeQpCmd = vscode.commands.registerCommand('periscope.search',
     () => periscope().register()
   );
-  context.subscriptions.push(disposable);
+
+  const periscopeSplitCmd = vscode.commands.registerCommand("periscope.openInHorizontalSplit", () => {
+    openInHorizontalSplit();
+  });
+
+  context.subscriptions.push(periscopeQpCmd, periscopeSplitCmd);
 }

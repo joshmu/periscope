@@ -34,8 +34,11 @@ type DisposablesMap = {
   query: vscode.Disposable[]
 };
 
+// Allow other commands to access the QuickPick
+let activeQP : vscode.QuickPick<AllQPItemVariants> | undefined;
+let previousActiveEditor: vscode.TextEditor | undefined;
+
 export const periscope = () => {
-  let activeEditor: vscode.TextEditor | undefined;
   let qp: vscode.QuickPick<AllQPItemVariants>;
   let workspaceFolders = vscode.workspace.workspaceFolders;
   let query = '';
@@ -54,9 +57,10 @@ export const periscope = () => {
     console.log('PERISCOPE: start');
     config = getConfig();
     workspaceFolders = vscode.workspace.workspaceFolders;
-    activeEditor = vscode.window.activeTextEditor;
+    previousActiveEditor = vscode.window.activeTextEditor;
     // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
     qp = vscode.window.createQuickPick();
+    activeQP = qp;
 
     // if ripgrep actions are available then open preliminary quickpick
     const openRgMenuActions = config.alwaysShowRgMenuActions && config.rgMenuActions.length > 0;
@@ -129,7 +133,8 @@ export const periscope = () => {
     disposables.query.push(
       qp.onDidChangeValue(onDidChangeValue),
       qp.onDidChangeActive(onDidChangeActive),
-      qp.onDidAccept(onDidAccept)
+      qp.onDidAccept(onDidAccept),
+      qp.onDidTriggerItemButton(onDidTriggerItemButton)
     );
   }
 
@@ -181,13 +186,21 @@ export const periscope = () => {
     accept();
   }
 
+  // when item button is 'TRIGGERED'
+  function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<QPItemQuery>) {
+    console.log('PERISCOPE: item button triggered');
+    if (e.item._type === 'QuickPickItemQuery') {
+      accept(e.item as QPItemQuery);
+    }
+  }
+
   // when prompt is 'CANCELLED'
   function onDidHide() {
     if (!qp.selectedItems[0]) {
-      if (activeEditor) {
+      if (previousActiveEditor) {
         vscode.window.showTextDocument(
-          activeEditor.document,
-          activeEditor.viewColumn
+          previousActiveEditor.document,
+          previousActiveEditor.viewColumn
         );
       }
     }
@@ -311,15 +324,22 @@ export const periscope = () => {
     });
   }
 
-  function accept() {
-    const currentItem = qp.selectedItems[0] as QPItemQuery;
-    if (!currentItem.data) {
+  function accept(item?: QPItemQuery) {
+    const currentItem = item ? item : qp.selectedItems[0] as QPItemQuery;
+    if (!currentItem?.data) {
       return;
     }
 
     const { filePath, linePos, colPos } = currentItem.data;
     vscode.workspace.openTextDocument(filePath).then(document => {
-      vscode.window.showTextDocument(document).then(editor => {
+      const options: vscode.TextDocumentShowOptions = {};
+
+      if(item) { // horizontal split
+        options.viewColumn = vscode.ViewColumn.Beside;
+        previousActiveEditor = undefined; // prevent focus previous editor
+      }
+
+      vscode.window.showTextDocument(document, options).then(editor => {
         setPos(editor, linePos, colPos);
         qp.dispose();
       });
@@ -368,6 +388,12 @@ export const periscope = () => {
       detail: formatPathLabel(filePath),
       // ! required to support regex, otherwise quick pick will automatically remove results that don't have an exact match
       alwaysShow: true,
+      buttons: [
+        {
+          iconPath: new vscode.ThemeIcon('split-horizontal'),
+          tooltip: 'Open in Horizontal split',
+        },
+      ],
     };
   }
 
@@ -426,6 +452,8 @@ export const periscope = () => {
     highlightDecoration.remove();
     setActiveContext(false);
     disposeAll();
+    activeQP = undefined;
+    previousActiveEditor = undefined;
     console.log('PERISCOPE: finished');
   }
 
@@ -433,3 +461,33 @@ export const periscope = () => {
     register,
   };
 };
+
+// Open the current qp selected item in a horizontal split
+export const openInHorizontalSplit = () => {
+  if(!activeQP) {
+    return;
+  }
+
+  // grab the current selected item
+  const currentItem = activeQP.activeItems[0] as QPItemQuery;
+
+  if (!currentItem?.data) {
+    return;
+  }
+
+  const options: vscode.TextDocumentShowOptions = {
+    viewColumn: vscode.ViewColumn.Beside,
+  };
+
+  const { filePath, linePos, colPos } = currentItem.data;
+  vscode.workspace.openTextDocument(filePath).then(document => {
+      vscode.window.showTextDocument(document, options).then(editor => {
+          // set cursor & view position
+          const position = new vscode.Position(linePos, colPos);
+          editor.revealRange(new vscode.Range(position, position));
+          previousActiveEditor = undefined; // prevent focus previous editor
+          activeQP?.dispose();
+      });
+  });
+};
+
