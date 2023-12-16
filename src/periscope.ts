@@ -187,7 +187,7 @@ export const periscope = () => {
   }
 
   // when item button is 'TRIGGERED'
-  function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<QPItemQuery>) {
+  function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<AllQPItemVariants>) {
     console.log('PERISCOPE: item button triggered');
     if (e.item._type === 'QuickPickItemQuery') {
       accept(e.item as QPItemQuery);
@@ -336,7 +336,7 @@ export const periscope = () => {
 
       if(item) { // horizontal split
         options.viewColumn = vscode.ViewColumn.Beside;
-        previousActiveEditor = undefined; // prevent focus previous editor
+        closePreviewEditor();
       }
 
       vscode.window.showTextDocument(document, options).then(editor => {
@@ -479,15 +479,24 @@ export const openInHorizontalSplit = () => {
     viewColumn: vscode.ViewColumn.Beside,
   };
 
+  closePreviewEditor();
+
   const { filePath, linePos, colPos } = currentItem.data;
-  vscode.workspace.openTextDocument(filePath).then(document => {
-      vscode.window.showTextDocument(document, options).then(editor => {
-          // set cursor & view position
-          const position = new vscode.Position(linePos, colPos);
-          editor.revealRange(new vscode.Range(position, position));
-          previousActiveEditor = undefined; // prevent focus previous editor
-          activeQP?.dispose();
-      });
+  vscode.workspace.openTextDocument(filePath).then((document) => {
+    vscode.window.showTextDocument(document, options).then((editor) => {
+      // set cursor & view position
+      const position = new vscode.Position(linePos, colPos);
+      editor.revealRange(new vscode.Range(position, position));
+      activeQP?.dispose();
+    });
   });
 };
+
+function closePreviewEditor() {
+  if(previousActiveEditor) {
+    vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+    previousActiveEditor = undefined; // prevent focus onDidHide
+  }
+}
+
 
