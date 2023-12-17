@@ -39,3 +39,18 @@ This extension contributes the following settings:
 * `peekBorderColor`: Change the peek color ('white', '#FFF' '#FFFFFFF', 'rgb(255,255,255)','rgba(255, 255, 255. 0.5) )
 * `peekBorderWidth`: Change the peek border width (px)
 * `peekBorderStyle`: Change the peek border style (solid, dashed, inset, double, groove, outset, ridge)
+
+### Other commands
+
+#### periscope.openInHorizontalSplit
+
+Open the selected entry in a horizontal split.
+
+Add a keybinding (`keybindings.json`):
+```json
+  {
+    "key": "ctrl+v",
+    "command": "periscope.openInHorizontalSplit",
+    "when": "periscopeActive"
+  }
+```
