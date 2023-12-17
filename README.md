@@ -14,10 +14,6 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 2. Input your query and move through the suggested results, the editor will reflect the current highlighted suggested item.
 3. Hit enter to open the file or cancel to return to your original active editor
 
-## Requirements
-
-[Install ripgrep](https://github.com/BurntSushi/ripgrep#installation)
-
 ## Extension Settings
 
 This extension contributes the following settings:
@@ -28,6 +24,7 @@ This extension contributes the following settings:
 
 * `rgOptions`: Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'.
 * `rgGlobExcludes`: Additional glob paths to exclude from the 'rg' search, eg: '__/dist/__'.
+* `rgPath`: Optional path to the `rg` binary. If not specified, the ripgrep bundled with vscode will be used.
 * `addSrcPaths`: Additional source paths to include in the rg search. You may want to add this as a workspace specific setting.
 * `rgMenuActions`: Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add  `{ label: "JS/TS", value: "--type-add 'jsts:*.{js|ts|tsx|jsx}' -t jsts" },` as a menu option to only show js & ts files in the results.
 * `startFolderDisplayDepth`: The folder depth to display in the results before '...'.

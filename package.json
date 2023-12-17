@@ -38,6 +38,10 @@
           },
           "description": "Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'."
         },
+        "periscope.rgPath": {
+          "type": "string",
+          "description": "Override the path to the 'rg' command, eg: '/usr/local/bin/rg'. If not specified, the bundled vscode rg will be used."
+        },
         "periscope.rgGlobExcludes": {
           "type": "array",
           "default": [],

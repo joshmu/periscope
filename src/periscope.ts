@@ -273,6 +273,8 @@ export const periscope = () => {
   }
 
   function rgCommand(value: string) {
+    const rgPath = ripgrepPath(config.rgPath);
+
     const rgRequiredFlags = [
       '--line-number',
       '--column',
@@ -298,7 +300,7 @@ export const periscope = () => {
       ...excludes,
     ];
 
-    return `rg '${value}' ${rgFlags.join(' ')}`;
+    return `"${rgPath}" '${value}' ${rgFlags.join(' ')}`;
   }
 
   function peekItem(items: readonly QPItemQuery[]) {
@@ -499,4 +501,17 @@ function closePreviewEditor() {
   }
 }
 
+// grap the bundled ripgrep binary from vscode
+function ripgrepPath(optionsPath?: string) {
+  if(optionsPath?.trim()) {
+    return optionsPath.trim();
+  }
 
+  const rgBinary = /^win/.test(process.platform) ? "rg.exe" : "rg";
+
+  return path.join(
+    vscode.env.appRoot,
+    "node_modules.asar.unpacked/@vscode/ripgrep/bin/",
+    rgBinary
+  );
+}
