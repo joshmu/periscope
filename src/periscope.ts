@@ -170,7 +170,13 @@ export const periscope = () => {
         return;
       }
 
-      search(value);
+      if(config.rgQueryParams.length > 0) {
+        const { newQuery, extraRgFlags } = extraRgFlagsFromQuery(value);
+        query = newQuery; // update query for later use
+        search(newQuery, extraRgFlags);
+      } else {
+        search(value);
+      }
     } else {
       qp.items = [];
     }
@@ -208,9 +214,9 @@ export const periscope = () => {
     finished();
   }
 
-  function search(value: string) {
+  function search(value: string, rgExtraFlags?: string[]) {
     qp.busy = true;
-    const rgCmd = rgCommand(value);
+    const rgCmd = rgCommand(value, rgExtraFlags);
     console.log('PERISCOPE: rgCmd:', rgCmd);
 
     checkKillProcess();
@@ -272,7 +278,9 @@ export const periscope = () => {
     }
   }
 
-  function rgCommand(value: string) {
+  function rgCommand(value: string, extraFlags?: string[]) {
+    const rgPath = ripgrepPath(config.rgPath);
+
     const rgRequiredFlags = [
       '--line-number',
       '--column',
@@ -295,10 +303,38 @@ export const periscope = () => {
       ...rgMenuActionsSelected,
       ...rootPaths,
       ...config.addSrcPaths,
+      ...(extraFlags || []),
       ...excludes,
     ];
 
-    return `rg '${value}' ${rgFlags.join(' ')}`;
+    return `"${rgPath}" '${value}' ${rgFlags.join(' ')}`;
+  }
+
+  // extract rg flags from the query, can match multiple regex's
+  function extraRgFlagsFromQuery(query: string): {
+    newQuery: string;
+    extraRgFlags: string[];
+  } {
+    const extraRgFlags: string[] = [];
+    const queries = [query];
+
+    for (const { param, regex } of config.rgQueryParams) {
+      if (param && regex) {
+        const match = query.match(regex);
+        if (match && match.length > 1) {
+          let newParam = param;
+          for (let i = 2; i < match.length; i++) {
+            newParam = newParam.replace(`$${i-1}`, match[i]);
+          }
+          extraRgFlags.push(newParam);
+          queries.push(match[1]);
+        }
+      }
+    }
+
+    // prefer the first query match or the original one
+    const newQuery = queries.length > 1 ? queries[1] : queries[0];
+    return { newQuery, extraRgFlags };
   }
 
   function peekItem(items: readonly QPItemQuery[]) {
@@ -499,4 +535,17 @@ function closePreviewEditor() {
   }
 }
 
+// grap the bundled ripgrep binary from vscode
+function ripgrepPath(optionsPath?: string) {
+  if(optionsPath?.trim()) {
+    return optionsPath.trim();
+  }
 
+  const rgBinary = /^win/.test(process.platform) ? "rg.exe" : "rg";
+
+  return path.join(
+    vscode.env.appRoot,
+    "node_modules.asar.unpacked/@vscode/ripgrep/bin/",
+    rgBinary
+  );
+}

@@ -38,6 +38,10 @@
           },
           "description": "Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'."
         },
+        "periscope.rgPath": {
+          "type": "string",
+          "description": "Override the path to the 'rg' command, eg: '/usr/local/bin/rg'. If not specified, the bundled vscode rg will be used."
+        },
         "periscope.rgGlobExcludes": {
           "type": "array",
           "default": [],
@@ -74,6 +78,28 @@
             ]
           },
           "description": "Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add  `{ label: \"JS/TS\", value: \"--type-add 'jsts:*.{js|ts|tsx|jsx}' -t jsts\" },` as a menu option to only show js & ts files in the results."
+        },
+        "periscope.rgQueryParams": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "param": {
+                "type": "string",
+                "description": "The rg params to translate to (e.g -t $1, -g '$1')."
+              },
+              "regex": {
+                "type": "string",
+                "description": "The regex to match the query and capture the value to pass to the rg param (e.g `^(.+) -t ?(\\w+)$`)"
+              }
+            },
+            "required": [
+              "param",
+              "regex"
+            ]
+          },
+          "description": "Match ripgrep parameters from the input query directly. E.g: `{ param: \"-t $1\", regex: \"^(.+) -t ?(\\w+)$\" },` will translate the query `hello -t rust` to `rg 'hello' -t rust`"
         },
         "periscope.startFolderDisplayDepth": {
           "type": "number",

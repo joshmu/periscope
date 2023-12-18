@@ -6,6 +6,8 @@ type ConfigItems =
   | 'addSrcPaths'
   | 'rgGlobExcludes'
   | 'rgMenuActions'
+  | 'rgQueryParams'
+  | 'rgPath'
   | 'startFolderDisplayDepth'
   | 'endFolderDisplayDepth'
   | 'alwaysShowRgMenuActions'
@@ -27,6 +29,8 @@ export function getConfig() {
     addSrcPaths: vsConfig.get<string[]>('addSrcPaths', []),
     rgGlobExcludes: vsConfig.get<string[]>('rgGlobExcludes', []),
     rgMenuActions: vsConfig.get<{label?: string, value: string}[]>('rgMenuActions', []),
+    rgQueryParams: vsConfig.get<{param?: string, regex: string}[]>('rgQueryParams', []),
+    rgPath: vsConfig.get<string | undefined>('rgPath', undefined),
     startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),
     endFolderDisplayDepth: vsConfig.get<number>('endFolderDisplayDepth', 4),
     alwaysShowRgMenuActions: vsConfig.get<boolean>(
