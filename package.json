@@ -40,7 +40,7 @@
         },
         "periscope.rgPath": {
           "type": "string",
-          "description": "Override the path to the 'rg' command, eg: '/usr/local/bin/rg'. If not specified, the bundled vscode rg will be used."
+          "description": "Override the path to the 'rg' command, eg: '/usr/local/bin/rg'. If not specified the vscode-ripgrep package will be used."
         },
         "periscope.rgGlobExcludes": {
           "type": "array",
