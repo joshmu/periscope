@@ -81,7 +81,12 @@
         },
         "periscope.rgQueryParams": {
           "type": "array",
-          "default": [],
+          "default": [
+            {
+              "param": "-t $1",
+              "regex": "^(.+) -t ?(\\w+)$"
+            }
+          ],
           "items": {
             "type": "object",
             "properties": {
