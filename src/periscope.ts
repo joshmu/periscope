@@ -4,6 +4,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { getConfig } from './utils/getConfig';
 import { getSelectedText } from './utils/getSelectedText';
 import { highlightDecorationType } from './utils/decorationType';
+import { rgPath } from 'vscode-ripgrep';
 
 export interface QPItemDefault extends vscode.QuickPickItem {
   _type: 'QuickPickItemDefault'
@@ -541,11 +542,5 @@ function ripgrepPath(optionsPath?: string) {
     return optionsPath.trim();
   }
 
-  const rgBinary = /^win/.test(process.platform) ? "rg.exe" : "rg";
-
-  return path.join(
-    vscode.env.appRoot,
-    "node_modules.asar.unpacked/@vscode/ripgrep/bin/",
-    rgBinary
-  );
+  return rgPath;
 }
