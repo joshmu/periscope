@@ -174,6 +174,7 @@ export const periscope = () => {
       if(config.rgQueryParams.length > 0) {
         const { newQuery, extraRgFlags } = extraRgFlagsFromQuery(value);
         query = newQuery; // update query for later use
+        qp.title = extraRgFlags.length > 0 ? `rg '${query}' ${extraRgFlags.join(' ')}` : undefined;
         search(newQuery, extraRgFlags);
       } else {
         search(value);
