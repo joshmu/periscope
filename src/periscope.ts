@@ -264,6 +264,10 @@ export const periscope = () => {
         );
       } else if (code === 1) {
         console.log(`PERISCOPE: rg exited with code ${code}`);
+        if(!config.showPreviousResultsWhenNoMatches) {
+          // hide the previous results if no results found
+          qp.items = [];
+        }
       } else if (code === 2) {
         console.error('PERISCOPE: No matches found');
       } else {
@@ -458,7 +462,7 @@ export const periscope = () => {
       folders.length >
       config.startFolderDisplayDepth + config.endFolderDisplayDepth
     ) {
-      const initialFolders = folders.splice(0, config.startFolderDisplayDepth);
+      const initialFolders = folders.splice(config.startFolderDisplayIndex, config.startFolderDisplayDepth);
       folders.splice(0, folders.length - config.endFolderDisplayDepth);
       folders.unshift(...initialFolders, '...');
     }

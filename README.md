@@ -28,9 +28,11 @@ This extension contributes the following settings:
 - `addSrcPaths`: Additional source paths to include in the rg search. You may want to add this as a workspace specific setting.
 - `rgMenuActions`: Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add `{ "label": "JS/TS", "value": "--type-add 'jsts:*.{js|ts|tsx|jsx}' -t jsts" },` as a menu option to only show js & ts files in the results.
 - `rgQueryParams`: Match ripgrep parameters from the input query directly. E.g: `{ "param": \"-t $1\", "regex": \"^(.+) -t ?(\\w+)$\" },` will translate the query `hello -t rust` to `rg 'hello' -t rust`.
+- `startFolderDisplayIndex`: The folder index to display in the results before '...'.
 - `startFolderDisplayDepth`: The folder depth to display in the results before '...'.
 - `endFolderDisplayDepth`: The folder depth to display in the results after '...'.
 - `alwaysShowRgMenuActions`: If true, then open rg menu actions every time the search is invoked.
+- `showPreviousResultsWhenNoMatches`: If true (default), when there are no matches for the current query, the previous results will still be shown.
 - `gotoRgMenuActionsPrefix`: If the query starts with this prefix, then open rg menu actions.
 - `enableGotoNativeSearch`: If true, then swap to native vscode search if the custom suffix is entered using the current query.
 - `gotoNativeSearchSuffix`: If the query ends with this suffix, then swap to the native search with the query applied.
