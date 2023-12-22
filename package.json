@@ -128,7 +128,7 @@
         },
         "periscope.showPreviousResultsWhenNoMatches": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "If true, when there are no matches for the current query, the previous results will still be shown."
         },
         "periscope.gotoRgMenuActionsPrefix": {

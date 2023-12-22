@@ -42,7 +42,7 @@ export function getConfig() {
     ),
     showPreviousResultsWhenNoMatches: vsConfig.get<boolean>(
       'showPreviousResultsWhenNoMatches',
-      true
+      false
     ),
     gotoRgMenuActionsPrefix:
       vsConfig.get<string>('gotoRgMenuActionsPrefix', '<<') || '<<',

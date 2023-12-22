@@ -32,7 +32,7 @@ This extension contributes the following settings:
 - `startFolderDisplayDepth`: The folder depth to display in the results before '...'.
 - `endFolderDisplayDepth`: The folder depth to display in the results after '...'.
 - `alwaysShowRgMenuActions`: If true, then open rg menu actions every time the search is invoked.
-- `showPreviousResultsWhenNoMatches`: If true (default), when there are no matches for the current query, the previous results will still be shown.
+- `showPreviousResultsWhenNoMatches`: If true, when there are no matches for the current query, the previous results will still be shown.
 - `gotoRgMenuActionsPrefix`: If the query starts with this prefix, then open rg menu actions.
 - `enableGotoNativeSearch`: If true, then swap to native vscode search if the custom suffix is entered using the current query.
 - `gotoNativeSearchSuffix`: If the query ends with this suffix, then swap to the native search with the query applied.
