@@ -7,6 +7,7 @@ type ConfigItems =
   | 'rgGlobExcludes'
   | 'rgMenuActions'
   | 'rgQueryParams'
+  | 'rgQueryParamsShowTitle'
   | 'rgPath'
   | 'startFolderDisplayDepth'
   | 'startFolderDisplayIndex'
@@ -32,6 +33,10 @@ export function getConfig() {
     rgGlobExcludes: vsConfig.get<string[]>('rgGlobExcludes', []),
     rgMenuActions: vsConfig.get<{label?: string, value: string}[]>('rgMenuActions', []),
     rgQueryParams: vsConfig.get<{param?: string, regex: string}[]>('rgQueryParams', []),
+    rgQueryParamsShowTitle: vsConfig.get<boolean>(
+      'rgQueryParamsShowTitle',
+      true
+    ),
     rgPath: vsConfig.get<string | undefined>('rgPath', undefined),
     startFolderDisplayIndex: vsConfig.get<number>('startFolderDisplayIndex', 0),
     startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),

@@ -1,10 +1,10 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import * as path from 'path';
+import * as vscode from 'vscode';
+import { rgPath } from 'vscode-ripgrep';
+import { highlightDecorationType } from './utils/decorationType';
 import { getConfig } from './utils/getConfig';
 import { getSelectedText } from './utils/getSelectedText';
-import { highlightDecorationType } from './utils/decorationType';
-import { rgPath } from 'vscode-ripgrep';
 
 export interface QPItemDefault extends vscode.QuickPickItem {
   _type: 'QuickPickItemDefault'
@@ -174,7 +174,11 @@ export const periscope = () => {
       if(config.rgQueryParams.length > 0) {
         const { newQuery, extraRgFlags } = extraRgFlagsFromQuery(value);
         query = newQuery; // update query for later use
-        qp.title = extraRgFlags.length > 0 ? `rg '${query}' ${extraRgFlags.join(' ')}` : undefined;
+
+        if(config.rgQueryParamsShowTitle) { // update title with preview
+          qp.title = extraRgFlags.length > 0 ? `rg '${query}' ${extraRgFlags.join(' ')}` : undefined;
+        }
+
         search(newQuery, extraRgFlags);
       } else {
         search(value);

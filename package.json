@@ -126,6 +126,11 @@
           "default": true,
           "description": "If true, then open rg menu actions every time the search is invoked."
         },
+        "periscope.rgQueryParamsShowTitle": {
+          "type": "boolean",
+          "default": true,
+          "description": "If true, when a ripgrep parameter match from the list in `rgQueryParams`, the quick pick will show the matched result as a preview in the title bar."
+        },
         "periscope.showPreviousResultsWhenNoMatches": {
           "type": "boolean",
           "default": false,
