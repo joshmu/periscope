@@ -106,6 +106,11 @@
           },
           "description": "Match ripgrep parameters from the input query directly. E.g: `{ param: \"-t $1\", regex: \"^(.+) -t ?(\\w+)$\" },` will translate the query `hello -t rust` to `rg 'hello' -t rust`"
         },
+        "periscope.startFolderDisplayIndex": {
+          "type": "number",
+          "default": 0,
+          "description": "The folder index to display in the results before truncating with '...'."
+        },
         "periscope.startFolderDisplayDepth": {
           "type": "number",
           "default": 1,
@@ -120,6 +125,16 @@
           "type": "boolean",
           "default": true,
           "description": "If true, then open rg menu actions every time the search is invoked."
+        },
+        "periscope.rgQueryParamsShowTitle": {
+          "type": "boolean",
+          "default": true,
+          "description": "If true, when a ripgrep parameter match from the list in `rgQueryParams`, the quick pick will show the matched result as a preview in the title bar."
+        },
+        "periscope.showPreviousResultsWhenNoMatches": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, when there are no matches for the current query, the previous results will still be shown."
         },
         "periscope.gotoRgMenuActionsPrefix": {
           "type": "string",

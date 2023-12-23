@@ -1,10 +1,10 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import * as path from 'path';
+import * as vscode from 'vscode';
+import { rgPath } from 'vscode-ripgrep';
+import { highlightDecorationType } from './utils/decorationType';
 import { getConfig } from './utils/getConfig';
 import { getSelectedText } from './utils/getSelectedText';
-import { highlightDecorationType } from './utils/decorationType';
-import { rgPath } from 'vscode-ripgrep';
 
 export interface QPItemDefault extends vscode.QuickPickItem {
   _type: 'QuickPickItemDefault'
@@ -174,6 +174,11 @@ export const periscope = () => {
       if(config.rgQueryParams.length > 0) {
         const { newQuery, extraRgFlags } = extraRgFlagsFromQuery(value);
         query = newQuery; // update query for later use
+
+        if(config.rgQueryParamsShowTitle) { // update title with preview
+          qp.title = extraRgFlags.length > 0 ? `rg '${query}' ${extraRgFlags.join(' ')}` : undefined;
+        }
+
         search(newQuery, extraRgFlags);
       } else {
         search(value);
@@ -263,6 +268,10 @@ export const periscope = () => {
         );
       } else if (code === 1) {
         console.log(`PERISCOPE: rg exited with code ${code}`);
+        if(!config.showPreviousResultsWhenNoMatches) {
+          // hide the previous results if no results found
+          qp.items = [];
+        }
       } else if (code === 2) {
         console.error('PERISCOPE: No matches found');
       } else {
@@ -457,7 +466,7 @@ export const periscope = () => {
       folders.length >
       config.startFolderDisplayDepth + config.endFolderDisplayDepth
     ) {
-      const initialFolders = folders.splice(0, config.startFolderDisplayDepth);
+      const initialFolders = folders.splice(config.startFolderDisplayIndex, config.startFolderDisplayDepth);
       folders.splice(0, folders.length - config.endFolderDisplayDepth);
       folders.unshift(...initialFolders, '...');
     }

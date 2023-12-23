@@ -7,10 +7,13 @@ type ConfigItems =
   | 'rgGlobExcludes'
   | 'rgMenuActions'
   | 'rgQueryParams'
+  | 'rgQueryParamsShowTitle'
   | 'rgPath'
   | 'startFolderDisplayDepth'
+  | 'startFolderDisplayIndex'
   | 'endFolderDisplayDepth'
   | 'alwaysShowRgMenuActions'
+  | 'showPreviousResultsWhenNoMatches'
   | 'gotoRgMenuActionsPrefix'
   | 'enableGotoNativeSearch'
   | 'gotoNativeSearchSuffix'
@@ -30,12 +33,21 @@ export function getConfig() {
     rgGlobExcludes: vsConfig.get<string[]>('rgGlobExcludes', []),
     rgMenuActions: vsConfig.get<{label?: string, value: string}[]>('rgMenuActions', []),
     rgQueryParams: vsConfig.get<{param?: string, regex: string}[]>('rgQueryParams', []),
+    rgQueryParamsShowTitle: vsConfig.get<boolean>(
+      'rgQueryParamsShowTitle',
+      true
+    ),
     rgPath: vsConfig.get<string | undefined>('rgPath', undefined),
+    startFolderDisplayIndex: vsConfig.get<number>('startFolderDisplayIndex', 0),
     startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),
     endFolderDisplayDepth: vsConfig.get<number>('endFolderDisplayDepth', 4),
     alwaysShowRgMenuActions: vsConfig.get<boolean>(
       'alwaysShowRgMenuActions',
       true
+    ),
+    showPreviousResultsWhenNoMatches: vsConfig.get<boolean>(
+      'showPreviousResultsWhenNoMatches',
+      false
     ),
     gotoRgMenuActionsPrefix:
       vsConfig.get<string>('gotoRgMenuActionsPrefix', '<<') || '<<',
