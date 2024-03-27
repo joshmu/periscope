@@ -358,7 +358,7 @@ export const periscope = () => {
     }
 
     const { filePath, linePos, colPos } = currentItem.data;
-    vscode.workspace.openTextDocument(filePath).then(document => {
+    vscode.workspace.openTextDocument(path.resolve(filePath)).then(document => {
       vscode.window
         .showTextDocument(document, {
           preview: true,
@@ -377,7 +377,7 @@ export const periscope = () => {
     }
 
     const { filePath, linePos, colPos } = currentItem.data;
-    vscode.workspace.openTextDocument(filePath).then(document => {
+    vscode.workspace.openTextDocument(path.resolve(filePath)).then(document => {
       const options: vscode.TextDocumentShowOptions = {};
 
       if(item) { // horizontal split
