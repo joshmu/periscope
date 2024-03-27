@@ -304,7 +304,7 @@ export const periscope = () => {
       : [];
 
     const excludes = config.rgGlobExcludes.map(exclude => {
-      return `--glob '!${exclude}'`;
+      return `--glob "!${exclude}"`;
     });
 
     const rgFlags = [
@@ -317,7 +317,7 @@ export const periscope = () => {
       ...excludes,
     ];
 
-    return `"${rgPath}" '${value}' ${rgFlags.join(' ')}`;
+    return `"${rgPath}" "${value}" ${rgFlags.join(' ')}`;
   }
 
   // extract rg flags from the query, can match multiple regex's
