@@ -224,15 +224,32 @@ export const periscope = () => {
     qp.busy = true;
     const rgCmd = rgCommand(value, rgExtraFlags);
     console.log('PERISCOPE: rgCmd:', rgCmd);
-
     checkKillProcess();
+    let searchResults: any[] = [];
     spawnProcess = spawn(rgCmd, [], { shell: true });
-
-    let searchResultLines: string[] = [];
+    
     spawnProcess.stdout.on('data', (data: Buffer) => {
       const lines = data.toString().split('\n').filter(Boolean);
-      searchResultLines = [...searchResultLines, ...lines];
+      for (const line of lines) {
+          const parsedLine = JSON.parse(line);
+          if (parsedLine.type === 'match') {
+              const { path, lines, line_number, absolute_offset } = parsedLine.data;
+              const filePath = path.text;
+              const linePos = line_number;
+              let colPos = absolute_offset === 0 ? 1 : absolute_offset + 1;
+              const textResult = lines.text.trim();
+
+              const resultItem = {
+                  filePath,
+                  linePos,
+                  colPos,
+                  textResult
+              };
+              searchResults.push(resultItem);
+          }
+      }
     });
+
     spawnProcess.stderr.on('data', (data: Buffer) => {
       console.error('PERISCOPE:', data.toString());
     });
@@ -240,22 +257,20 @@ export const periscope = () => {
       if (code === null) {
         return;
       }
-      if (code === 0 && searchResultLines.length) {
-        qp.items = searchResultLines
+      if (code === 0 && searchResults.length) {
+        qp.items = searchResults
           .map(searchResult => {
             // break the filename via regext ':line:col:'
-            const [filePath, linePos, colPos, ...textResult] =
-              searchResult.split(':');
-            const fileContents = textResult.join(':');
+            const {filePath, linePos, colPos, textResult} = searchResult;
 
             // if all data is not available then remove the item
-            if (!filePath || !linePos || !colPos || !fileContents) {
+            if (!filePath || !linePos || !colPos || !textResult) {
               return false;
             }
 
             return createResultItem(
               filePath,
-              fileContents,
+              textResult,
               parseInt(linePos),
               parseInt(colPos),
               searchResult
@@ -297,6 +312,7 @@ export const periscope = () => {
       '--no-heading',
       '--with-filename',
       '--color=never',
+      '--json'
     ];
 
     const rootPaths = workspaceFolders
