@@ -200,5 +200,8 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "vscode-ripgrep": "^1.13.2"
+  },
+  "release": {
+    "branches": ["master"]
   }
 }
