@@ -4,7 +4,6 @@
   "description": "ripgrep workspace search with file peek",
   "version": "1.3.0",
   "publisher": "JoshMu",
-  "private": false,
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
