@@ -1,7 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { rgPath } from 'vscode-ripgrep';
+import { rgPath } from '@vscode/ripgrep';
 import { highlightDecorationType } from './utils/decorationType';
 import { getConfig } from './utils/getConfig';
 import { getSelectedText } from './utils/getSelectedText';
