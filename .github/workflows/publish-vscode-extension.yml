@@ -15,8 +15,8 @@ jobs:
           node-version: 20
       - run: npm ci
 
-      - name: Set Executable Permissions for ripgrep
-        run: chmod +x ./node_modules/vscode-ripgrep/bin/rg
+      # - name: Set Executable Permissions for ripgrep
+      #   run: chmod +x ./node_modules/@vscode/ripgrep/bin/rg
 
       - name: Semantic Release
         run: npx semantic-release
