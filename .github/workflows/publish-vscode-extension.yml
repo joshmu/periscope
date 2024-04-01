@@ -15,8 +15,8 @@ jobs:
           node-version: 20
       - run: npm ci
 
-      # - name: Set Executable Permissions for ripgrep
-      #   run: chmod +x ./node_modules/@vscode/ripgrep/bin/rg
+      - name: Remove ripgrep bin folder, to allow consumers to redefine their OS specific binaries
+        run: rm -rf ./node_modules/@vscode/ripgrep/bin
 
       - name: Semantic Release
         run: npx semantic-release
@@ -24,14 +24,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Add any other tokens or configuration required by semantic-release plugins
 
-      # - name: Install Visual Studio Marketplace CLI
-      #   run: npm install -g vsce
+      - name: Install Visual Studio Marketplace CLI
+        run: npm install -g vsce
 
-      # - name: Package & Publish Extension to Visual Studio Marketplace
-      #   run: vsce publish --pat ${{ secrets.VS_MARKETPLACE_TOKEN }}
+      - name: Package & Publish Extension to Visual Studio Marketplace
+        run: vsce publish --pat ${{ secrets.VS_MARKETPLACE_TOKEN }}
 
-      # - name: Install Open VSX CLI
-      #   run: npm install -g ovsx
+      - name: Install Open VSX CLI
+        run: npm install -g ovsx
 
-      # - name: Package & Publish Extension to Open VSX Registry
-      #   run: ovsx publish --pat ${{ secrets.OPEN_VSX_TOKEN }}
+      - name: Package & Publish Extension to Open VSX Registry
+        run: ovsx publish --pat ${{ secrets.OPEN_VSX_TOKEN }}
