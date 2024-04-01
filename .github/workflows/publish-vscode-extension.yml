@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  publish:
+  semantic-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,24 +14,77 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
-
-      - name: Remove ripgrep bin folder, to allow consumers to redefine their OS specific binaries
-        run: rm -rf ./node_modules/@vscode/ripgrep/bin
-
       - name: Semantic Release
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Add any other tokens or configuration required by semantic-release plugins
 
-      - name: Install Visual Studio Marketplace CLI
-        run: npm install -g vsce
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: arm64
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+            npm_config_arch: arm64
+          - os: ubuntu-latest
+            platform: linux
+            arch: armhf
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: alpine
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm_config_arch: ${{ matrix.npm_config_arch }}
+      - shell: pwsh
+        run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
+      - run: npx vsce package --target ${{ env.target }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.target }}
+          path: "*.vsix"
 
-      - name: Package & Publish Extension to Visual Studio Marketplace
-        run: vsce publish --pat ${{ secrets.VS_MARKETPLACE_TOKEN }}
+  publish:
+    runs-on: ubuntu-latest
+    needs: build
+    if: success() && startsWith( github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v2
+      - run: npx vsce publish --packagePath $(find . -iname *.vsix)
+        env:
+          VSCE_PAT: ${{ secrets.VS_MARKETPLACE_TOKEN }}
 
-      - name: Install Open VSX CLI
-        run: npm install -g ovsx
-
-      - name: Package & Publish Extension to Open VSX Registry
-        run: ovsx publish --pat ${{ secrets.OPEN_VSX_TOKEN }}
+      # The Open VSX publishing steps remain commented out as platform-specific packages are not supported.
+      # - name: Install Open VSX CLI
+      #   run: npm install -g ovsx
+      # - name: Publish Extension to Open VSX Registry
+      #   run: ovsx publish -p ${{ secrets.OPEN_VSX_TOKEN }}
