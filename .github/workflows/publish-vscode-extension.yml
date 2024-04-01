@@ -21,7 +21,6 @@ jobs:
           # Add any other tokens or configuration required by semantic-release plugins
       - name: Publish to Open VSX Registry
         uses: HaaLeo/publish-vscode-extension@v1
-        id: publishToOpenVSX
         with:
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
       - name: Publish to Visual Studio Marketplace
@@ -29,4 +28,3 @@ jobs:
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
-          extensionFile: ${{ steps.publishToOpenVSX.outputs.vsixPath }}
