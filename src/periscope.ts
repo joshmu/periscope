@@ -5,6 +5,7 @@ import { rgPath } from '@vscode/ripgrep';
 import { highlightDecorationType } from './utils/decorationType';
 import { getConfig } from './utils/getConfig';
 import { getSelectedText } from './utils/getSelectedText';
+import { tryJsonParse } from './utils/tryJsonParse';
 
 export interface QPItemDefault extends vscode.QuickPickItem {
   _type: 'QuickPickItemDefault'
@@ -33,6 +34,16 @@ type DisposablesMap = {
   general: vscode.Disposable[]
   rgMenuActions: vscode.Disposable[]
   query: vscode.Disposable[]
+};
+
+type RgLine = {
+  type: string
+  data: {
+    path: { text: string }
+    lines: { text: string }
+    line_number: number
+    absolute_offset: number
+  }
 };
 
 // Allow other commands to access the QuickPick
@@ -231,8 +242,9 @@ export const periscope = () => {
     spawnProcess.stdout.on('data', (data: Buffer) => {
       const lines = data.toString().split('\n').filter(Boolean);
       for (const line of lines) {
-          const parsedLine = JSON.parse(line);
-          if (parsedLine.type === 'match') {
+          const parsedLine = tryJsonParse<RgLine>(line);
+
+          if (parsedLine?.type === 'match') {
               const { path, lines, line_number, absolute_offset } = parsedLine.data;
               const filePath = path.text;
               const linePos = line_number;
