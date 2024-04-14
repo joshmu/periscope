@@ -243,7 +243,6 @@ export const periscope = () => {
     
     spawnProcess.stdout.on('data', (data: Buffer) => {
       const lines = data.toString().split('\n').filter(Boolean);
-      console.log("spawnProcess.stdout.on > lines:", lines);
 
       for (const line of lines) {
           const parsedLine = tryJsonParse<RgLine>(line);
@@ -261,7 +260,6 @@ export const periscope = () => {
                   colPos,
                   textResult
               };
-              console.log(`spawnProcess.stdout.on`, Math.random());
               searchResults.push(resultItem);
           }
       }
