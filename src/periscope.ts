@@ -55,7 +55,7 @@ export const periscope = () => {
   let workspaceFolders = vscode.workspace.workspaceFolders;
   let query = '';
   let highlightDecoration = highlightDecorationType();
-  let spawnProcess: ChildProcessWithoutNullStreams | undefined;
+  let spawnRegistry: ChildProcessWithoutNullStreams[] = [];
   let config = getConfig();
   let rgMenuActionsSelected: string[] = [];
   let disposables: DisposablesMap = {
@@ -237,10 +237,14 @@ export const periscope = () => {
     console.log('PERISCOPE: rgCmd:', rgCmd);
     checkKillProcess();
     let searchResults: any[] = [];
-    spawnProcess = spawn(rgCmd, [], { shell: true });
+
+    const spawnProcess = spawn(rgCmd, [], { shell: true });
+    spawnRegistry.push(spawnProcess);
     
     spawnProcess.stdout.on('data', (data: Buffer) => {
       const lines = data.toString().split('\n').filter(Boolean);
+      console.log("spawnProcess.stdout.on > lines:", lines);
+
       for (const line of lines) {
           const parsedLine = tryJsonParse<RgLine>(line);
 
@@ -257,6 +261,7 @@ export const periscope = () => {
                   colPos,
                   textResult
               };
+              console.log(`spawnProcess.stdout.on`, Math.random());
               searchResults.push(resultItem);
           }
       }
@@ -309,10 +314,16 @@ export const periscope = () => {
   }
 
   function checkKillProcess() {
-    if (spawnProcess) {
-      // Kill the previous spawn process if it exists
+    spawnRegistry.forEach(spawnProcess => {
+      spawnProcess.stdout.destroy();
+      spawnProcess.stderr.destroy();
       spawnProcess.kill();
-    }
+    });
+
+    // check if spawn process is no longer running and if so remove from registry
+    spawnRegistry = spawnRegistry.filter(spawnProcess => {
+      return !spawnProcess.killed;
+    });
   }
 
   function rgCommand(value: string, extraFlags?: string[]) {
@@ -399,6 +410,8 @@ export const periscope = () => {
   }
 
   function accept(item?: QPItemQuery) {
+    checkKillProcess();
+
     const currentItem = item ? item : qp.selectedItems[0] as QPItemQuery;
     if (!currentItem?.data) {
       return;
@@ -573,7 +586,7 @@ function closePreviewEditor() {
   }
 }
 
-// grap the bundled ripgrep binary from vscode
+// grab the bundled ripgrep binary from vscode
 function ripgrepPath(optionsPath?: string) {
   if(optionsPath?.trim()) {
     return optionsPath.trim();
