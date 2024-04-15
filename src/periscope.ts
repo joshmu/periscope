@@ -269,9 +269,6 @@ export const periscope = () => {
       console.error('PERISCOPE:', data.toString());
     });
     spawnProcess.on('exit', (code: number) => {
-      if (code === null) {
-        return;
-      }
       if (code === 0 && searchResults.length) {
         qp.items = searchResults
           .map(searchResult => {
@@ -292,20 +289,26 @@ export const periscope = () => {
             );
           })
           .filter(Boolean) as QPItemQuery[];
+      } else if (code === null || code === 0) {
+        // do nothing if no code provided or process is success but nothing needs to be done
+        const msg = `PERISCOPE: Nothing to do...`;
+        console.log(msg);
+        return;
       } else if (code === 127) {
-        vscode.window.showErrorMessage(
-          `Periscope: Exited with code ${code}, ripgrep not found.`
-        );
+        const msg = `PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`;
+        vscode.window.showErrorMessage(msg        );
       } else if (code === 1) {
-        console.log(`PERISCOPE: rg exited with code ${code}`);
+        console.log(`PERISCOPE: Ripgrep exited with code ${code} (no results found)`);
         if(!config.showPreviousResultsWhenNoMatches) {
           // hide the previous results if no results found
           qp.items = [];
         }
       } else if (code === 2) {
-        console.error('PERISCOPE: No matches found');
+        console.error(`PERISCOPE: Ripgrep exited with code ${code} (error during search operation)`);
       } else {
-        vscode.window.showErrorMessage(`Ripgrep exited with code ${code}`);
+        const msg = `PERISCOPE: Ripgrep exited with code ${code}`;
+        console.error(msg);
+        vscode.window.showErrorMessage(msg);
       }
       qp.busy = false;
     });
@@ -436,8 +439,8 @@ export const periscope = () => {
     const selection = new vscode.Selection(0, 0, 0, 0);
     editor.selection = selection;
 
-    const lineNumber = linePos ? linePos - 1 : 0;
-    const charNumber = colPos ? colPos - 1 : 0;
+    const lineNumber = Math.max(linePos ? linePos - 1 : 0, 0);
+    const charNumber = Math.max(colPos ? colPos - 1 : 0, 0);
 
     editor
       .edit(editBuilder => {
