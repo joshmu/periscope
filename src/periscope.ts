@@ -296,13 +296,10 @@ export const periscope = () => {
         return;
       } else if (code === 127) {
         const msg = `PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`;
-        vscode.window.showErrorMessage(msg        );
+        vscode.window.showErrorMessage(msg);
       } else if (code === 1) {
         console.log(`PERISCOPE: Ripgrep exited with code ${code} (no results found)`);
-        if(!config.showPreviousResultsWhenNoMatches) {
-          // hide the previous results if no results found
-          qp.items = [];
-        }
+        handleNoResultsFound();
       } else if (code === 2) {
         console.error(`PERISCOPE: Ripgrep exited with code ${code} (error during search operation)`);
       } else {
@@ -311,6 +308,25 @@ export const periscope = () => {
         vscode.window.showErrorMessage(msg);
       }
       qp.busy = false;
+    });
+  }
+
+  function handleNoResultsFound() {
+    if (config.showPreviousResultsWhenNoMatches) {
+      return;
+    }
+
+    // hide the previous results if no results found
+    qp.items = [];
+    // no peek preview available, show the origin document instead
+    showPreviewOfOriginDocument();
+  }
+
+  function showPreviewOfOriginDocument() {
+    if (!previousActiveEditor) {return;}
+    vscode.window.showTextDocument(previousActiveEditor.document, {
+      preserveFocus: true,
+      preview: true
     });
   }
 
