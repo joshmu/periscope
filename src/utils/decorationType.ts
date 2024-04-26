@@ -4,7 +4,7 @@ import { getConfig } from './getConfig';
 /**
  * Util to create a decoration type (for highlighting) for when 'peeking' at a file
  */
-export function highlightDecorationType() {
+export function highlightLineDecorationType() {
   const {
     peekBorderColor: borderColor,
     peekBorderWidth: borderWidth,

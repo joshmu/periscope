@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { openInHorizontalSplit, periscope } from './periscope';
+import { periscope } from './lib/periscope';
+import { openInHorizontalSplit } from './lib/editorActions';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('<<PERISCOPE>> is now active.');

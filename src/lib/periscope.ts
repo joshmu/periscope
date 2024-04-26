@@ -1,60 +1,21 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { rgPath } from '@vscode/ripgrep';
-import { highlightDecorationType } from './utils/decorationType';
-import { getConfig } from './utils/getConfig';
-import { getSelectedText } from './utils/getSelectedText';
-import { tryJsonParse } from './utils/tryJsonParse';
-
-export interface QPItemDefault extends vscode.QuickPickItem {
-  _type: 'QuickPickItemDefault'
-}
-export interface QPItemQuery extends vscode.QuickPickItem {
-  _type: 'QuickPickItemQuery'
-  // custom payload
-  data: {
-    filePath: string
-    linePos: number
-    colPos: number
-    rawResult: string
-  }
-}
-export interface QPItemRgMenuAction extends vscode.QuickPickItem {
-  _type: 'QuickPickItemRgMenuAction'
-  // custom payload
-  data: {
-    rgOption: string
-  }
-}
-
-type AllQPItemVariants = QPItemDefault | QPItemQuery | QPItemRgMenuAction;
-
-type DisposablesMap = {
-  general: vscode.Disposable[]
-  rgMenuActions: vscode.Disposable[]
-  query: vscode.Disposable[]
-};
-
-type RgLine = {
-  type: string
-  data: {
-    path: { text: string }
-    lines: { text: string }
-    line_number: number
-    absolute_offset: number
-  }
-};
-
-// Allow other commands to access the QuickPick
-let activeQP : vscode.QuickPick<AllQPItemVariants> | undefined;
-let previousActiveEditor: vscode.TextEditor | undefined;
+import { highlightLineDecorationType } from '../utils/decorationType';
+import { getConfig } from '../utils/getConfig';
+import { getSelectedText } from '../utils/getSelectedText';
+import { tryJsonParse } from '../utils/jsonUtils';
+import { AllQPItemVariants, DisposablesMap, QPItemQuery, QPItemRgMenuAction, RgLine } from '../types';
+import { ripgrepPath } from '../utils/ripgrep';
+import { previousActiveEditor,  updatePreviousActiveEditor } from './editorContext';
+import { updateActiveQP } from './quickpickContext';
+import { closePreviewEditor, openNativeVscodeSearch, setCursorPosition } from './editorActions';
+import { log, notifyError } from '../utils/log';
 
 export const periscope = () => {
   let qp: vscode.QuickPick<AllQPItemVariants>;
   let workspaceFolders = vscode.workspace.workspaceFolders;
   let query = '';
-  let highlightDecoration = highlightDecorationType();
   let spawnRegistry: ChildProcessWithoutNullStreams[] = [];
   let config = getConfig();
   let rgMenuActionsSelected: string[] = [];
@@ -66,13 +27,13 @@ export const periscope = () => {
 
   function register() {
     setActiveContext(true);
-    console.log('PERISCOPE: start');
+    log('start');
     config = getConfig();
     workspaceFolders = vscode.workspace.workspaceFolders;
-    previousActiveEditor = vscode.window.activeTextEditor;
+    updatePreviousActiveEditor(vscode.window.activeTextEditor);
     // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
     qp = vscode.window.createQuickPick();
-    activeQP = qp;
+    updateActiveQP(qp);
 
     // if ripgrep actions are available then open preliminary quickpick
     const openRgMenuActions = config.alwaysShowRgMenuActions && config.rgMenuActions.length > 0;
@@ -110,7 +71,7 @@ export const periscope = () => {
     // add items from the config
     qp.items = config.rgMenuActions.map(({value, label}) => ({ 
       _type: 'QuickPickItemRgMenuAction',
-      label: label || value,
+      label: label ?? value,
       description: label ? value : undefined,
       data: {
         rgOption: value,
@@ -152,7 +113,7 @@ export const periscope = () => {
 
   // create vscode context for the extension for targeted keybindings
   function setActiveContext(flag: boolean) {
-    console.log(`PERISCOPE: setContext ${flag}`);
+    log(`setContext ${flag}`);
     vscode.commands.executeCommand('setContext', 'periscopeActive', flag);
   }
 
@@ -178,7 +139,7 @@ export const periscope = () => {
         config.gotoNativeSearchSuffix &&
         value.endsWith(config.gotoNativeSearchSuffix)
       ) {
-        openNativeVscodeSearch();
+        openNativeVscodeSearch(query, qp);
         return;
       }
 
@@ -211,9 +172,9 @@ export const periscope = () => {
 
   // when item button is 'TRIGGERED'
   function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<AllQPItemVariants>) {
-    console.log('PERISCOPE: item button triggered');
+    log('item button triggered');
     if (e.item._type === 'QuickPickItemQuery') {
-      accept(e.item as QPItemQuery);
+      accept(e.item);
     }
   }
 
@@ -234,7 +195,7 @@ export const periscope = () => {
   function search(value: string, rgExtraFlags?: string[]) {
     qp.busy = true;
     const rgCmd = rgCommand(value, rgExtraFlags);
-    console.log('PERISCOPE: rgCmd:', rgCmd);
+    log('rgCmd:', rgCmd);
     checkKillProcess();
     let searchResults: any[] = [];
 
@@ -248,6 +209,7 @@ export const periscope = () => {
           const parsedLine = tryJsonParse<RgLine>(line);
 
           if (parsedLine?.type === 'match') {
+              // eslint-disable-next-line @typescript-eslint/naming-convention
               const { path, lines, line_number, absolute_offset } = parsedLine.data;
               const filePath = path.text;
               const linePos = line_number;
@@ -266,7 +228,7 @@ export const periscope = () => {
     });
 
     spawnProcess.stderr.on('data', (data: Buffer) => {
-      console.error('PERISCOPE:', data.toString());
+      log.error(data.toString());
     });
     spawnProcess.on('exit', (code: number) => {
       if (code === 0 && searchResults.length) {
@@ -291,21 +253,20 @@ export const periscope = () => {
           .filter(Boolean) as QPItemQuery[];
       } else if (code === null || code === 0) {
         // do nothing if no code provided or process is success but nothing needs to be done
-        const msg = `PERISCOPE: Nothing to do...`;
-        console.log(msg);
+        log('Nothing to do...');
         return;
       } else if (code === 127) {
-        const msg = `PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`;
-        vscode.window.showErrorMessage(msg);
+        notifyError(`PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`);
       } else if (code === 1) {
-        console.log(`PERISCOPE: Ripgrep exited with code ${code} (no results found)`);
+        log(`Ripgrep exited with code ${code} (no results found)`);
+        notifyError(`Ripgrep exited with code ${code} (no results found)`);
         handleNoResultsFound();
       } else if (code === 2) {
-        console.error(`PERISCOPE: Ripgrep exited with code ${code} (error during search operation)`);
+        log.error(`Ripgrep exited with code ${code} (error during search operation)`);
       } else {
-        const msg = `PERISCOPE: Ripgrep exited with code ${code}`;
-        console.error(msg);
-        vscode.window.showErrorMessage(msg);
+        const msg = `Ripgrep exited with code ${code}`;
+        log.error(msg);
+        notifyError(`PERISCOPE: ${msg}`);
       }
       qp.busy = false;
     });
@@ -421,7 +382,7 @@ export const periscope = () => {
           preserveFocus: true,
         })
         .then(editor => {
-          setPos(editor, linePos, colPos);
+          setCursorPosition(editor, linePos, colPos);
         });
     });
   }
@@ -444,32 +405,12 @@ export const periscope = () => {
       }
 
       vscode.window.showTextDocument(document, options).then(editor => {
-        setPos(editor, linePos, colPos);
+        setCursorPosition(editor, linePos, colPos);
         qp.dispose();
       });
     });
   }
 
-  // set cursor & view position
-  function setPos(editor: vscode.TextEditor, linePos: number, colPos: number) {
-    const selection = new vscode.Selection(0, 0, 0, 0);
-    editor.selection = selection;
-
-    const lineNumber = Math.max(linePos ? linePos - 1 : 0, 0);
-    const charNumber = Math.max(colPos ? colPos - 1 : 0, 0);
-
-    editor
-      .edit(editBuilder => {
-        editBuilder.insert(selection.active, '');
-      })
-      .then(() => {
-        const newPosition = new vscode.Position(lineNumber, charNumber);
-        const range = editor.document.lineAt(newPosition).range;
-        editor.selection = new vscode.Selection(newPosition, newPosition);
-        editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
-        highlightDecoration.set(editor);
-      });
-  }
 
   // required to update the quick pick item with result information
   function createResultItem(
@@ -531,34 +472,14 @@ export const periscope = () => {
     return folders.join(path.sep);
   }
 
-  // Open the native VSCode search with the provided query and enable regex
-  function openNativeVscodeSearch() {
-    // remove the config suffix from the query
-    const trimmedQuery = query.slice(
-      0,
-      query.indexOf(config.gotoNativeSearchSuffix)
-    );
-
-    vscode.commands.executeCommand('workbench.action.findInFiles', {
-      query: trimmedQuery,
-      isRegex: true,
-      isCaseSensitive: false,
-      matchWholeWord: false,
-      triggerSearch: true,
-    });
-
-    // close extension down
-    qp.hide();
-  }
-
   function finished() {
     checkKillProcess();
-    highlightDecoration.remove();
+    highlightLineDecorationType().remove();
     setActiveContext(false);
     disposeAll();
-    activeQP = undefined;
-    previousActiveEditor = undefined;
-    console.log('PERISCOPE: finished');
+    updateActiveQP(undefined);
+    updatePreviousActiveEditor(undefined);
+    log('finished');
   }
 
   return {
@@ -566,48 +487,3 @@ export const periscope = () => {
   };
 };
 
-// Open the current qp selected item in a horizontal split
-export const openInHorizontalSplit = () => {
-  if(!activeQP) {
-    return;
-  }
-
-  // grab the current selected item
-  const currentItem = activeQP.activeItems[0] as QPItemQuery;
-
-  if (!currentItem?.data) {
-    return;
-  }
-
-  const options: vscode.TextDocumentShowOptions = {
-    viewColumn: vscode.ViewColumn.Beside,
-  };
-
-  closePreviewEditor();
-
-  const { filePath, linePos, colPos } = currentItem.data;
-  vscode.workspace.openTextDocument(filePath).then((document) => {
-    vscode.window.showTextDocument(document, options).then((editor) => {
-      // set cursor & view position
-      const position = new vscode.Position(linePos, colPos);
-      editor.revealRange(new vscode.Range(position, position));
-      activeQP?.dispose();
-    });
-  });
-};
-
-function closePreviewEditor() {
-  if(previousActiveEditor) {
-    vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-    previousActiveEditor = undefined; // prevent focus onDidHide
-  }
-}
-
-// grab the bundled ripgrep binary from vscode
-function ripgrepPath(optionsPath?: string) {
-  if(optionsPath?.trim()) {
-    return optionsPath.trim();
-  }
-
-  return rgPath;
-}
