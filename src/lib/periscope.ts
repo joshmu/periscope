@@ -1,75 +1,65 @@
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { spawn } from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { highlightLineDecorationType } from '../utils/decorationType';
-import { getConfig } from '../utils/getConfig';
 import { getSelectedText } from '../utils/getSelectedText';
 import { tryJsonParse } from '../utils/jsonUtils';
-import { AllQPItemVariants, DisposablesMap, QPItemQuery, QPItemRgMenuAction, RgLine } from '../types';
-import { ripgrepPath } from '../utils/ripgrep';
+import { AllQPItemVariants, QPItemQuery, QPItemRgMenuAction, RgLine } from '../types';
 import { previousActiveEditor,  updatePreviousActiveEditor } from './editorContext';
 import { updateActiveQP } from './quickpickContext';
 import { closePreviewEditor, openNativeVscodeSearch, setCursorPosition } from './editorActions';
 import { log, notifyError } from '../utils/log';
+import { formatPathLabel } from '../utils/formatPathLabel';
+import { context as cx } from './context';
+import { rgCommand } from './ripgrep';
 
 export const periscope = () => {
-  let qp: vscode.QuickPick<AllQPItemVariants>;
-  let workspaceFolders = vscode.workspace.workspaceFolders;
-  let query = '';
-  let spawnRegistry: ChildProcessWithoutNullStreams[] = [];
-  let config = getConfig();
-  let rgMenuActionsSelected: string[] = [];
-  let disposables: DisposablesMap = {
-    general: [],
-    rgMenuActions: [],
-    query: [],
-  };
+  // fresh context
+  cx.resetContext();
 
   function register() {
-    setActiveContext(true);
+    // fresh context
+    cx.resetContext();
     log('start');
-    config = getConfig();
-    workspaceFolders = vscode.workspace.workspaceFolders;
+
+    setActiveContext(true);
     updatePreviousActiveEditor(vscode.window.activeTextEditor);
-    // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
-    qp = vscode.window.createQuickPick();
-    updateActiveQP(qp);
+    // todo: check whether we actually need activeQP?
+    updateActiveQP(cx.qp);
 
     // if ripgrep actions are available then open preliminary quickpick
-    const openRgMenuActions = config.alwaysShowRgMenuActions && config.rgMenuActions.length > 0;
+    const openRgMenuActions = cx.config.alwaysShowRgMenuActions && cx.config.rgMenuActions.length > 0;
     openRgMenuActions ? setupRgMenuActions() : setupQuickPickForQuery();
 
-    disposables.general.push(
-      qp.onDidHide(onDidHide)
+    cx.disposables.general.push(
+      cx.qp.onDidHide(onDidHide)
     );
-    qp.show();
+    cx.qp.show();
   }
 
   function disposeAll() {
-    disposables.general.forEach(d => d.dispose());
-    disposables.rgMenuActions.forEach(d => d.dispose());
-    disposables.query.forEach(d => d.dispose());
+    cx.disposables.general.forEach(d => d.dispose());
+    cx.disposables.rgMenuActions.forEach(d => d.dispose());
+    cx.disposables.query.forEach(d => d.dispose());
   }
 
   function reset() {
     checkKillProcess();
-    disposables.rgMenuActions.forEach(d => d.dispose());
-    disposables.query.forEach(d => d.dispose());
-    qp.busy = false;
-    qp.value = '';
-    query = '';
-    rgMenuActionsSelected = [];
+    cx.disposables.rgMenuActions.forEach(d => d.dispose());
+    cx.disposables.query.forEach(d => d.dispose());
+    cx.qp.busy = false;
+    cx.qp.value = '';
+    cx.query = '';
+    cx.rgMenuActionsSelected = [];
   }
 
   // when ripgrep actions are available show preliminary quickpick for those options to add to the query
   function setupRgMenuActions() {
     reset();
-
-    qp.placeholder = '🫧 Select actions or type custom rg options (Space key to check/uncheck)';
-    qp.canSelectMany = true;
+    cx.qp.placeholder = '🫧 Select actions or type custom rg options (Space key to check/uncheck)';
+    cx.qp.canSelectMany = true;
 
     // add items from the config
-    qp.items = config.rgMenuActions.map(({value, label}) => ({ 
+    cx.qp.items = cx.config.rgMenuActions.map(({value, label}) => ({ 
       _type: 'QuickPickItemRgMenuAction',
       label: label ?? value,
       description: label ? value : undefined,
@@ -80,34 +70,34 @@ export const periscope = () => {
     );
 
     function next() {
-      rgMenuActionsSelected = (qp.selectedItems as QPItemRgMenuAction[]).map(item => item.data.rgOption);
+      cx.rgMenuActionsSelected = (cx.qp.selectedItems as QPItemRgMenuAction[]).map(item => item.data.rgOption);
 
       // if no actions selected, then use the current query as a custom command to rg
-      if (!rgMenuActionsSelected.length && qp.value) {
-        rgMenuActionsSelected.push(qp.value);
-        qp.value = '';
+      if (!cx.rgMenuActionsSelected.length && cx.qp.value) {
+        cx.rgMenuActionsSelected.push(cx.qp.value);
+        cx.qp.value = '';
       }
 
       setupQuickPickForQuery();
     }
 
-    disposables.rgMenuActions.push(
-      qp.onDidTriggerButton(next),
-      qp.onDidAccept(next)
+    cx.disposables.rgMenuActions.push(
+      cx.qp.onDidTriggerButton(next),
+      cx.qp.onDidAccept(next)
     );
   }
 
   // update quickpick event listeners for the query
   function setupQuickPickForQuery() {
-    qp.placeholder = '🫧';
-    qp.items = [];
-    qp.canSelectMany = false;
-    qp.value = getSelectedText();
-    disposables.query.push(
-      qp.onDidChangeValue(onDidChangeValue),
-      qp.onDidChangeActive(onDidChangeActive),
-      qp.onDidAccept(onDidAccept),
-      qp.onDidTriggerItemButton(onDidTriggerItemButton)
+    cx.qp.placeholder = '🫧';
+    cx.qp.items = [];
+    cx.qp.canSelectMany = false;
+    cx.qp.value = getSelectedText();
+    cx.disposables.query.push(
+      cx.qp.onDidChangeValue(onDidChangeValue),
+      cx.qp.onDidChangeActive(onDidChangeActive),
+      cx.qp.onDidAccept(onDidAccept),
+      cx.qp.onDidTriggerItemButton(onDidTriggerItemButton)
     );
   }
 
@@ -122,12 +112,12 @@ export const periscope = () => {
     checkKillProcess();
 
     if (value) {
-      query = value;
+      cx.query = value;
 
       // Jump to rg menu actions
       if (
-        config.gotoRgMenuActionsPrefix &&
-        value.startsWith(config.gotoRgMenuActionsPrefix)
+        cx.config.gotoRgMenuActionsPrefix &&
+        value.startsWith(cx.config.gotoRgMenuActionsPrefix)
       ) {
         setupRgMenuActions();
         return;
@@ -135,20 +125,20 @@ export const periscope = () => {
 
       // Jump to native vscode search option
       if (
-        config.enableGotoNativeSearch &&
-        config.gotoNativeSearchSuffix &&
-        value.endsWith(config.gotoNativeSearchSuffix)
+        cx.config.enableGotoNativeSearch &&
+        cx.config.gotoNativeSearchSuffix &&
+        value.endsWith(cx.config.gotoNativeSearchSuffix)
       ) {
-        openNativeVscodeSearch(query, qp);
+        openNativeVscodeSearch(cx.query, cx.qp);
         return;
       }
 
-      if(config.rgQueryParams.length > 0) {
+      if(cx.config.rgQueryParams.length > 0) {
         const { newQuery, extraRgFlags } = extraRgFlagsFromQuery(value);
-        query = newQuery; // update query for later use
+        cx.query = newQuery; // update query for later use
 
-        if(config.rgQueryParamsShowTitle) { // update title with preview
-          qp.title = extraRgFlags.length > 0 ? `rg '${query}' ${extraRgFlags.join(' ')}` : undefined;
+        if(cx.config.rgQueryParamsShowTitle) { // update title with preview
+          cx.qp.title = extraRgFlags.length > 0 ? `rg '${cx.query}' ${extraRgFlags.join(' ')}` : undefined;
         }
 
         search(newQuery, extraRgFlags);
@@ -156,7 +146,7 @@ export const periscope = () => {
         search(value);
       }
     } else {
-      qp.items = [];
+      cx.qp.items = [];
     }
   }
 
@@ -180,7 +170,7 @@ export const periscope = () => {
 
   // when prompt is 'CANCELLED'
   function onDidHide() {
-    if (!qp.selectedItems[0]) {
+    if (!cx.qp.selectedItems[0]) {
       if (previousActiveEditor) {
         vscode.window.showTextDocument(
           previousActiveEditor.document,
@@ -193,14 +183,14 @@ export const periscope = () => {
   }
 
   function search(value: string, rgExtraFlags?: string[]) {
-    qp.busy = true;
+    cx.qp.busy = true;
     const rgCmd = rgCommand(value, rgExtraFlags);
     log('rgCmd:', rgCmd);
     checkKillProcess();
     let searchResults: any[] = [];
 
     const spawnProcess = spawn(rgCmd, [], { shell: true });
-    spawnRegistry.push(spawnProcess);
+    cx.spawnRegistry.push(spawnProcess);
     
     spawnProcess.stdout.on('data', (data: Buffer) => {
       const lines = data.toString().split('\n').filter(Boolean);
@@ -228,11 +218,19 @@ export const periscope = () => {
     });
 
     spawnProcess.stderr.on('data', (data: Buffer) => {
+      const errorMsg = data.toString();
+
+      // additional UI feedback for common errors
+      if (errorMsg.includes('unrecognized')) {
+        cx.qp.title = errorMsg;
+      }
+
       log.error(data.toString());
+      handleNoResultsFound();
     });
     spawnProcess.on('exit', (code: number) => {
       if (code === 0 && searchResults.length) {
-        qp.items = searchResults
+        cx.qp.items = searchResults
           .map(searchResult => {
             // break the filename via regext ':line:col:'
             const {filePath, linePos, colPos, textResult} = searchResult;
@@ -259,7 +257,6 @@ export const periscope = () => {
         notifyError(`PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`);
       } else if (code === 1) {
         log(`Ripgrep exited with code ${code} (no results found)`);
-        notifyError(`Ripgrep exited with code ${code} (no results found)`);
         handleNoResultsFound();
       } else if (code === 2) {
         log.error(`Ripgrep exited with code ${code} (error during search operation)`);
@@ -268,17 +265,17 @@ export const periscope = () => {
         log.error(msg);
         notifyError(`PERISCOPE: ${msg}`);
       }
-      qp.busy = false;
+      cx.qp.busy = false;
     });
   }
 
   function handleNoResultsFound() {
-    if (config.showPreviousResultsWhenNoMatches) {
+    if (cx.config.showPreviousResultsWhenNoMatches) {
       return;
     }
 
     // hide the previous results if no results found
-    qp.items = [];
+    cx.qp.items = [];
     // no peek preview available, show the origin document instead
     showPreviewOfOriginDocument();
   }
@@ -292,6 +289,7 @@ export const periscope = () => {
   }
 
   function checkKillProcess() {
+    const {spawnRegistry} = cx;
     spawnRegistry.forEach(spawnProcess => {
       spawnProcess.stdout.destroy();
       spawnProcess.stderr.destroy();
@@ -299,42 +297,9 @@ export const periscope = () => {
     });
 
     // check if spawn process is no longer running and if so remove from registry
-    spawnRegistry = spawnRegistry.filter(spawnProcess => {
+    cx.spawnRegistry = spawnRegistry.filter(spawnProcess => {
       return !spawnProcess.killed;
     });
-  }
-
-  function rgCommand(value: string, extraFlags?: string[]) {
-    const rgPath = ripgrepPath(config.rgPath);
-
-    const rgRequiredFlags = [
-      '--line-number',
-      '--column',
-      '--no-heading',
-      '--with-filename',
-      '--color=never',
-      '--json'
-    ];
-
-    const rootPaths = workspaceFolders
-      ? workspaceFolders.map(folder => folder.uri.fsPath)
-      : [];
-
-    const excludes = config.rgGlobExcludes.map(exclude => {
-      return `--glob "!${exclude}"`;
-    });
-
-    const rgFlags = [
-      ...rgRequiredFlags,
-      ...config.rgOptions,
-      ...rgMenuActionsSelected,
-      ...rootPaths,
-      ...config.addSrcPaths,
-      ...(extraFlags || []),
-      ...excludes,
-    ];
-
-    return `"${rgPath}" "${value}" ${rgFlags.join(' ')}`;
   }
 
   // extract rg flags from the query, can match multiple regex's
@@ -345,7 +310,7 @@ export const periscope = () => {
     const extraRgFlags: string[] = [];
     const queries = [query];
 
-    for (const { param, regex } of config.rgQueryParams) {
+    for (const { param, regex } of cx.config.rgQueryParams) {
       if (param && regex) {
         const match = query.match(regex);
         if (match && match.length > 1) {
@@ -390,7 +355,7 @@ export const periscope = () => {
   function accept(item?: QPItemQuery) {
     checkKillProcess();
 
-    const currentItem = item ? item : qp.selectedItems[0] as QPItemQuery;
+    const currentItem = item ? item : cx.qp.selectedItems[0] as QPItemQuery;
     if (!currentItem?.data) {
       return;
     }
@@ -406,11 +371,10 @@ export const periscope = () => {
 
       vscode.window.showTextDocument(document, options).then(editor => {
         setCursorPosition(editor, linePos, colPos);
-        qp.dispose();
+        cx.qp.dispose();
       });
     });
   }
-
 
   // required to update the quick pick item with result information
   function createResultItem(
@@ -442,39 +406,9 @@ export const periscope = () => {
     };
   }
 
-  function formatPathLabel(filePath: string) {
-    if (!workspaceFolders) {
-      return filePath;
-    }
-
-    // find correct workspace folder
-    let workspaceFolder = workspaceFolders[0];
-    for (const folder of workspaceFolders) {
-      if (filePath.startsWith(folder.uri.fsPath)) {
-        workspaceFolder = folder;
-        break;
-      }
-    }
-
-    const workspaceFolderName = workspaceFolder.name;
-    const relativeFilePath = path.relative(workspaceFolder.uri.fsPath, filePath);
-    const folders = [workspaceFolderName, ...relativeFilePath.split(path.sep)];
-
-    // abbreviate path if too long
-    if (
-      folders.length >
-      config.startFolderDisplayDepth + config.endFolderDisplayDepth
-    ) {
-      const initialFolders = folders.splice(config.startFolderDisplayIndex, config.startFolderDisplayDepth);
-      folders.splice(0, folders.length - config.endFolderDisplayDepth);
-      folders.unshift(...initialFolders, '...');
-    }
-    return folders.join(path.sep);
-  }
-
   function finished() {
     checkKillProcess();
-    highlightLineDecorationType().remove();
+    cx.highlightDecoration.remove();
     setActiveContext(false);
     disposeAll();
     updateActiveQP(undefined);

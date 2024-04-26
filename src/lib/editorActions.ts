@@ -2,8 +2,7 @@ import * as vscode from 'vscode';
 import { previousActiveEditor, updatePreviousActiveEditor } from './editorContext';
 import { activeQP } from './quickpickContext';
 import { AllQPItemVariants, QPItemQuery } from '../types';
-import { getConfig } from '../utils/getConfig';
-import { highlightLineDecorationType } from '../utils/decorationType';
+import {context as cx} from './context';
 
 export function closePreviewEditor() {
   if(previousActiveEditor) {
@@ -47,7 +46,7 @@ export function openNativeVscodeSearch(query: string, qp: vscode.QuickPick<AllQP
   // remove the config suffix from the query
   const trimmedQuery = query.slice(
     0,
-    query.indexOf(getConfig().gotoNativeSearchSuffix)
+    query.indexOf(cx.config.gotoNativeSearchSuffix)
   );
 
   vscode.commands.executeCommand('workbench.action.findInFiles', {
@@ -78,6 +77,6 @@ export function openNativeVscodeSearch(query: string, qp: vscode.QuickPick<AllQP
         const range = editor.document.lineAt(newPosition).range;
         editor.selection = new vscode.Selection(newPosition, newPosition);
         editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
-        highlightLineDecorationType().set(editor);
+        cx.highlightDecoration.set(editor);
       });
   }
