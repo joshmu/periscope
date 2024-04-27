@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { previousActiveEditor, updatePreviousActiveEditor } from './editorContext';
-import { activeQP } from './quickpickContext';
 import { AllQPItemVariants, QPItemQuery } from '../types';
-import {context as cx} from './context';
+import { context as cx } from './context';
 
 export function closePreviewEditor() {
   if(previousActiveEditor) {
@@ -13,12 +13,12 @@ export function closePreviewEditor() {
 
 // Open the current qp selected item in a horizontal split
 export const openInHorizontalSplit = () => {
-  if(!activeQP) {
+  if(!cx.qp) {
     return;
   }
 
   // grab the current selected item
-  const currentItem = activeQP.activeItems[0] as QPItemQuery;
+  const currentItem = cx.qp.activeItems[0] as QPItemQuery;
 
   if (!currentItem?.data) {
     return;
@@ -32,11 +32,9 @@ export const openInHorizontalSplit = () => {
 
   const { filePath, linePos, colPos } = currentItem.data;
   vscode.workspace.openTextDocument(filePath).then((document) => {
-    vscode.window.showTextDocument(document, options).then((editor) => {
-      // set cursor & view position
-      const position = new vscode.Position(linePos, colPos);
-      editor.revealRange(new vscode.Range(position, position));
-      activeQP?.dispose();
+    vscode.window.showTextDocument(document, options).then(editor => {
+      setCursorPosition(editor, linePos, colPos);
+      cx.qp?.dispose();
     });
   });
 };
@@ -80,3 +78,46 @@ export function openNativeVscodeSearch(query: string, qp: vscode.QuickPick<AllQP
         cx.highlightDecoration.set(editor);
       });
   }
+
+
+export function handleNoResultsFound() {
+  if (cx.config.showPreviousResultsWhenNoMatches) {
+    return;
+  }
+
+  // hide the previous results if no results found
+  cx.qp.items = [];
+  // no peek preview available, show the origin document instead
+  showPreviewOfOriginDocument();
+}
+
+export function showPreviewOfOriginDocument() {
+  if (!previousActiveEditor) {return;}
+  vscode.window.showTextDocument(previousActiveEditor.document, {
+    preserveFocus: true,
+    preview: true
+  });
+}
+
+export function peekItem(items: readonly QPItemQuery[]) {
+  if (items.length === 0) {
+    return;
+  }
+
+  const currentItem = items[0];
+  if (!currentItem.data) {
+    return;
+  }
+
+  const { filePath, linePos, colPos } = currentItem.data;
+  vscode.workspace.openTextDocument(path.resolve(filePath)).then(document => {
+    vscode.window
+      .showTextDocument(document, {
+        preview: true,
+        preserveFocus: true,
+      })
+      .then(editor => {
+        setCursorPosition(editor, linePos, colPos);
+      });
+  });
+}
