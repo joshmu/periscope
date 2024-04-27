@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import { getConfig } from './getConfig';
 
 /**
- * Util to create a decoration type (for highlighting) for when 'peeking' at a file
+ * Util to create a highlight decoration on matches when 'peeking' at a file
  */
-export function highlightLineDecorationType() {
+export function initHighlightLineInstance() {
   const {
     peekBorderColor: borderColor,
     peekBorderWidth: borderWidth,

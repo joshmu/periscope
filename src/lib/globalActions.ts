@@ -7,10 +7,23 @@ import { context as cx } from './context';
 import { QPItemQuery } from '../types';
 import { closePreviewEditor, setCursorPosition } from './editorActions';
 
-export function accept(item?: QPItemQuery) {
+type ConfirmPayload = ConfirmPayloadDefault | ConfirmHorizontalSplitPayload;
+
+type ConfirmPayloadDefault = { context: 'unknown' };
+
+type ConfirmHorizontalSplitPayload = {
+  item: QPItemQuery
+  context: 'openInHorizontalSplit'
+};
+
+export function confirm(payload: ConfirmPayload = {context: 'unknown'}) {
   checkKillProcess();
 
-  const currentItem = item ? item : cx.qp.selectedItems[0] as QPItemQuery;
+  let currentItem = cx.qp.selectedItems[0] as QPItemQuery;
+  if (payload.context === 'openInHorizontalSplit') {
+    currentItem = payload.item;
+  }
+
   if (!currentItem?.data) {
     return;
   }
@@ -19,7 +32,7 @@ export function accept(item?: QPItemQuery) {
   vscode.workspace.openTextDocument(path.resolve(filePath)).then(document => {
     const options: vscode.TextDocumentShowOptions = {};
 
-    if(item) { // horizontal split
+    if(payload.context === 'openInHorizontalSplit') {
       options.viewColumn = vscode.ViewColumn.Beside;
       closePreviewEditor();
     }

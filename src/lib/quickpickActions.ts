@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { AllQPItemVariants, QPItemQuery, QPItemRgMenuAction } from "../types";
 import { openNativeVscodeSearch, peekItem } from "./editorActions";
-import { checkKillProcess, extraRgFlagsFromQuery, search } from "./ripgrep";
+import { checkKillProcess, checkAndExtractRgFlagsFromQuery, rgSearch } from "./ripgrep";
 import { context as cx } from './context';
 import { getSelectedText } from "../utils/getSelectedText";
 import { log } from '../utils/log';
 import { previousActiveEditor } from './editorContext';
-import { accept, finished } from './globalActions';
+import { confirm, finished } from './globalActions';
 
 // update quickpick event listeners for the query
 export function setupQuickPickForQuery() {
@@ -36,43 +36,41 @@ export function reset() {
 function onDidChangeValue(value: string) {
   checkKillProcess();
 
-  if (value) {
-    cx.query = value;
-
-    // Jump to rg menu actions
-    if (
-      cx.config.gotoRgMenuActionsPrefix &&
-      value.startsWith(cx.config.gotoRgMenuActionsPrefix)
-    ) {
-      setupRgMenuActions();
-      return;
-    }
-
-    // Jump to native vscode search option
-    if (
-      cx.config.enableGotoNativeSearch &&
-      cx.config.gotoNativeSearchSuffix &&
-      value.endsWith(cx.config.gotoNativeSearchSuffix)
-    ) {
-      openNativeVscodeSearch(cx.query, cx.qp);
-      return;
-    }
-
-    if(cx.config.rgQueryParams.length > 0) {
-      const { newQuery, extraRgFlags } = extraRgFlagsFromQuery(value);
-      cx.query = newQuery; // update query for later use
-
-      if(cx.config.rgQueryParamsShowTitle) { // update title with preview
-        cx.qp.title = extraRgFlags.length > 0 ? `rg '${cx.query}' ${extraRgFlags.join(' ')}` : undefined;
-      }
-
-      search(newQuery, extraRgFlags);
-    } else {
-      search(value);
-    }
-  } else {
+  if (!value) {
     cx.qp.items = [];
+    return;
   }
+
+  cx.query = value;
+
+  // jump to rg custom menu if the prefix is found in the query
+  if (
+    cx.config.gotoRgMenuActionsPrefix &&
+    value.startsWith(cx.config.gotoRgMenuActionsPrefix)
+  ) {
+    setupRgMenuActions();
+    return;
+  }
+
+  // jump to native vscode search if the suffix is found in the query
+  if (
+    cx.config.enableGotoNativeSearch &&
+    cx.config.gotoNativeSearchSuffix &&
+    value.endsWith(cx.config.gotoNativeSearchSuffix)
+  ) {
+    openNativeVscodeSearch(cx.query, cx.qp);
+    return;
+  }
+
+  // update the query if rgQueryParams are available and found
+  const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(value);
+  
+  // update the quickpick title with a preview of the rgQueryParam command if utilised
+  if(cx.config.rgQueryParamsShowTitle) {
+    cx.qp.title = extraRgFlags.length > 0 ? `rg '${cx.query}' ${extraRgFlags.join(' ')}` : undefined;
+  }
+
+  rgSearch(updatedQuery, extraRgFlags);
 }
 
 // when item is 'FOCUSSED'
@@ -82,14 +80,19 @@ function onDidChangeActive(items: readonly AllQPItemVariants[]) {
 
 // when item is 'SELECTED'
 function onDidAccept() {
-  accept();
+  confirm();
 }
 
 // when item button is 'TRIGGERED'
+// this is the rightmost button on the quickpick item
 function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<AllQPItemVariants>) {
   log('item button triggered');
   if (e.item._type === 'QuickPickItemQuery') {
-    accept(e.item);
+    // as there is only horizontal split as an option we can assume this
+    confirm({
+      context: 'openInHorizontalSplit',
+      item: e.item
+    });
   }
 }
 

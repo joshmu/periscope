@@ -1,16 +1,24 @@
+import { rgPath } from '@vscode/ripgrep';
 import { spawn } from 'child_process';
 import * as vscode from 'vscode';
 import { getConfig } from "../utils/getConfig";
-import { ripgrepPath } from "../utils/ripgrep";
 import { context as cx } from './context';
 import { tryJsonParse } from '../utils/jsonUtils';
 import { QPItemQuery, RgLine } from '../types';
 import { log, notifyError } from '../utils/log';
 import { createResultItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
-import { parse } from 'path';
 
-export function rgCommand(value: string, extraFlags?: string[]) {
+// grab the bundled ripgrep binary from vscode
+function ripgrepPath(optionsPath?: string) {
+  if(optionsPath?.trim()) {
+    return optionsPath.trim();
+  }
+
+  return rgPath;
+}
+
+function getRgCommand(value: string, extraFlags?: string[]) {
   let config = getConfig();
   let workspaceFolders = vscode.workspace.workspaceFolders;
 
@@ -46,9 +54,9 @@ export function rgCommand(value: string, extraFlags?: string[]) {
   return `"${rgPath}" "${value}" ${rgFlags.join(' ')}`;
 }
 
-export function search(value: string, rgExtraFlags?: string[]) {
+export function rgSearch(value: string, rgExtraFlags?: string[]) {
   cx.qp.busy = true;
-  const rgCmd = rgCommand(value, rgExtraFlags);
+  const rgCmd = getRgCommand(value, rgExtraFlags);
   log('rgCmd:', rgCmd);
   checkKillProcess();
   let searchResults: any[] = [];
@@ -63,20 +71,7 @@ export function search(value: string, rgExtraFlags?: string[]) {
         const parsedLine = tryJsonParse<RgLine>(line);
 
         if (parsedLine?.type === 'match') {
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            const { path, lines, line_number } = parsedLine.data;
-            const filePath = path.text;
-            const linePos = line_number;
-            const colPos = parsedLine.data.submatches[0].start + 1;
-            const textResult = lines.text.trim();
-
-            const resultItem = {
-                filePath,
-                linePos,
-                colPos,
-                textResult
-            };
-            searchResults.push(resultItem);
+          searchResults.push(normaliseRgResult(parsedLine));
         }
     }
   });
@@ -134,6 +129,22 @@ export function search(value: string, rgExtraFlags?: string[]) {
   });
 }
 
+function normaliseRgResult(parsedLine: RgLine) {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const { path, lines, line_number } = parsedLine.data;
+  const filePath = path.text;
+  const linePos = line_number;
+  const colPos = parsedLine.data.submatches[0].start + 1;
+  const textResult = lines.text.trim();
+
+  return {
+    filePath,
+    linePos,
+    colPos,
+    textResult
+  };
+}
+
 export function checkKillProcess() {
   const {spawnRegistry} = cx;
   spawnRegistry.forEach(spawnProcess => {
@@ -149,10 +160,7 @@ export function checkKillProcess() {
 }
 
 // extract rg flags from the query, can match multiple regex's
-export function extraRgFlagsFromQuery(query: string): {
-  newQuery: string;
-  extraRgFlags: string[];
-} {
+export function checkAndExtractRgFlagsFromQuery(query: string): { updatedQuery: string,  extraRgFlags: string[]} {
   const extraRgFlags: string[] = [];
   const queries = [query];
 
@@ -171,6 +179,6 @@ export function extraRgFlagsFromQuery(query: string): {
   }
 
   // prefer the first query match or the original one
-  const newQuery = queries.length > 1 ? queries[1] : queries[0];
-  return { newQuery, extraRgFlags };
+  const updatedQuery = queries.length > 1 ? queries[1] : queries[0];
+  return { updatedQuery, extraRgFlags };
 }
