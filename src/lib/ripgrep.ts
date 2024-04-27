@@ -2,7 +2,7 @@ import { rgPath } from '@vscode/ripgrep';
 import { spawn } from 'child_process';
 import * as vscode from 'vscode';
 import { getConfig } from "../utils/getConfig";
-import { context as cx } from './context';
+import { context as cx, updateAppState } from './context';
 import { tryJsonParse } from '../utils/jsonUtils';
 import { QPItemQuery, RgLine } from '../types';
 import { log, notifyError } from '../utils/log';
@@ -55,6 +55,7 @@ function getRgCommand(value: string, extraFlags?: string[]) {
 }
 
 export function rgSearch(value: string, rgExtraFlags?: string[]) {
+  updateAppState('SEARCHING');
   cx.qp.busy = true;
   const rgCmd = getRgCommand(value, rgExtraFlags);
   log('rgCmd:', rgCmd);
@@ -89,7 +90,8 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
   });
 
   spawnProcess.on('exit', (code: number) => {
-    if (code === 0 && searchResults.length) {
+    // we need to additionally check 'SEARCHING' state as the user might have cancelled the search but the process may still be running (eg: go back to the rg menu actions view)
+    if (code === 0 && searchResults.length && cx.appState === 'SEARCHING') {
       cx.qp.items = searchResults
         .map(searchResult => {
           // break the filename via regext ':line:col:'

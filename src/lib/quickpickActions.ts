@@ -2,10 +2,9 @@ import * as vscode from 'vscode';
 import { AllQPItemVariants, QPItemQuery, QPItemRgMenuAction } from "../types";
 import { openNativeVscodeSearch, peekItem } from "./editorActions";
 import { checkKillProcess, checkAndExtractRgFlagsFromQuery, rgSearch } from "./ripgrep";
-import { context as cx } from './context';
+import { context as cx, updateAppState } from './context';
 import { getSelectedText } from "../utils/getSelectedText";
 import { log } from '../utils/log';
-import { previousActiveEditor } from './editorContext';
 import { confirm, finished } from './globalActions';
 
 // update quickpick event listeners for the query
@@ -99,10 +98,10 @@ function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<AllQPItemVari
 // when prompt is 'CANCELLED'
 export function onDidHide() {
   if (!cx.qp.selectedItems[0]) {
-    if (previousActiveEditor) {
+    if (cx.previousActiveEditor) {
       vscode.window.showTextDocument(
-        previousActiveEditor.document,
-        previousActiveEditor.viewColumn
+        cx.previousActiveEditor.document,
+        cx.previousActiveEditor.viewColumn
       );
     }
   }
@@ -114,6 +113,7 @@ export function onDidHide() {
 // when ripgrep actions are available show preliminary quickpick for those options to add to the query
 export function setupRgMenuActions() {
   reset();
+  updateAppState('IDLE');
   cx.qp.placeholder = '🫧 Select actions or type custom rg options (Space key to check/uncheck)';
   cx.qp.canSelectMany = true;
 

@@ -1,13 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { previousActiveEditor, updatePreviousActiveEditor } from './editorContext';
 import { AllQPItemVariants, QPItemQuery } from '../types';
 import { context as cx } from './context';
 
 export function closePreviewEditor() {
-  if(previousActiveEditor) {
+  if(cx.previousActiveEditor) {
     vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-    updatePreviousActiveEditor(undefined); // prevent focus onDidHide
+    cx.previousActiveEditor = undefined; // prevent focus onDidHide
   }
 }
 
@@ -92,8 +91,8 @@ export function handleNoResultsFound() {
 }
 
 export function showPreviewOfOriginDocument() {
-  if (!previousActiveEditor) {return;}
-  vscode.window.showTextDocument(previousActiveEditor.document, {
+  if (!cx.previousActiveEditor) {return;}
+  vscode.window.showTextDocument(cx.previousActiveEditor.document, {
     preserveFocus: true,
     preview: true
   });

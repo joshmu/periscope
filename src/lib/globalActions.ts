@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { log } from "../utils/log";
-import { updatePreviousActiveEditor } from "./editorContext";
 import { checkKillProcess } from "./ripgrep";
-import { context as cx } from './context';
+import { context as cx, updateAppState } from './context';
 import { QPItemQuery } from '../types';
 import { closePreviewEditor, setCursorPosition } from './editorActions';
 
@@ -44,17 +43,34 @@ export function confirm(payload: ConfirmPayload = {context: 'unknown'}) {
   });
 }
 
+// start periscope extension/search
+export function start() {
+  log('start');
+  cx.resetContext();
+  setExtensionActiveContext(true);
+}
+
+// end periscope extension
 export function finished() {
+  setExtensionActiveContext(false);
+  updateAppState('FINISHED');
   checkKillProcess();
   cx.highlightDecoration.remove();
-  setActiveContext(false);
   disposeAll();
-  updatePreviousActiveEditor(undefined);
+  cx.previousActiveEditor = undefined;
   log('finished');
 }
 
 // create vscode context for the extension for targeted keybindings
-export function setActiveContext(flag: boolean) {
+/**
+ * eg:
+ * {
+    "key": "ctrl+\\",
+    "command": "periscope.openInHorizontalSplit",
+    "when": "periscopeActive"  <<< this is the context
+  }
+ */
+export function setExtensionActiveContext(flag: boolean) {
   log(`setContext ${flag}`);
   vscode.commands.executeCommand('setContext', 'periscopeActive', flag);
 }
