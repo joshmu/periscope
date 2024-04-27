@@ -38,5 +38,12 @@ export type RgLine = {
     line_number: number
     // eslint-disable-next-line @typescript-eslint/naming-convention
     absolute_offset: number
+    submatches: {
+      end: number
+      match: {
+        text: string
+      }
+      start: number
+    }[]
   }
 };

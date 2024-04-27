@@ -8,6 +8,7 @@ import { QPItemQuery, RgLine } from '../types';
 import { log, notifyError } from '../utils/log';
 import { createResultItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
+import { parse } from 'path';
 
 export function rgCommand(value: string, extraFlags?: string[]) {
   let config = getConfig();
@@ -63,10 +64,10 @@ export function search(value: string, rgExtraFlags?: string[]) {
 
         if (parsedLine?.type === 'match') {
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            const { path, lines, line_number, absolute_offset } = parsedLine.data;
+            const { path, lines, line_number } = parsedLine.data;
             const filePath = path.text;
             const linePos = line_number;
-            let colPos = absolute_offset === 0 ? 1 : absolute_offset + 1;
+            const colPos = parsedLine.data.submatches[0].start + 1;
             const textResult = lines.text.trim();
 
             const resultItem = {
