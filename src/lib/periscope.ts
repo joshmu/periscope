@@ -1,17 +1,10 @@
-import * as vscode from 'vscode';
-import { updatePreviousActiveEditor } from './editorContext';
-import { log } from '../utils/log';
 import { context as cx } from './context';
 import { onDidHide, setupQuickPickForQuery, setupRgMenuActions } from './quickpickActions';
-import { setActiveContext } from './globalActions';
+import { start } from './globalActions';
 import { openInHorizontalSplit } from './editorActions';
 
 function search() {
-  cx.resetContext();
-  log('start');
-
-  setActiveContext(true);
-  updatePreviousActiveEditor(vscode.window.activeTextEditor);
+  start();
 
   // if ripgrep actions are available then open preliminary quickpick
   const openRgMenuActions = cx.config.alwaysShowRgMenuActions && cx.config.rgMenuActions.length > 0;
@@ -20,6 +13,8 @@ function search() {
   cx.disposables.general.push(
     cx.qp.onDidHide(onDidHide)
   );
+
+  // search logic is triggered from the QuickPick event handlers...
   cx.qp.show();
 }
 
