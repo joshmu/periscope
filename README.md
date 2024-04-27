@@ -14,6 +14,10 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 2. Input your query and move through the suggested results, the editor will reflect the current highlighted suggested item.
 3. Hit enter to open the file or cancel to return to your original active editor
 
+## Requirements
+
+Vscode configuration _Editor: Enable Preview_ must be enabled.
+
 ## Extension Settings
 
 This extension contributes the following settings:
