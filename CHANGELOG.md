@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.6.4](https://github.com/joshmu/periscope/compare/v1.6.3...v1.6.4) (2024-04-28)
+
 ## [1.6.3](https://github.com/joshmu/periscope/compare/v1.6.2...v1.6.3) (2024-04-28)
 
 ### Bug Fixes
