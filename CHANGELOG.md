@@ -4,11 +4,7 @@ All notable changes to this project will be documented in this file. See [Conven
 
 ## [1.6.2](https://github.com/joshmu/periscope/compare/v1.6.1...v1.6.2) (2024-04-28)
 
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-#### 1.6.1 (2024-04-28)
+## 1.6.1 (2024-04-28)
 
 ##### New Features
 

@@ -1,5 +1,5 @@
 {
-  "include": ["src/**/*", "node_modules/@types/**/*.d.ts"],
+  "include": ["src/**/*"],
   "compilerOptions": {
     "module": "commonjs",
     "target": "ES2020",
