@@ -71,9 +71,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm_config_arch: ${{ matrix.npm_config_arch }}
+      - run: cat package.json | grep version
+      - run: echo "Packaging version = $RELEASE_VERSION"
       - shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
-      - run: npx vsce package --target ${{ env.target }} ${{ env.RELEASE_VERSION }}
+      - run: npx vsce package --target ${{ env.target }} $RELEASE_VERSION
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.target }}
