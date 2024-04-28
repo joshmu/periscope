@@ -7,12 +7,14 @@ function search() {
   start();
 
   // if ripgrep actions are available then open preliminary quickpick
-  const openRgMenuActions = cx.config.alwaysShowRgMenuActions && cx.config.rgMenuActions.length > 0;
-  openRgMenuActions ? setupRgMenuActions() : setupQuickPickForQuery();
+  const showRgMenuActions = cx.config.alwaysShowRgMenuActions && cx.config.rgMenuActions.length > 0;
+  if (showRgMenuActions) {
+    setupRgMenuActions();
+  } else {
+    setupQuickPickForQuery();
+  }
 
-  cx.disposables.general.push(
-    cx.qp.onDidHide(onDidHide)
-  );
+  cx.disposables.general.push(cx.qp.onDidHide(onDidHide));
 
   // search logic is triggered from the QuickPick event handlers...
   cx.qp.show();
@@ -20,5 +22,5 @@ function search() {
 
 export const PERISCOPE = {
   search,
-  openInHorizontalSplit
+  openInHorizontalSplit,
 };

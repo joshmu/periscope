@@ -1,24 +1,25 @@
 import * as vscode from 'vscode';
+import { ChildProcessWithoutNullStreams } from 'child_process';
 import { AllQPItemVariants, DisposablesMap } from '../types';
 import { getConfig } from '../utils/getConfig';
-import { ChildProcessWithoutNullStreams } from 'child_process';
 import { initHighlightLineInstance } from '../utils/highlightLineDecorationType';
 
 // simple context for each invoke of periscope search
-let qp = vscode.window.createQuickPick<AllQPItemVariants>(); // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
-let workspaceFolders = vscode.workspace.workspaceFolders;
-let previousActiveEditor = vscode.window.activeTextEditor;
-let query = '';
-let spawnRegistry: ChildProcessWithoutNullStreams[] = [];
-let config = getConfig();
-let rgMenuActionsSelected: string[] = [];
-let highlightDecoration = initHighlightLineInstance();
-let disposables: DisposablesMap = {
+// @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
+const qp = vscode.window.createQuickPick<AllQPItemVariants>();
+const { workspaceFolders } = vscode.workspace;
+const previousActiveEditor = vscode.window.activeTextEditor;
+const query = '';
+const spawnRegistry: ChildProcessWithoutNullStreams[] = [];
+const config = getConfig();
+const rgMenuActionsSelected: string[] = [];
+const highlightDecoration = initHighlightLineInstance();
+const disposables: DisposablesMap = {
   general: [],
   rgMenuActions: [],
   query: [],
 };
-let appState = updateAppState('IDLE');
+const appState = updateAppState('IDLE');
 
 export const context = {
   resetContext,
@@ -31,7 +32,7 @@ export const context = {
   rgMenuActionsSelected,
   highlightDecoration,
   disposables,
-  appState 
+  appState,
 };
 
 // reset the context
@@ -53,6 +54,8 @@ function resetContext() {
 
 type AppState = 'IDLE' | 'SEARCHING' | 'FINISHED';
 export function updateAppState(state: AppState) {
-  if (context?.appState) {context.appState = state;}
+  if (context?.appState) {
+    context.appState = state;
+  }
   return state;
 }

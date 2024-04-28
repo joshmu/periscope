@@ -1,49 +1,49 @@
 import * as vscode from 'vscode';
 
 export interface QPItemDefault extends vscode.QuickPickItem {
-  _type: 'QuickPickItemDefault'
+  _type: 'QuickPickItemDefault';
 }
 export interface QPItemQuery extends vscode.QuickPickItem {
-  _type: 'QuickPickItemQuery'
+  _type: 'QuickPickItemQuery';
   // custom payload
   data: {
-    filePath: string
-    linePos: number
-    colPos: number
-    rawResult: string
-  }
+    filePath: string;
+    linePos: number;
+    colPos: number;
+    rawResult: unknown;
+  };
 }
 export interface QPItemRgMenuAction extends vscode.QuickPickItem {
-  _type: 'QuickPickItemRgMenuAction'
+  _type: 'QuickPickItemRgMenuAction';
   // custom payload
   data: {
-    rgOption: string
-  }
+    rgOption: string;
+  };
 }
 
 export type AllQPItemVariants = QPItemDefault | QPItemQuery | QPItemRgMenuAction;
 
 export type DisposablesMap = {
-  general: vscode.Disposable[]
-  rgMenuActions: vscode.Disposable[]
-  query: vscode.Disposable[]
+  general: vscode.Disposable[];
+  rgMenuActions: vscode.Disposable[];
+  query: vscode.Disposable[];
 };
 
 export type RgLine = {
-  type: string
+  type: string;
   data: {
-    path: { text: string }
-    lines: { text: string }
+    path: { text: string };
+    lines: { text: string };
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    line_number: number
+    line_number: number;
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    absolute_offset: number
+    absolute_offset: number;
     submatches: {
-      end: number
+      end: number;
       match: {
-        text: string
-      }
-      start: number
-    }[]
-  }
+        text: string;
+      };
+      start: number;
+    }[];
+  };
 };

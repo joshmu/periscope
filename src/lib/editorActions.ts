@@ -4,7 +4,7 @@ import { AllQPItemVariants, QPItemQuery } from '../types';
 import { context as cx } from './context';
 
 export function closePreviewEditor() {
-  if(cx.previousActiveEditor) {
+  if (cx.previousActiveEditor) {
     vscode.commands.executeCommand('workbench.action.closeActiveEditor');
     cx.previousActiveEditor = undefined; // prevent focus onDidHide
   }
@@ -12,7 +12,7 @@ export function closePreviewEditor() {
 
 // Open the current qp selected item in a horizontal split
 export const openInHorizontalSplit = () => {
-  if(!cx.qp) {
+  if (!cx.qp) {
     return;
   }
 
@@ -31,7 +31,7 @@ export const openInHorizontalSplit = () => {
 
   const { filePath, linePos, colPos } = currentItem.data;
   vscode.workspace.openTextDocument(filePath).then((document) => {
-    vscode.window.showTextDocument(document, options).then(editor => {
+    vscode.window.showTextDocument(document, options).then((editor) => {
       setCursorPosition(editor, linePos, colPos);
       cx.qp?.dispose();
     });
@@ -41,10 +41,7 @@ export const openInHorizontalSplit = () => {
 // Open the native VSCode search with the provided query and enable regex
 export function openNativeVscodeSearch(query: string, qp: vscode.QuickPick<AllQPItemVariants>) {
   // remove the config suffix from the query
-  const trimmedQuery = query.slice(
-    0,
-    query.indexOf(cx.config.gotoNativeSearchSuffix)
-  );
+  const trimmedQuery = query.slice(0, query.indexOf(cx.config.gotoNativeSearchSuffix));
 
   vscode.commands.executeCommand('workbench.action.findInFiles', {
     query: trimmedQuery,
@@ -58,26 +55,25 @@ export function openNativeVscodeSearch(query: string, qp: vscode.QuickPick<AllQP
   qp.hide();
 }
 
- export function setCursorPosition(editor: vscode.TextEditor, linePos: number, colPos: number) {
-    const selection = new vscode.Selection(0, 0, 0, 0);
-    editor.selection = selection;
+export function setCursorPosition(editor: vscode.TextEditor, linePos: number, colPos: number) {
+  const selection = new vscode.Selection(0, 0, 0, 0);
+  editor.selection = selection;
 
-    const lineNumber = Math.max(linePos ? linePos - 1 : 0, 0);
-    const charNumber = Math.max(colPos ? colPos - 1 : 0, 0);
+  const lineNumber = Math.max(linePos ? linePos - 1 : 0, 0);
+  const charNumber = Math.max(colPos ? colPos - 1 : 0, 0);
 
-    editor
-      .edit(editBuilder => {
-        editBuilder.insert(selection.active, '');
-      })
-      .then(() => {
-        const newPosition = new vscode.Position(lineNumber, charNumber);
-        const range = editor.document.lineAt(newPosition).range;
-        editor.selection = new vscode.Selection(newPosition, newPosition);
-        editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
-        cx.highlightDecoration.set(editor);
-      });
-  }
-
+  editor
+    .edit((editBuilder) => {
+      editBuilder.insert(selection.active, '');
+    })
+    .then(() => {
+      const newPosition = new vscode.Position(lineNumber, charNumber);
+      const { range } = editor.document.lineAt(newPosition);
+      editor.selection = new vscode.Selection(newPosition, newPosition);
+      editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+      cx.highlightDecoration.set(editor);
+    });
+}
 
 export function handleNoResultsFound() {
   if (cx.config.showPreviousResultsWhenNoMatches) {
@@ -91,10 +87,12 @@ export function handleNoResultsFound() {
 }
 
 export function showPreviewOfOriginDocument() {
-  if (!cx.previousActiveEditor) {return;}
+  if (!cx.previousActiveEditor) {
+    return;
+  }
   vscode.window.showTextDocument(cx.previousActiveEditor.document, {
     preserveFocus: true,
-    preview: true
+    preview: true,
   });
 }
 
@@ -109,13 +107,13 @@ export function peekItem(items: readonly QPItemQuery[]) {
   }
 
   const { filePath, linePos, colPos } = currentItem.data;
-  vscode.workspace.openTextDocument(path.resolve(filePath)).then(document => {
+  vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
     vscode.window
       .showTextDocument(document, {
         preview: true,
         preserveFocus: true,
       })
-      .then(editor => {
+      .then((editor) => {
         setCursorPosition(editor, linePos, colPos);
       });
   });
