@@ -1,7 +1,7 @@
-import { rgPath } from '@vscode/ripgrep';
+import { rgPath as vscodeRgPath } from '@vscode/ripgrep';
 import { spawn } from 'child_process';
 import * as vscode from 'vscode';
-import { getConfig } from "../utils/getConfig";
+import { getConfig } from '../utils/getConfig';
 import { context as cx, updateAppState } from './context';
 import { tryJsonParse } from '../utils/jsonUtils';
 import { QPItemQuery, RgLine } from '../types';
@@ -11,35 +11,24 @@ import { handleNoResultsFound } from './editorActions';
 
 // grab the bundled ripgrep binary from vscode
 function ripgrepPath(optionsPath?: string) {
-  if(optionsPath?.trim()) {
+  if (optionsPath?.trim()) {
     return optionsPath.trim();
   }
 
-  return rgPath;
+  return vscodeRgPath;
 }
 
 function getRgCommand(value: string, extraFlags?: string[]) {
-  let config = getConfig();
-  let workspaceFolders = vscode.workspace.workspaceFolders;
+  const config = getConfig();
+  const { workspaceFolders } = vscode.workspace;
 
   const rgPath = ripgrepPath(config.rgPath);
 
-  const rgRequiredFlags = [
-    '--line-number',
-    '--column',
-    '--no-heading',
-    '--with-filename',
-    '--color=never',
-    '--json'
-  ];
+  const rgRequiredFlags = ['--line-number', '--column', '--no-heading', '--with-filename', '--color=never', '--json'];
 
-  const rootPaths = workspaceFolders
-    ? workspaceFolders.map(folder => folder.uri.fsPath)
-    : [];
+  const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
 
-  const excludes = config.rgGlobExcludes.map(exclude => {
-    return `--glob "!${exclude}"`;
-  });
+  const excludes = config.rgGlobExcludes.map((exclude) => `--glob "!${exclude}"`);
 
   const rgFlags = [
     ...rgRequiredFlags,
@@ -60,21 +49,21 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
   const rgCmd = getRgCommand(value, rgExtraFlags);
   log('rgCmd:', rgCmd);
   checkKillProcess();
-  let searchResults: any[] = [];
+  const searchResults: ReturnType<typeof normaliseRgResult>[] = [];
 
   const spawnProcess = spawn(rgCmd, [], { shell: true });
   cx.spawnRegistry.push(spawnProcess);
-  
+
   spawnProcess.stdout.on('data', (data: Buffer) => {
     const lines = data.toString().split('\n').filter(Boolean);
 
-    for (const line of lines) {
-        const parsedLine = tryJsonParse<RgLine>(line);
+    lines.forEach((line) => {
+      const parsedLine = tryJsonParse<RgLine>(line);
 
-        if (parsedLine?.type === 'match') {
-          searchResults.push(normaliseRgResult(parsedLine));
-        }
-    }
+      if (parsedLine?.type === 'match') {
+        searchResults.push(normaliseRgResult(parsedLine));
+      }
+    });
   });
 
   spawnProcess.stderr.on('data', (data: Buffer) => {
@@ -90,25 +79,22 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
   });
 
   spawnProcess.on('exit', (code: number) => {
-    // we need to additionally check 'SEARCHING' state as the user might have cancelled the search but the process may still be running (eg: go back to the rg menu actions view)
+    /**
+     * we need to additionally check 'SEARCHING' state as the user might have cancelled the search
+     * but the process may still be running (eg: go back to the rg menu actions view)
+     */
     if (code === 0 && searchResults.length && cx.appState === 'SEARCHING') {
       cx.qp.items = searchResults
-        .map(searchResult => {
+        .map((searchResult) => {
           // break the filename via regext ':line:col:'
-          const {filePath, linePos, colPos, textResult} = searchResult;
+          const { filePath, linePos, colPos, textResult } = searchResult;
 
           // if all data is not available then remove the item
           if (!filePath || !linePos || !colPos || !textResult) {
             return false;
           }
 
-          return createResultItem(
-            filePath,
-            textResult,
-            parseInt(linePos),
-            parseInt(colPos),
-            searchResult
-          );
+          return createResultItem(filePath, textResult, linePos, colPos, searchResult);
         })
         .filter(Boolean) as QPItemQuery[];
     } else if (code === null || code === 0) {
@@ -132,9 +118,10 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
 }
 
 function normaliseRgResult(parsedLine: RgLine) {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+  // eslint-disable-next-line camelcase, @typescript-eslint/naming-convention
   const { path, lines, line_number } = parsedLine.data;
   const filePath = path.text;
+  // eslint-disable-next-line camelcase
   const linePos = line_number;
   const colPos = parsedLine.data.submatches[0].start + 1;
   const textResult = lines.text.trim();
@@ -143,42 +130,40 @@ function normaliseRgResult(parsedLine: RgLine) {
     filePath,
     linePos,
     colPos,
-    textResult
+    textResult,
   };
 }
 
 export function checkKillProcess() {
-  const {spawnRegistry} = cx;
-  spawnRegistry.forEach(spawnProcess => {
+  const { spawnRegistry } = cx;
+  spawnRegistry.forEach((spawnProcess) => {
     spawnProcess.stdout.destroy();
     spawnProcess.stderr.destroy();
     spawnProcess.kill();
   });
 
   // check if spawn process is no longer running and if so remove from registry
-  cx.spawnRegistry = spawnRegistry.filter(spawnProcess => {
-    return !spawnProcess.killed;
-  });
+  cx.spawnRegistry = spawnRegistry.filter((spawnProcess) => !spawnProcess.killed);
 }
 
 // extract rg flags from the query, can match multiple regex's
-export function checkAndExtractRgFlagsFromQuery(query: string): { updatedQuery: string,  extraRgFlags: string[]} {
+export function checkAndExtractRgFlagsFromQuery(query: string): { updatedQuery: string; extraRgFlags: string[] } {
   const extraRgFlags: string[] = [];
   const queries = [query];
 
-  for (const { param, regex } of cx.config.rgQueryParams) {
+  cx.config.rgQueryParams.forEach(({ param, regex }) => {
     if (param && regex) {
       const match = query.match(regex);
       if (match && match.length > 1) {
         let newParam = param;
-        for (let i = 2; i < match.length; i++) {
-          newParam = newParam.replace(`$${i-1}`, match[i]);
-        }
+        match.slice(2).forEach((value, index) => {
+          newParam = newParam.replace(`$${index + 1}`, value);
+        });
         extraRgFlags.push(newParam);
         queries.push(match[1]);
       }
     }
-  }
+  });
 
   // prefer the first query match or the original one
   const updatedQuery = queries.length > 1 ? queries[1] : queries[0];

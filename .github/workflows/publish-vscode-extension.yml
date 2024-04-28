@@ -75,7 +75,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.target }}
-          path: "*.vsix"
+          path: '*.vsix'
           retention-days: 1
 
   publish:

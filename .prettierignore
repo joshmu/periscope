@@ -1,0 +1,17 @@
+# Ignore all files in the node_modules directory
+node_modules
+
+# Ignore all files in the dist directory
+dist
+
+# Ignore all files in the build directory
+build
+
+# Ignore all files in the coverage directory
+coverage
+
+# Ignore all files with a .min.js extension
+*.min.js
+
+# Ignore all files with a .min.css extension
+*.min.css

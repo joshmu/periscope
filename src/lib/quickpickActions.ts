@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { AllQPItemVariants, QPItemQuery, QPItemRgMenuAction } from "../types";
-import { openNativeVscodeSearch, peekItem } from "./editorActions";
-import { checkKillProcess, checkAndExtractRgFlagsFromQuery, rgSearch } from "./ripgrep";
+import { AllQPItemVariants, QPItemQuery, QPItemRgMenuAction } from '../types';
+import { openNativeVscodeSearch, peekItem } from './editorActions';
+import { checkKillProcess, checkAndExtractRgFlagsFromQuery, rgSearch } from './ripgrep';
 import { context as cx, updateAppState } from './context';
-import { getSelectedText } from "../utils/getSelectedText";
+import { getSelectedText } from '../utils/getSelectedText';
 import { log } from '../utils/log';
 import { confirm, finished } from './globalActions';
 
@@ -17,14 +17,14 @@ export function setupQuickPickForQuery() {
     cx.qp.onDidChangeValue(onDidChangeValue),
     cx.qp.onDidChangeActive(onDidChangeActive),
     cx.qp.onDidAccept(onDidAccept),
-    cx.qp.onDidTriggerItemButton(onDidTriggerItemButton)
+    cx.qp.onDidTriggerItemButton(onDidTriggerItemButton),
   );
 }
 
 export function reset() {
   checkKillProcess();
-  cx.disposables.rgMenuActions.forEach(d => d.dispose());
-  cx.disposables.query.forEach(d => d.dispose());
+  cx.disposables.rgMenuActions.forEach((d) => d.dispose());
+  cx.disposables.query.forEach((d) => d.dispose());
   cx.qp.busy = false;
   cx.qp.value = '';
   cx.query = '';
@@ -43,10 +43,7 @@ function onDidChangeValue(value: string) {
   cx.query = value;
 
   // jump to rg custom menu if the prefix is found in the query
-  if (
-    cx.config.gotoRgMenuActionsPrefix &&
-    value.startsWith(cx.config.gotoRgMenuActionsPrefix)
-  ) {
+  if (cx.config.gotoRgMenuActionsPrefix && value.startsWith(cx.config.gotoRgMenuActionsPrefix)) {
     setupRgMenuActions();
     return;
   }
@@ -63,9 +60,9 @@ function onDidChangeValue(value: string) {
 
   // update the query if rgQueryParams are available and found
   const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(value);
-  
+
   // update the quickpick title with a preview of the rgQueryParam command if utilised
-  if(cx.config.rgQueryParamsShowTitle) {
+  if (cx.config.rgQueryParamsShowTitle) {
     cx.qp.title = extraRgFlags.length > 0 ? `rg '${cx.query}' ${extraRgFlags.join(' ')}` : undefined;
   }
 
@@ -90,7 +87,7 @@ function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<AllQPItemVari
     // as there is only horizontal split as an option we can assume this
     confirm({
       context: 'openInHorizontalSplit',
-      item: e.item
+      item: e.item,
     });
   }
 }
@@ -99,16 +96,12 @@ function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<AllQPItemVari
 export function onDidHide() {
   if (!cx.qp.selectedItems[0]) {
     if (cx.previousActiveEditor) {
-      vscode.window.showTextDocument(
-        cx.previousActiveEditor.document,
-        cx.previousActiveEditor.viewColumn
-      );
+      vscode.window.showTextDocument(cx.previousActiveEditor.document, cx.previousActiveEditor.viewColumn);
     }
   }
 
   finished();
 }
-
 
 // when ripgrep actions are available show preliminary quickpick for those options to add to the query
 export function setupRgMenuActions() {
@@ -118,18 +111,17 @@ export function setupRgMenuActions() {
   cx.qp.canSelectMany = true;
 
   // add items from the config
-  cx.qp.items = cx.config.rgMenuActions.map(({value, label}) => ({ 
+  cx.qp.items = cx.config.rgMenuActions.map(({ value, label }) => ({
     _type: 'QuickPickItemRgMenuAction',
     label: label ?? value,
     description: label ? value : undefined,
     data: {
       rgOption: value,
-    }
-    })
-  );
+    },
+  }));
 
   function next() {
-    cx.rgMenuActionsSelected = (cx.qp.selectedItems as QPItemRgMenuAction[]).map(item => item.data.rgOption);
+    cx.rgMenuActionsSelected = (cx.qp.selectedItems as QPItemRgMenuAction[]).map((item) => item.data.rgOption);
 
     // if no actions selected, then use the current query as a custom command to rg
     if (!cx.rgMenuActionsSelected.length && cx.qp.value) {
@@ -140,8 +132,5 @@ export function setupRgMenuActions() {
     setupQuickPickForQuery();
   }
 
-  cx.disposables.rgMenuActions.push(
-    cx.qp.onDidTriggerButton(next),
-    cx.qp.onDidAccept(next)
-  );
+  cx.disposables.rgMenuActions.push(cx.qp.onDidTriggerButton(next), cx.qp.onDidAccept(next));
 }

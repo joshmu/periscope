@@ -199,8 +199,12 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "lint": "eslint src --ext ts && prettier --check .",
+    "test": "node ./out/test/runTest.js",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@vscode/ripgrep": "^1.15.9"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
@@ -209,17 +213,24 @@
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
     "@types/vscode": "^1.76.0",
-    "@typescript-eslint/eslint-plugin": "^5.53.0",
-    "@typescript-eslint/parser": "^5.53.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^7.7.1",
     "@vscode/test-electron": "^2.2.3",
-    "eslint": "^8.34.0",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
     "glob": "^8.1.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "mocha": "^10.2.0",
+    "prettier": "3.2.5",
     "semantic-release": "^23.0.8",
     "typescript": "^4.9.5"
   },
-  "license": "SEE LICENSE IN LICENSE.txt",
-  "dependencies": {
-    "@vscode/ripgrep": "^1.15.9"
-  }
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown",
+    "src/**/*": "eslint --fix"
+  },
+  "license": "SEE LICENSE IN LICENSE.txt"
 }

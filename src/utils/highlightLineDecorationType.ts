@@ -5,11 +5,7 @@ import { getConfig } from './getConfig';
  * Util to create a highlight decoration on matches when 'peeking' at a file
  */
 export function initHighlightLineInstance() {
-  const {
-    peekBorderColor: borderColor,
-    peekBorderWidth: borderWidth,
-    peekBorderStyle: borderStyle,
-  } = getConfig();
+  const { peekBorderColor: borderColor, peekBorderWidth: borderWidth, peekBorderStyle: borderStyle } = getConfig();
 
   function get() {
     const decorationType = vscode.window.createTextEditorDecorationType({
