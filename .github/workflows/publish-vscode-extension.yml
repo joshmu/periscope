@@ -67,7 +67,7 @@ jobs:
           node-version: 20
       - name: Checkout the latest tag
         shell: pwsh
-        run: git checkout tags/$(git describe --tags `git rev-list --tags --max-count=1`)
+        run: git checkout tags/$(git describe --tags $(git rev-list --tags --max-count=1))
       - run: npm install
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
