@@ -18,6 +18,8 @@ jobs:
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log release version
+        run: echo "RELEASE_VERSION=$(npx -c 'console.log(require("./package.json").version)')" >> $GITHUB_ENV
 
   build:
     needs: semantic-release
@@ -71,7 +73,7 @@ jobs:
           npm_config_arch: ${{ matrix.npm_config_arch }}
       - shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
-      - run: npx vsce package --target ${{ env.target }}
+      - run: npx vsce package --target ${{ env.target }} ${{ env.RELEASE_VERSION }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.target }}
