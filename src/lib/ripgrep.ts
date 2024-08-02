@@ -35,7 +35,7 @@ function getRgCommand(value: string, extraFlags?: string[]) {
     ...config.rgOptions,
     ...cx.rgMenuActionsSelected,
     ...rootPaths,
-    ...config.addSrcPaths,
+    ...config.addSrcPaths.map(ensureQuotedPath),
     ...(extraFlags || []),
     ...excludes,
   ];
@@ -168,4 +168,17 @@ export function checkAndExtractRgFlagsFromQuery(query: string): { updatedQuery: 
   // prefer the first query match or the original one
   const updatedQuery = queries.length > 1 ? queries[1] : queries[0];
   return { updatedQuery, extraRgFlags };
+}
+
+/**
+ * Ensure that the src path provided is quoted
+ * Required when config paths contain whitespace
+ */
+function ensureQuotedPath(path: string): string {
+  // support for paths already quoted via config
+  if (path.startsWith('"') && path.endsWith('"')) {
+    return path;
+  }
+  // else quote the path
+  return `"${path}"`;
 }
