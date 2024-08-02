@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.7.1](https://github.com/joshmu/periscope/compare/v1.7.0...v1.7.1) (2024-08-02)
+
+### Bug Fixes
+
+- update vsce ([39dae80](https://github.com/joshmu/periscope/commit/39dae8078e714a5f185a18ebcc79a75ba981728f))
+
 # [1.7.0](https://github.com/joshmu/periscope/compare/v1.6.10...v1.7.0) (2024-08-02)
 
 ### Features
