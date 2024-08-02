@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+# [1.7.0](https://github.com/joshmu/periscope/compare/v1.6.10...v1.7.0) (2024-08-02)
+
+### Features
+
+- support paths which contain whitespace ([c001fe2](https://github.com/joshmu/periscope/commit/c001fe2297e1a8a3d4c5ac48b4ae0ce9898e1b57))
+
 ## [1.6.10](https://github.com/joshmu/periscope/compare/v1.6.9...v1.6.10) (2024-04-28)
 
 ## [1.6.9](https://github.com/joshmu/periscope/compare/v1.6.8...v1.6.9) (2024-04-28)
