@@ -22,11 +22,11 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 
 For optimal performance, ensure that the VSCode configuration _Editor: Enable Preview_ is enabled. This allows files to be previewed before opening them completely.
 
-## Extension Settings
+### Tips
 
-This extension contributes the following settings:
-
-- `periscope.search`: Enable Periscope Search
+- **Search with Regex**: Use regex in your search query to find specific patterns in your codebase.
+- **Selected Text Search**: Highlight text in the editor and invoke `periscope.search` to have it automatically used as the initial query.
+- **Utilise rqQueryParams**: Create shortcuts for common ripgrep search queries via regex matching against your current query. This provides a way to map your query to ripgrep parameters via capture groups in the regex.
 
 ### Configuration
 
@@ -52,20 +52,6 @@ This extension contributes the following settings:
 ### Advanced Configurations
 
 Detailed examples for setting up advanced search parameters and UI customization are provided below to help you tailor Periscope to fit your workflow.
-
-#### periscope.openInHorizontalSplit
-
-Open the result preview in a horizontal split.
-
-Add a keybinding (`keybindings.json`):
-
-```json
-{
-  "key": "ctrl+v",
-  "command": "periscope.openInHorizontalSplit",
-  "when": "periscopeActive"
-}
-```
 
 #### periscope.rgQueryParams
 
@@ -111,6 +97,27 @@ Add the following to your `settings.json`:
   }
 ],
 ```
+
+#### periscope.openInHorizontalSplit
+
+Open the result preview in a horizontal split.
+
+Add a keybinding (`keybindings.json`):
+
+```json
+{
+  "key": "ctrl+v",
+  "command": "periscope.openInHorizontalSplit",
+  "when": "periscopeActive"
+}
+```
+
+## Extension Settings
+
+This extension contributes the following settings:
+
+- `periscope.search`: Enable Periscope Search
+- `periscope.openInHorizontalSplit`: Open the result preview in a horizontal split
 
 ## Troubleshooting
 
