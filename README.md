@@ -22,13 +22,13 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 
 For optimal performance, ensure that the VSCode configuration _Editor: Enable Preview_ is enabled. This allows files to be previewed before opening them completely.
 
-### Tips
+## Tips
 
 - **Search with Regex**: Use regex in your search query to find specific patterns in your codebase.
 - **Selected Text Search**: Highlight text in the editor and invoke `periscope.search` to have it automatically used as the initial query.
 - **Utilise rqQueryParams**: Create shortcuts for common ripgrep search queries via regex matching against your current query. This provides a way to map your query to ripgrep parameters via capture groups in the regex.
 
-### Configuration
+## Configuration
 
 - `rgOptions`: Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'.
 - `rgGlobExcludes`: Additional glob paths to exclude from the 'rg' search, eg: '**/dist/**'.
@@ -49,11 +49,11 @@ For optimal performance, ensure that the VSCode configuration _Editor: Enable Pr
 - `peekBorderWidth`: Change the peek border width (px)
 - `peekBorderStyle`: Change the peek border style (solid, dashed, inset, double, groove, outset, ridge)
 
-### Advanced Configurations
+## Advanced Configurations
 
 Detailed examples for setting up advanced search parameters and UI customization are provided below to help you tailor Periscope to fit your workflow.
 
-#### periscope.rgQueryParams
+### periscope.rgQueryParams
 
 Create shortcuts for common ripgrep search queries via regex matching against your current query. This provides a way to map your query to ripgrep parameters via capture groups in the regex.
 
@@ -98,7 +98,7 @@ Add the following to your `settings.json`:
 ],
 ```
 
-#### periscope.openInHorizontalSplit
+### periscope.openInHorizontalSplit
 
 Open the result preview in a horizontal split.
 
