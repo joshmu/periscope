@@ -2,8 +2,9 @@ import { context as cx } from './context';
 import { onDidHide, setupQuickPickForQuery, setupRgMenuActions } from './quickpickActions';
 import { start } from './globalActions';
 import { openInHorizontalSplit } from './editorActions';
+import { getSelectedText } from '../utils/getSelectedText';
 
-function search() {
+function search(useSelection = false) {
   start();
 
   // if ripgrep actions are available then open preliminary quickpick
@@ -18,9 +19,17 @@ function search() {
 
   // search logic is triggered from the QuickPick event handlers...
   cx.qp.show();
+
+  if (useSelection) {
+    const selectedText = getSelectedText();
+    if (selectedText) {
+      cx.qp.value = selectedText;
+    }
+  }
 }
 
 export const PERISCOPE = {
   search,
+  searchWithSelection: () => search(true),
   openInHorizontalSplit,
 };

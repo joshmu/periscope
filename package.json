@@ -37,6 +37,10 @@
         "title": "Periscope: Search"
       },
       {
+        "command": "periscope.searchWithSelection",
+        "title": "Periscope: Search with Selection"
+      },
+      {
         "command": "periscope.openInHorizontalSplit",
         "title": "Periscope: Open Result in Horizontal Split",
         "enablement": "periscopeActive"
