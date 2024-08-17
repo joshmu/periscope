@@ -40,7 +40,19 @@ function getRgCommand(value: string, extraFlags?: string[]) {
     ...excludes,
   ];
 
-  return `"${rgPath}" "${value}" ${rgFlags.join(' ')}`;
+  const normalizedQuery = handleSearchTermWithAdditionalRgParams(value);
+
+  return `"${rgPath}" ${normalizedQuery} ${rgFlags.join(' ')}`;
+}
+
+/**
+ * Support for passing raw ripgrep queries by detection of a search_term within quotes within the input query
+ * if found we can assume the rest of the query are additional ripgrep parameters
+ */
+function handleSearchTermWithAdditionalRgParams(query: string): string {
+  const valueWithinQuotes = /".*?"/.exec(query);
+  if (valueWithinQuotes) return query;
+  return `"${query}"`;
 }
 
 export function rgSearch(value: string, rgExtraFlags?: string[]) {
