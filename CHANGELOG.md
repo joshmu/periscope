@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+# [1.8.0](https://github.com/joshmu/periscope/compare/v1.7.4...v1.8.0) (2024-08-17)
+
+### Features
+
+- support for passing rg parameters directly when search term is enclosed by quotation marks ([ea125af](https://github.com/joshmu/periscope/commit/ea125af3d33021415a90f4ea48125555bab8e15b))
+
 ## [1.7.4](https://github.com/joshmu/periscope/compare/v1.7.3...v1.7.4) (2024-08-04)
 
 ## [1.7.3](https://github.com/joshmu/periscope/compare/v1.7.2...v1.7.3) (2024-08-03)
