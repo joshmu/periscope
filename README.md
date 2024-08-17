@@ -26,7 +26,8 @@ For optimal performance, ensure that the VSCode configuration _Editor: Enable Pr
 
 - **Search with Regex**: Use regex in your search query to find specific patterns in your codebase.
 - **Selected Text Search**: Highlight text in the editor and invoke `periscope.search` to have it automatically used as the initial query.
-- **Utilise `rgQueryParams`**: Create shortcuts for common ripgrep search queries via regex matching against your current query. This provides a way to map your query to ripgrep parameters via capture groups in the regex.
+- **Raw Queries**: Enclosing your `search_term` in quotes will allow additional ripgrep parameters to be passed through. eg: `"foobar" -t js` will search for `foobar` in js files.
+- **Utilise `rgQueryParams`**: Create shortcuts for common ripgrep search queries via regex matching against your current query. This provides a way to map your query to ripgrep parameters via capture groups in the regex for faster lookups.
 
 ## Configuration
 
