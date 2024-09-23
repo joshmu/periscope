@@ -7,9 +7,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   const periscopeQpCmd = vscode.commands.registerCommand('periscope.search', () => PERISCOPE.search());
 
+  const periscopeQpFilesCmd = vscode.commands.registerCommand('periscope.searchFiles', () => PERISCOPE.searchFiles());
+
   const periscopeSplitCmd = vscode.commands.registerCommand('periscope.openInHorizontalSplit', () =>
     PERISCOPE.openInHorizontalSplit(),
   );
 
-  context.subscriptions.push(periscopeQpCmd, periscopeSplitCmd);
+  context.subscriptions.push(periscopeQpCmd, periscopeQpFilesCmd, periscopeSplitCmd);
 }

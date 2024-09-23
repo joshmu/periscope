@@ -47,3 +47,9 @@ export type RgLine = {
     }[];
   };
 };
+
+export type FzfLine = {
+  data: {
+    path: { text: string };
+  };
+};

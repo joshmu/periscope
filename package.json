@@ -13,6 +13,7 @@
     "workspace search",
     "search in files",
     "search in folder",
+    "search files",
     "search preview"
   ],
   "version": "1.8.0",
@@ -35,6 +36,10 @@
       {
         "command": "periscope.search",
         "title": "Periscope: Search"
+      },
+      {
+        "command": "periscope.searchFiles",
+        "title": "Periscope: Search Files"
       },
       {
         "command": "periscope.openInHorizontalSplit",

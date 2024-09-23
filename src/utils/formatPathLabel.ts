@@ -32,3 +32,9 @@ export function formatPathLabel(filePath: string) {
   }
   return folders.join(path.sep);
 }
+
+export function formatFilenameLabel(filePath: string) {
+  const config = getConfig();
+
+  return path.basename(filePath);
+}

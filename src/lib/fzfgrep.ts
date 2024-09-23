@@ -1,0 +1,214 @@
+import { rgPath as vscodeRgPath } from '@vscode/ripgrep';
+import { spawn } from 'child_process';
+import * as vscode from 'vscode';
+import { getConfig } from '../utils/getConfig';
+import { context as cx, updateAppState } from './context';
+import { tryJsonParse } from '../utils/jsonUtils';
+import { QPItemQuery, RgLine, FzfLine } from '../types';
+import { log, notifyError } from '../utils/log';
+import { createResultItemFile } from '../utils/quickpickUtils';
+import { handleNoResultsFound } from './editorActions';
+
+// grab the bundled ripgrep binary from vscode
+function ripgrepPath(optionsPath?: string) {
+  if (optionsPath?.trim()) {
+    return optionsPath.trim();
+  }
+
+  return vscodeRgPath;
+}
+
+function getFzfCommand(value: string, extraFlags?: string[]) {
+  const config = getConfig();
+  const { workspaceFolders } = vscode.workspace;
+
+  const rgPath = ripgrepPath(config.rgPath);
+
+  const rgRequiredFlags = ['--line-number', '--column', '--no-heading', '--with-filename', '--color=never', '--files'];
+  const fzfRequiredFlags = ['-i', '--filter'];
+
+  const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
+
+  const excludes = config.rgGlobExcludes.map((exclude) => `--glob "!${exclude}"`);
+
+  const rgFlags = [
+    ...rgRequiredFlags,
+    ...config.rgOptions,
+    ...cx.fzfMenuActionsSelected,
+    ...rootPaths,
+    ...config.addSrcPaths.map(ensureQuotedPath),
+    ...(extraFlags || []),
+    ...excludes,
+  ];
+
+  const fzfFlags = [...fzfRequiredFlags];
+
+  const normalizedQuery = handleSearchTermWithAdditionalRgParams(value);
+
+  return `"${rgPath}" "" ${rgFlags.join(' ')} | fzf ${fzfFlags.join(' ')} ${normalizedQuery}`;
+}
+
+/**
+ * Support for passing raw ripgrep queries by detection of a search_term within quotes within the input query
+ * if found we can assume the rest of the query are additional ripgrep parameters
+ */
+function handleSearchTermWithAdditionalRgParams(query: string): string {
+  const valueWithinQuotes = /".*?"/.exec(query);
+  if (valueWithinQuotes) return query;
+  return `"${query}"`;
+}
+
+export function fzfSearch(value: string, rgExtraFlags?: string[]) {
+  updateAppState('SEARCHING');
+  cx.qp.busy = true;
+  const rgCmd = getFzfCommand(value, rgExtraFlags);
+  log('rgCmd:', rgCmd);
+  checkKillProcess();
+  const searchResults: ReturnType<typeof normaliseRgResult>[] = [];
+
+  const spawnProcess = spawn(rgCmd, [], { shell: true });
+  cx.spawnRegistry.push(spawnProcess);
+
+  // Capture stdout
+  spawnProcess.stdout.on('data', (data: Buffer) => {
+    const lines = data.toString().split('\n').filter(Boolean);
+
+    lines.forEach((line) => {
+      const parsedLine: FzfLine = {
+        data: {
+          path: {
+            text: line,
+          },
+        },
+      };
+
+      searchResults.push(normaliseFzfResult(parsedLine));
+    });
+  });
+
+  spawnProcess.stderr.on('data', (data: Buffer) => {
+    const errorMsg = data.toString();
+
+    // additional UI feedback for common errors
+    if (errorMsg.includes('unrecognized')) {
+      cx.qp.title = errorMsg;
+    }
+
+    log.error(data.toString());
+    handleNoResultsFound();
+  });
+
+  spawnProcess.on('exit', (code: number) => {
+    /**
+     * we need to additionally check 'SEARCHING' state as the user might have cancelled the search
+     * but the process may still be running (eg: go back to the rg menu actions view)
+     */
+    if (code === 0 && searchResults.length && cx.appState === 'SEARCHING') {
+      cx.qp.items = searchResults
+        .map((searchResult) => {
+          // break the filename via regext ':line:col:'
+          const { filePath, linePos, colPos, textResult } = searchResult;
+
+          // if all data is not available then remove the item
+          if (!filePath || !textResult) {
+            return false;
+          }
+
+          return createResultItemFile(filePath, textResult, linePos, colPos, searchResult);
+        })
+        .filter(Boolean) as QPItemQuery[];
+    } else if (code === null || code === 0) {
+      // do nothing if no code provided or process is success but nothing needs to be done
+      log('Nothing to do...');
+      return;
+    } else {
+      const msg = `PERISCOPE exited with code ${code}`;
+      log.error(msg);
+      notifyError(`PERISCOPE: ${msg}`);
+    }
+    cx.qp.busy = false;
+  });
+}
+
+function normaliseRgResult(parsedLine: RgLine) {
+  // eslint-disable-next-line camelcase, @typescript-eslint/naming-convention
+  const { path, lines, line_number } = parsedLine.data;
+  const filePath = path.text;
+  // eslint-disable-next-line camelcase
+  const linePos = line_number;
+  const colPos = parsedLine.data.submatches[0].start + 1;
+  const textResult = lines.text.trim();
+
+  return {
+    filePath,
+    linePos,
+    colPos,
+    textResult,
+  };
+}
+
+function normaliseFzfResult(parsedLine: FzfLine) {
+  // eslint-disable-next-line camelcase, @typescript-eslint/naming-convention
+  const { path } = parsedLine.data;
+  const filePath = path.text;
+  // eslint-disable-next-line camelcase
+  const linePos = 0;
+  const colPos = 0;
+  const textResult = filePath.trim();
+
+  return {
+    filePath,
+    linePos,
+    colPos,
+    textResult,
+  };
+}
+
+export function checkKillProcess() {
+  const { spawnRegistry } = cx;
+  spawnRegistry.forEach((spawnProcess) => {
+    spawnProcess.stdout.destroy();
+    spawnProcess.stderr.destroy();
+    spawnProcess.kill();
+  });
+
+  // check if spawn process is no longer running and if so remove from registry
+  cx.spawnRegistry = spawnRegistry.filter((spawnProcess) => !spawnProcess.killed);
+}
+
+// extract rg flags from the query, can match multiple regex's
+export function checkAndExtractRgFlagsFromQuery(query: string): { updatedQuery: string; extraRgFlags: string[] } {
+  const extraRgFlags: string[] = [];
+  const queries = [query];
+
+  cx.config.rgQueryParams.forEach(({ param, regex }) => {
+    if (param && regex) {
+      const match = query.match(regex);
+      if (match && match.length > 1) {
+        let newParam = param;
+        match.slice(2).forEach((value, index) => {
+          newParam = newParam.replace(`$${index + 1}`, value);
+        });
+        extraRgFlags.push(newParam);
+        queries.push(match[1]);
+      }
+    }
+  });
+
+  // prefer the first query match or the original one
+  const updatedQuery = queries.length > 1 ? queries[1] : queries[0];
+  return { updatedQuery, extraRgFlags };
+}
+
+/**
+ * Ensure that the src path provided is quoted
+ * Required when config paths contain whitespace
+ */
+function ensureQuotedPath(path: string): string {
+  // support for paths already quoted via config
+  if (path.startsWith('"') && path.endsWith('"')) {
+    return path;
+  }
+  // else quote the path
+  return `"${path}"`;
+}
