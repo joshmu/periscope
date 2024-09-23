@@ -45,7 +45,7 @@ function getFzfCommand(value: string, extraFlags?: string[]) {
 
   const normalizedQuery = handleSearchTermWithAdditionalRgParams(value);
 
-  return `"${rgPath}" "" ${rgFlags.join(' ')} | fzf ${fzfFlags.join(' ')} ${normalizedQuery}`;
+  return `"${rgPath}" "" ${rgFlags.join(' ')} | sed "s|${rootPaths[0]}/||" | fzf ${fzfFlags.join(' ')} ${normalizedQuery}`;
 }
 
 /**
