@@ -51,5 +51,7 @@ export type RgLine = {
 export type FzfLine = {
   data: {
     path: { text: string };
+    line_pos: number;
+    col_pos: number;
   };
 };

@@ -24,7 +24,15 @@ function getFzfCommand(value: string, extraFlags?: string[]) {
 
   const rgPath = ripgrepPath(config.rgPath);
 
-  const rgRequiredFlags = ['--line-number', '--column', '--no-heading', '--with-filename', '--color=never', '--files'];
+  const rgRequiredFlags = [
+    '--line-number',
+    '--column',
+    '--no-heading',
+    '--with-filename',
+    '--color=never',
+    '--files',
+    '--follow',
+  ];
   const fzfRequiredFlags = ['-i', '--filter'];
 
   const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
@@ -43,31 +51,49 @@ function getFzfCommand(value: string, extraFlags?: string[]) {
 
   const fzfFlags = [...fzfRequiredFlags];
 
-  const normalizedQuery = handleSearchTermWithAdditionalRgParams(value);
+  const normalizedQuery = handleSearchTermWithCursorPositions(value);
+  const workspaceFolder = rootPaths[0];
+  const sedCmd = `| sed 's|${workspaceFolder}/||'`;
 
-  return `"${rgPath}" "" ${rgFlags.join(' ')} | sed "s|${rootPaths[0]}/||" | fzf ${fzfFlags.join(' ')} ${normalizedQuery}`;
+  return `"${rgPath}" "" ${rgFlags.join(' ')} ${sedCmd} | fzf ${fzfFlags.join(' ')} ${normalizedQuery}`;
 }
 
 /**
- * Support for passing raw ripgrep queries by detection of a search_term within quotes within the input query
- * if found we can assume the rest of the query are additional ripgrep parameters
+ * Support for passing a filename with line and column numbers, like /path/file.js:10:11
  */
-function handleSearchTermWithAdditionalRgParams(query: string): string {
-  const valueWithinQuotes = /".*?"/.exec(query);
-  if (valueWithinQuotes) return query;
+function handleSearchTermWithCursorPositions(query: string): string {
+  const valuePath = /^[^:]+/.exec(query);
+
+  if (valuePath) return valuePath[0];
   return `"${query}"`;
+}
+
+function extractLineAndColPos(query: string): { linePos: number; colPos: number } {
+  const matches = query.match(/(?::(\d+))/g)?.map((match) => match.replace(':', ''));
+  const linePos = matches?.[0] ? parseInt(matches[0], 10) : 0;
+  const colPos = matches?.[1] ? parseInt(matches[1], 10) : 0;
+
+  return {
+    linePos,
+    colPos,
+  };
 }
 
 export function fzfSearch(value: string, rgExtraFlags?: string[]) {
   updateAppState('SEARCHING');
   cx.qp.busy = true;
   const rgCmd = getFzfCommand(value, rgExtraFlags);
+  const curPosition = extractLineAndColPos(value);
   log('rgCmd:', rgCmd);
   checkKillProcess();
   const searchResults: ReturnType<typeof normaliseRgResult>[] = [];
 
   const spawnProcess = spawn(rgCmd, [], { shell: true });
   cx.spawnRegistry.push(spawnProcess);
+
+  const { workspaceFolders } = vscode.workspace;
+  const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
+  const workspaceFolder = rootPaths[0];
 
   // Capture stdout
   spawnProcess.stdout.on('data', (data: Buffer) => {
@@ -77,8 +103,10 @@ export function fzfSearch(value: string, rgExtraFlags?: string[]) {
       const parsedLine: FzfLine = {
         data: {
           path: {
-            text: line,
+            text: `${workspaceFolder  }/${  line}`,
           },
+          line_pos: curPosition.linePos,
+          col_pos: curPosition.colPos,
         },
       };
 
@@ -121,6 +149,11 @@ export function fzfSearch(value: string, rgExtraFlags?: string[]) {
       // do nothing if no code provided or process is success but nothing needs to be done
       log('Nothing to do...');
       return;
+    } else if (code === 1) {
+      log(`Ripgrep exited with code ${code} (no results found)`);
+      handleNoResultsFound();
+    } else if (code === 2) {
+      log.error(`Ripgrep exited with code ${code} (error during search operation)`);
     } else {
       const msg = `PERISCOPE exited with code ${code}`;
       log.error(msg);
@@ -152,8 +185,8 @@ function normaliseFzfResult(parsedLine: FzfLine) {
   const { path } = parsedLine.data;
   const filePath = path.text;
   // eslint-disable-next-line camelcase
-  const linePos = 0;
-  const colPos = 0;
+  const linePos = parsedLine.data.line_pos;
+  const colPos = parsedLine.data.col_pos;
   const textResult = filePath.trim();
 
   return {

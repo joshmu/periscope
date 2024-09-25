@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { QPItemQuery } from '../types';
-import { formatPathLabel, formatFilenameLabel } from './formatPathLabel';
+import { formatPathLabel, formatPathFileLabel, formatFilenameLabel } from './formatPathLabel';
 
 // required to update the quick pick item with result information
 export function createResultItem(
@@ -52,7 +52,7 @@ export function createResultItemFile(
       rawResult,
     },
     // description: `${folders.join(path.sep)}`,
-    detail: formatPathLabel(filePath),
+    detail: formatPathFileLabel(filePath),
     /**
      * ! required to support regex
      * otherwise quick pick will automatically remove results that don't have an exact match
