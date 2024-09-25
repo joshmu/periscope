@@ -38,6 +38,7 @@ For optimal performance, ensure that the VSCode configuration _Editor: Enable Pr
 - `rgMenuActions`: Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add `{ "label": "JS/TS", "value": "--type-add 'jsts:*.{js|ts|tsx|jsx}' -t jsts" },` as a menu option to only show js & ts files in the results.
 - `rgQueryParams`: Match ripgrep parameters from the input query directly. E.g: `{ "regex": \"^(.+) -t ?(\\w+)$\", "param": \"-t $1\" },` will translate the query `hello -t rust` to `rg 'hello' -t rust` to enable a filetype filter.
 - `rgQueryParamsShowTitle`: When a ripgrep parameter match from the list in `rgQueryParams`, the quick pick will show the matched result as a preview in the title bar.
+- `showWorkspaceFolderInFilePath`: Include workspace folder name in the folder depth display.
 - `startFolderDisplayIndex`: The folder index to display in the results before '...'.
 - `startFolderDisplayDepth`: The folder depth to display in the results before '...'.
 - `endFolderDisplayDepth`: The folder depth to display in the results after '...'.

@@ -9,6 +9,7 @@ type ConfigItems =
   | 'rgQueryParams'
   | 'rgQueryParamsShowTitle'
   | 'rgPath'
+  | 'showWorkspaceFolderInFilePath'
   | 'startFolderDisplayDepth'
   | 'startFolderDisplayIndex'
   | 'endFolderDisplayDepth'
@@ -32,6 +33,7 @@ export function getConfig() {
     rgQueryParams: vsConfig.get<{ param?: string; regex: string }[]>('rgQueryParams', []),
     rgQueryParamsShowTitle: vsConfig.get<boolean>('rgQueryParamsShowTitle', true),
     rgPath: vsConfig.get<string | undefined>('rgPath', undefined),
+    showWorkspaceFolderInFilePath: vsConfig.get<boolean>('showWorkspaceFolderInFilePath', true),
     startFolderDisplayIndex: vsConfig.get<number>('startFolderDisplayIndex', 0),
     startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),
     endFolderDisplayDepth: vsConfig.get<number>('endFolderDisplayDepth', 4),

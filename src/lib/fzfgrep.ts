@@ -3,7 +3,6 @@ import { spawn } from 'child_process';
 import * as vscode from 'vscode';
 import { getConfig } from '../utils/getConfig';
 import { context as cx, updateAppState } from './context';
-import { tryJsonParse } from '../utils/jsonUtils';
 import { QPItemQuery, RgLine, FzfLine } from '../types';
 import { log, notifyError } from '../utils/log';
 import { createResultItemFile } from '../utils/quickpickUtils';
@@ -103,7 +102,7 @@ export function fzfSearch(value: string, rgExtraFlags?: string[]) {
       const parsedLine: FzfLine = {
         data: {
           path: {
-            text: `${workspaceFolder  }/${  line}`,
+            text: `${workspaceFolder}/${line}`,
           },
           line_pos: curPosition.linePos,
           col_pos: curPosition.colPos,

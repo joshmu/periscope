@@ -144,6 +144,11 @@
           "default": 4,
           "description": "The folder depth to display in the results after truncating with '...'."
         },
+        "periscope.showWorkspaceFolderInFilePath": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include workspace folder name in the folder depth display."
+        },
         "periscope.alwaysShowRgMenuActions": {
           "type": "boolean",
           "default": true,
