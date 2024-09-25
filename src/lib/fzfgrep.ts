@@ -7,6 +7,7 @@ import { QPItemQuery, RgLine, FzfLine } from '../types';
 import { log, notifyError } from '../utils/log';
 import { createResultItemFile } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
+import { checkKillProcess, ensureQuotedPath } from './ripgrep';
 
 // grab the bundled ripgrep binary from vscode
 function ripgrepPath(optionsPath?: string) {
@@ -194,53 +195,4 @@ function normaliseFzfResult(parsedLine: FzfLine) {
     colPos,
     textResult,
   };
-}
-
-export function checkKillProcess() {
-  const { spawnRegistry } = cx;
-  spawnRegistry.forEach((spawnProcess) => {
-    spawnProcess.stdout.destroy();
-    spawnProcess.stderr.destroy();
-    spawnProcess.kill();
-  });
-
-  // check if spawn process is no longer running and if so remove from registry
-  cx.spawnRegistry = spawnRegistry.filter((spawnProcess) => !spawnProcess.killed);
-}
-
-// extract rg flags from the query, can match multiple regex's
-export function checkAndExtractRgFlagsFromQuery(query: string): { updatedQuery: string; extraRgFlags: string[] } {
-  const extraRgFlags: string[] = [];
-  const queries = [query];
-
-  cx.config.rgQueryParams.forEach(({ param, regex }) => {
-    if (param && regex) {
-      const match = query.match(regex);
-      if (match && match.length > 1) {
-        let newParam = param;
-        match.slice(2).forEach((value, index) => {
-          newParam = newParam.replace(`$${index + 1}`, value);
-        });
-        extraRgFlags.push(newParam);
-        queries.push(match[1]);
-      }
-    }
-  });
-
-  // prefer the first query match or the original one
-  const updatedQuery = queries.length > 1 ? queries[1] : queries[0];
-  return { updatedQuery, extraRgFlags };
-}
-
-/**
- * Ensure that the src path provided is quoted
- * Required when config paths contain whitespace
- */
-function ensureQuotedPath(path: string): string {
-  // support for paths already quoted via config
-  if (path.startsWith('"') && path.endsWith('"')) {
-    return path;
-  }
-  // else quote the path
-  return `"${path}"`;
 }

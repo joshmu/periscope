@@ -186,7 +186,7 @@ export function checkAndExtractRgFlagsFromQuery(query: string): { updatedQuery: 
  * Ensure that the src path provided is quoted
  * Required when config paths contain whitespace
  */
-function ensureQuotedPath(path: string): string {
+export function ensureQuotedPath(path: string): string {
   // support for paths already quoted via config
   if (path.startsWith('"') && path.endsWith('"')) {
     return path;

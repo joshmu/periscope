@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { AllQPItemVariants, QPItemQuery, QPItemRgMenuAction } from '../types';
 import { openNativeVscodeSearch, peekItem } from './editorActions';
 import { checkKillProcess, checkAndExtractRgFlagsFromQuery, rgSearch } from './ripgrep';
+import { fzfSearch } from './fzfgrep';
 import { context as cx, updateAppState } from './context';
 import { getSelectedText } from '../utils/getSelectedText';
 import { log } from '../utils/log';
@@ -15,6 +16,20 @@ export function setupQuickPickForQuery() {
   cx.qp.value = getSelectedText();
   cx.disposables.query.push(
     cx.qp.onDidChangeValue(onDidChangeValue),
+    cx.qp.onDidChangeActive(onDidChangeActive),
+    cx.qp.onDidAccept(onDidAccept),
+    cx.qp.onDidTriggerItemButton(onDidTriggerItemButton),
+  );
+}
+
+// update quickpick event listeners for the file search query
+export function setupQuickPickForFilesQuery() {
+  cx.qp.placeholder = '🫧';
+  cx.qp.items = [];
+  cx.qp.canSelectMany = false;
+  cx.qp.value = getSelectedText();
+  cx.disposables.query.push(
+    cx.qp.onDidChangeValue(onDidChangeFzfValue),
     cx.qp.onDidChangeActive(onDidChangeActive),
     cx.qp.onDidAccept(onDidAccept),
     cx.qp.onDidTriggerItemButton(onDidTriggerItemButton),
@@ -67,6 +82,25 @@ function onDidChangeValue(value: string) {
   }
 
   rgSearch(updatedQuery, extraRgFlags);
+}
+
+function onDidChangeFzfValue(value: string) {
+  checkKillProcess();
+
+  if (!value) {
+    cx.qp.items = [];
+    return;
+  }
+
+  cx.query = value;
+
+  // jump to rg custom menu if the prefix is found in the query
+  if (cx.config.gotoRgMenuActionsPrefix && value.startsWith(cx.config.gotoRgMenuActionsPrefix)) {
+    setupRgMenuActions();
+    return;
+  }
+
+  fzfSearch(value);
 }
 
 // when item is 'FOCUSSED'

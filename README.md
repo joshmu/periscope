@@ -7,6 +7,7 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 ## Key Features
 
 - **Fast Search**: Utilizes `ripgrep` for lightning-fast search capabilities.
+- **Fast Fuzzy Search**: Utilizes `fzf` for lightning-fast file search capabilities.
 - **Real-Time Preview**: See preview of files right in the search pane as you navigate through search results.
 - **Customizable**: Extensive configuration options to tailor search behavior and UI to your needs.
 
@@ -14,13 +15,14 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 
 ## Usage Instructions
 
-1. **Invoke Search**: Assign a keybinding such as `<super> + p` to invoke the `periscope.search` command. You can also access it via the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and search for **periscope**.
+1. **Invoke Search**: Assign a keybinding such as `<super> + p` to invoke the `periscope.search` or `periscope.searchFiles` command. You can also access it via the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and search for **periscope**.
 2. **Search and Preview**: Enter your query to see the search results dynamically. Navigate through results to preview files directly in the editor.
 3. **Open or Cancel**: Press `Enter` to open the highlighted file or `Esc` to cancel and return to your work.
 
 ## Requirements
 
 For optimal performance, ensure that the VSCode configuration _Editor: Enable Preview_ is enabled. This allows files to be previewed before opening them completely.
+For file searching install fzf library. Read the instructions here: https://github.com/junegunn/fzf?tab=readme-ov-file#installation
 
 ## Tips
 
@@ -119,6 +121,7 @@ Add a keybinding (`keybindings.json`):
 This extension contributes the following settings:
 
 - `periscope.search`: Enable Periscope Search
+- `periscope.searchFiles`: Enable Periscope Fuzzy Search
 - `periscope.openInHorizontalSplit`: Open the result preview in a horizontal split
 
 ## Troubleshooting

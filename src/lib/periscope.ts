@@ -1,6 +1,5 @@
 import { context as cx } from './context';
-import { onDidHide, setupQuickPickForQuery, setupRgMenuActions } from './quickpickActions';
-import { setupQuickPickForFilesQuery } from './quickpickFileActions';
+import { onDidHide, setupQuickPickForQuery, setupQuickPickForFilesQuery, setupRgMenuActions } from './quickpickActions';
 import { start } from './globalActions';
 import { openInHorizontalSplit } from './editorActions';
 
@@ -24,7 +23,7 @@ function search() {
 function searchFiles() {
   start();
 
-  // if ripgrep actions are available then open preliminary quickpick
+  // Don't show RgMenu actions immediatelly on file search
   setupQuickPickForFilesQuery();
 
   cx.disposables.general.push(cx.qp.onDidHide(onDidHide));
