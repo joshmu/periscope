@@ -1,5 +1,5 @@
 import { context as cx, setSearchType } from './context';
-import { onDidHide, setupQuickPickForQuery, setupQuickPickForFilesQuery, setupRgMenuActions } from './quickpickActions';
+import { onDidHide, setupQuickPickForQuery, setupRgMenuActions } from './quickpickActions';
 import { start } from './globalActions';
 import { openInHorizontalSplit } from './editorActions';
 
