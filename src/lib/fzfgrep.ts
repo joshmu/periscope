@@ -85,7 +85,6 @@ export function fzfSearch(value: string, rgExtraFlags?: string[]) {
   const rgCmd = getFzfCommand(value, rgExtraFlags);
   const curPosition = extractLineAndColPos(value);
   log('rgCmd:', rgCmd);
-  notifyError(`PERISCOPE: ${rgCmd}`);
   checkKillProcess();
   const searchResults: ReturnType<typeof normaliseRgResult>[] = [];
 
