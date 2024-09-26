@@ -42,7 +42,7 @@ function getFzfCommand(value: string, extraFlags?: string[]) {
   const rgFlags = [
     ...rgRequiredFlags,
     ...config.rgOptions,
-    ...cx.fzfMenuActionsSelected,
+    ...cx.rgMenuActionsSelected,
     ...rootPaths,
     ...config.addSrcPaths.map(ensureQuotedPath),
     ...(extraFlags || []),
@@ -85,6 +85,7 @@ export function fzfSearch(value: string, rgExtraFlags?: string[]) {
   const rgCmd = getFzfCommand(value, rgExtraFlags);
   const curPosition = extractLineAndColPos(value);
   log('rgCmd:', rgCmd);
+  notifyError(`PERISCOPE: ${rgCmd}`);
   checkKillProcess();
   const searchResults: ReturnType<typeof normaliseRgResult>[] = [];
 

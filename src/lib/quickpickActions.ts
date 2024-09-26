@@ -3,7 +3,7 @@ import { AllQPItemVariants, QPItemQuery, QPItemRgMenuAction } from '../types';
 import { openNativeVscodeSearch, peekItem } from './editorActions';
 import { checkKillProcess, checkAndExtractRgFlagsFromQuery, rgSearch } from './ripgrep';
 import { fzfSearch } from './fzfgrep';
-import { context as cx, updateAppState } from './context';
+import { context as cx, updateAppState, setSearchType } from './context';
 import { getSelectedText } from '../utils/getSelectedText';
 import { log } from '../utils/log';
 import { confirm, finished } from './globalActions';
@@ -16,20 +16,6 @@ export function setupQuickPickForQuery() {
   cx.qp.value = getSelectedText();
   cx.disposables.query.push(
     cx.qp.onDidChangeValue(onDidChangeValue),
-    cx.qp.onDidChangeActive(onDidChangeActive),
-    cx.qp.onDidAccept(onDidAccept),
-    cx.qp.onDidTriggerItemButton(onDidTriggerItemButton),
-  );
-}
-
-// update quickpick event listeners for the file search query
-export function setupQuickPickForFilesQuery() {
-  cx.qp.placeholder = '🫧';
-  cx.qp.items = [];
-  cx.qp.canSelectMany = false;
-  cx.qp.value = getSelectedText();
-  cx.disposables.query.push(
-    cx.qp.onDidChangeValue(onDidChangeFzfValue),
     cx.qp.onDidChangeActive(onDidChangeActive),
     cx.qp.onDidAccept(onDidAccept),
     cx.qp.onDidTriggerItemButton(onDidTriggerItemButton),
@@ -81,26 +67,11 @@ function onDidChangeValue(value: string) {
     cx.qp.title = extraRgFlags.length > 0 ? `rg '${cx.query}' ${extraRgFlags.join(' ')}` : undefined;
   }
 
-  rgSearch(updatedQuery, extraRgFlags);
-}
-
-function onDidChangeFzfValue(value: string) {
-  checkKillProcess();
-
-  if (!value) {
-    cx.qp.items = [];
-    return;
+  if (cx.activeSearchType === 'FZF') {
+    fzfSearch(value, extraRgFlags);
+  } else {
+    rgSearch(updatedQuery, extraRgFlags);
   }
-
-  cx.query = value;
-
-  // jump to rg custom menu if the prefix is found in the query
-  if (cx.config.gotoRgMenuActionsPrefix && value.startsWith(cx.config.gotoRgMenuActionsPrefix)) {
-    setupRgMenuActions();
-    return;
-  }
-
-  fzfSearch(value);
 }
 
 // when item is 'FOCUSSED'

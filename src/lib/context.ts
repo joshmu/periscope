@@ -13,7 +13,6 @@ const query = '';
 const spawnRegistry: ChildProcessWithoutNullStreams[] = [];
 const config = getConfig();
 const rgMenuActionsSelected: string[] = [];
-const fzfMenuActionsSelected: string[] = [];
 const highlightDecoration = initHighlightLineInstance();
 const disposables: DisposablesMap = {
   general: [],
@@ -21,6 +20,7 @@ const disposables: DisposablesMap = {
   query: [],
 };
 const appState = updateAppState('IDLE');
+const activeSearchType = setSearchType('RG');
 
 export const context = {
   resetContext,
@@ -31,7 +31,7 @@ export const context = {
   spawnRegistry,
   config,
   rgMenuActionsSelected,
-  fzfMenuActionsSelected,
+  activeSearchType,
   highlightDecoration,
   disposables,
   appState,
@@ -46,7 +46,6 @@ function resetContext() {
   context.spawnRegistry = [];
   context.config = getConfig();
   context.rgMenuActionsSelected = [];
-  context.fzfMenuActionsSelected = [];
   context.highlightDecoration = initHighlightLineInstance();
   context.disposables = {
     general: [],
@@ -61,4 +60,12 @@ export function updateAppState(state: AppState) {
     context.appState = state;
   }
   return state;
+}
+
+type SearchType = 'RG' | 'FZF';
+export function setSearchType(type: SearchType) {
+  if (context?.activeSearchType) {
+    context.activeSearchType = type;
+  }
+  return type;
 }
