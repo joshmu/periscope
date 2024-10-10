@@ -119,7 +119,7 @@ Add a keybinding (`keybindings.json`):
 This extension contributes the following settings:
 
 - `periscope.search`: Enable Periscope Search
-- `periscope.openInHorizontalSplit`: Open the result preview in a horizontal split
+- `periscope.openInHorizontalSplit`: Open the result preview in a horizontal split.
 
 ## Troubleshooting
 
