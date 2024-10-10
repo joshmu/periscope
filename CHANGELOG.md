@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.8.1](https://github.com/joshmu/periscope/compare/v1.8.0...v1.8.1) (2024-10-10)
+
 # [1.8.0](https://github.com/joshmu/periscope/compare/v1.7.4...v1.8.0) (2024-08-17)
 
 ### Features
