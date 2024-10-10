@@ -21,8 +21,16 @@ export function formatPathLabel(filePath: string) {
     workspaceFolders.find((folder) => filePath.startsWith(folder.uri.fsPath)) || workspaceFolders[0];
 
   const workspaceFolderName = workspaceFolder.name;
-  const relativeFilePath = path.relative(workspaceFolder.uri.fsPath, filePath);
-  const folders = [workspaceFolderName, ...relativeFilePath.split(path.sep)];
+  let relativeFilePath;
+  let folders;
+
+  if (config.showWorkspaceFolderInFilePath) {
+    relativeFilePath = path.relative(workspaceFolder.uri.fsPath, filePath);
+    folders = [workspaceFolderName, ...relativeFilePath.split(path.sep)];
+  } else {
+    relativeFilePath = path.relative(workspaceFolder.uri.fsPath, filePath).replace(/(\.\.\/)+/, '');
+    folders = [...relativeFilePath.split(path.sep)];
+  }
 
   // abbreviate path if too long
   if (folders.length > config.startFolderDisplayDepth + config.endFolderDisplayDepth) {
