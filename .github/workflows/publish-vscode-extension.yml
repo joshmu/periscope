@@ -15,7 +15,17 @@ jobs:
           node-version: 20
       - run: npm ci
       - name: Semantic Release
-        run: npx semantic-release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Force patch bump if no release
+        if: steps.semantic.outputs.new_release_published != 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          npm version patch -m "chore(release): bump version to %s [skip ci]"
+          git push --follow-tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
