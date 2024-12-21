@@ -100,9 +100,6 @@ jobs:
       - run: npx @vscode/vsce publish --packagePath $(find . -iname *.vsix)
         env:
           VSCE_PAT: ${{ secrets.VS_MARKETPLACE_TOKEN }}
-
-      # The Open VSX publishing steps remain commented out as platform-specific packages are not supported.
-      # - name: Install Open VSX CLI
-      #   run: npm install -g ovsx
-      # - name: Publish Extension to Open VSX Registry
-      #   run: ovsx publish -p ${{ secrets.OPEN_VSX_TOKEN }}
+      - run: npx ovsx publish --packagePath $(find . -iname *.vsix)
+        env:
+          OVSX_PAT: ${{ secrets.OPEN_VSX_TOKEN }}
