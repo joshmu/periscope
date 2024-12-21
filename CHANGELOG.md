@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+# [1.9.0](https://github.com/joshmu/periscope/compare/v1.8.2...v1.9.0) (2024-12-21)
+
+### Features
+
+- support for platform specific extension on open-vsx.org ([143923b](https://github.com/joshmu/periscope/commit/143923bce29fa93ff18e259ad4f10885285e4c04))
+
 ## [1.8.1](https://github.com/joshmu/periscope/compare/v1.8.0...v1.8.1) (2024-10-10)
 
 # [1.8.0](https://github.com/joshmu/periscope/compare/v1.7.4...v1.8.0) (2024-08-17)
