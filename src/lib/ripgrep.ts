@@ -1,4 +1,3 @@
-import { rgPath as vscodeRgPath } from '@vscode/ripgrep';
 import { spawn } from 'child_process';
 import * as vscode from 'vscode';
 import { getConfig } from '../utils/getConfig';
@@ -9,20 +8,11 @@ import { log, notifyError } from '../utils/log';
 import { createResultItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
 
-// grab the bundled ripgrep binary from vscode
-function ripgrepPath(optionsPath?: string) {
-  if (optionsPath?.trim()) {
-    return optionsPath.trim();
-  }
-
-  return vscodeRgPath;
-}
-
 function getRgCommand(value: string, extraFlags?: string[]) {
   const config = getConfig();
   const { workspaceFolders } = vscode.workspace;
 
-  const rgPath = ripgrepPath(config.rgPath);
+  const { rgPath } = config;
 
   const rgRequiredFlags = ['--line-number', '--column', '--no-heading', '--with-filename', '--color=never', '--json'];
 
