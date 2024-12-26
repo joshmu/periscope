@@ -712,4 +712,119 @@ export function UserProfile({ name, age }: Props) {
     // Verify language ID for syntax highlighting
     assert.strictEqual(mockDocument.languageId, 'typescript', 'Should identify TypeScript for syntax highlighting');
   });
+
+  test('should handle preview content scrolling and navigation', async () => {
+    // Mock document with large content to enable scrolling
+    const mockContent = Array(100)
+      .fill(0)
+      .map((_, i) => `Line ${i + 1}: console.log('test line ${i + 1}');`)
+      .join('\n');
+
+    const mockDocument = {
+      getText: sandbox.stub().returns(mockContent),
+      lineAt: (line: number) => ({
+        text: `Line ${line + 1}: console.log('test line ${line + 1}');`,
+        range: new vscode.Range(line, 0, line, 45),
+      }),
+      lineCount: 100,
+      uri: vscode.Uri.file('src/test/longFile.ts'),
+      languageId: 'typescript',
+      visibleRanges: [new vscode.Range(0, 0, 20, 0)], // Initial visible range
+    };
+
+    // Mock editor for scrolling
+    const mockEditor = {
+      document: mockDocument,
+      visibleRanges: [new vscode.Range(0, 0, 20, 0)],
+      revealRange: sandbox.stub().callsFake((range: vscode.Range, type?: vscode.TextEditorRevealType) => {
+        // Update visible ranges to center around the revealed line
+        const linesVisible = 20;
+        const halfVisible = Math.floor(linesVisible / 2);
+        const startLine = Math.max(0, range.start.line - halfVisible);
+        const endLine = Math.min(mockDocument.lineCount - 1, range.start.line + halfVisible);
+        mockEditor.visibleRanges = [new vscode.Range(startLine, 0, endLine, 0)];
+      }),
+      selection: new vscode.Selection(0, 0, 0, 0),
+      options: {
+        get: (key: string) => {
+          if (key === 'lineNumbers') return 'on';
+          if (key === 'scrollBehavior') return 'smooth';
+          return undefined;
+        },
+      },
+      edit: async (callback: any) => {
+        await callback({
+          replace: (range: vscode.Range, newText: string) =>
+            // Simulate text replacement
+            true,
+        });
+        return true;
+      },
+    };
+
+    // Mock workspace and path resolution
+    const workspaceRoot = '/Users/joshmu/Desktop/code/projects/vscode-extensions/periscope';
+    sandbox
+      .stub(vscode.workspace, 'workspaceFolders')
+      .value([{ uri: vscode.Uri.file(workspaceRoot), name: 'periscope', index: 0 }]);
+
+    // Mock text document opening and editor creation
+    sandbox.stub(vscode.workspace, 'openTextDocument').resolves(mockDocument as any);
+    sandbox.stub(vscode.window, 'showTextDocument').callsFake(async () => {
+      // Simulate scrolling to the target line
+      const targetRange = new vscode.Range(49, 0, 49, 45); // Line 50 (0-based)
+      mockEditor.revealRange(targetRange, vscode.TextEditorRevealType.InCenter);
+      return mockEditor as any;
+    });
+
+    // Sample QuickPick item with match in the middle of the file
+    const item: QPItemQuery = {
+      _type: 'QuickPickItemQuery',
+      label: '$(file) src/test/longFile.ts:50:1',
+      description: "Line 50: console.log('test line 50');",
+      data: {
+        filePath: 'src/test/longFile.ts',
+        linePos: 50,
+        colPos: 1,
+        rawResult: {} as any,
+      },
+    };
+
+    // Call peekItem
+    await peekItem([item]);
+
+    // Verify document was opened
+    const openTextDocumentStub = vscode.workspace.openTextDocument as sinon.SinonStub;
+    assert.strictEqual(openTextDocumentStub.calledOnce, true, 'Should open document for preview');
+
+    // Verify editor was shown
+    const showTextDocumentStub = vscode.window.showTextDocument as sinon.SinonStub;
+    assert.strictEqual(showTextDocumentStub.calledOnce, true, 'Should show text document');
+
+    // Verify scroll to target line
+    const revealRangeStub = mockEditor.revealRange as sinon.SinonStub;
+    assert.strictEqual(revealRangeStub.calledOnce, true, 'Should call revealRange');
+
+    const revealedRange = revealRangeStub.firstCall.args[0] as vscode.Range;
+    assert.strictEqual(
+      revealedRange.start.line,
+      49, // 0-based index for line 50
+      'Should reveal the correct line',
+    );
+
+    // Verify visible range includes context
+    const visibleStartLine = mockEditor.visibleRanges[0].start.line;
+    const visibleEndLine = mockEditor.visibleRanges[0].end.line;
+    assert.ok(visibleStartLine <= 49 && visibleEndLine >= 49, 'Target line should be within visible range');
+
+    // Verify we can see enough context (at least 3 lines before and after)
+    assert.ok(
+      visibleStartLine <= 46, // 3 lines before target
+      'Should show at least 3 lines of context before target',
+    );
+    assert.ok(
+      visibleEndLine >= 52, // 3 lines after target
+      'Should show at least 3 lines of context after target',
+    );
+  });
 });
