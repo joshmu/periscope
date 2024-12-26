@@ -6,7 +6,7 @@ import { QPItemQuery, RgLine, AllQPItemVariants, QPItemRgMenuAction } from '../.
 import { context as cx } from '../../lib/context';
 import { setupQuickPickForQuery, setupRgMenuActions } from '../../lib/quickpickActions';
 import { getSelectedText } from '../../utils/getSelectedText';
-import { peekItem } from '../../lib/editorActions';
+import { peekItem, handleNoResultsFound } from '../../lib/editorActions';
 
 suite('QuickPick UI', () => {
   let sandbox: sinon.SinonSandbox;
@@ -372,5 +372,74 @@ suite('QuickPick UI', () => {
     // Verify QuickPick was hidden
     const hideStub = mockQuickPick.hide as sinon.SinonStub;
     assert.strictEqual(hideStub.calledOnce, true, 'Should hide QuickPick after native search');
+  });
+
+  test('should handle previous results when no matches found', async () => {
+    // Mock configuration
+    cx.config = {
+      ...cx.config,
+      showPreviousResultsWhenNoMatches: true,
+    };
+
+    // Sample previous results
+    const previousResults: QPItemQuery[] = [
+      {
+        _type: 'QuickPickItemQuery',
+        label: '$(file) src/test.ts:42:13',
+        description: 'const test = "hello world";',
+        data: {
+          filePath: 'src/test.ts',
+          linePos: 42,
+          colPos: 13,
+          rawResult: {},
+        },
+      },
+    ];
+
+    // Set previous results
+    cx.qp.items = previousResults;
+
+    // Call handleNoResultsFound
+    handleNoResultsFound();
+
+    // Verify previous results are kept
+    assert.deepStrictEqual(
+      cx.qp.items,
+      previousResults,
+      'Should keep previous results when showPreviousResultsWhenNoMatches is true',
+    );
+
+    // Change configuration to not show previous results
+    cx.config = {
+      ...cx.config,
+      showPreviousResultsWhenNoMatches: false,
+    };
+
+    // Mock previous active editor
+    cx.previousActiveEditor = {
+      document: { uri: vscode.Uri.file('src/test.ts') },
+      viewColumn: vscode.ViewColumn.One,
+    } as vscode.TextEditor;
+
+    // Mock showTextDocument
+    const showTextDocumentStub = sandbox.stub(vscode.window, 'showTextDocument').resolves();
+
+    // Call handleNoResultsFound again
+    handleNoResultsFound();
+
+    // Verify items are cleared
+    assert.strictEqual(cx.qp.items.length, 0, 'Should clear items when showPreviousResultsWhenNoMatches is false');
+
+    // Verify origin document is shown
+    assert.strictEqual(
+      showTextDocumentStub.calledOnce,
+      true,
+      'Should show origin document when no results found and showPreviousResultsWhenNoMatches is false',
+    );
+    assert.deepStrictEqual(
+      showTextDocumentStub.firstCall.args,
+      [cx.previousActiveEditor.document, { preserveFocus: true, preview: true }],
+      'Should call showTextDocument with correct arguments',
+    );
   });
 });
