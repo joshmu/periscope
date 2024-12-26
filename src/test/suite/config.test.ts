@@ -64,4 +64,28 @@ suite('Configuration Tests', () => {
     assert.strictEqual(config.peekBorderWidth, '2px', 'Default peekBorderWidth should be 2px');
     assert.strictEqual(config.peekBorderStyle, 'solid', 'Default peekBorderStyle should be solid');
   });
+
+  test('should handle custom ripgrep options', () => {
+    // Mock workspace configuration with custom ripgrep options
+    const customRgOptions = ['--case-sensitive', '--follow', '--hidden'];
+    const mockConfig: Partial<WorkspaceConfiguration> = {
+      get<T>(section: string, defaultValue?: T): T | undefined {
+        if (section === 'rgOptions') {
+          return customRgOptions as T;
+        }
+        return defaultValue;
+      },
+    };
+    sandbox.stub(vscode.workspace, 'getConfiguration').returns(mockConfig as WorkspaceConfiguration);
+
+    // Get the config
+    const config = getConfig();
+
+    // Verify custom ripgrep options
+    assert.deepStrictEqual(config.rgOptions, customRgOptions, 'Custom rgOptions should be applied correctly');
+
+    // Verify other settings remain at default values
+    assert.deepStrictEqual(config.addSrcPaths, [], 'Other settings should remain at default values');
+    assert.deepStrictEqual(config.rgGlobExcludes, [], 'Other settings should remain at default values');
+  });
 });
