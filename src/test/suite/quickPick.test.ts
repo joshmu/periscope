@@ -7,6 +7,7 @@ import { context as cx } from '../../lib/context';
 import { setupQuickPickForQuery, setupRgMenuActions } from '../../lib/quickpickActions';
 import { getSelectedText } from '../../utils/getSelectedText';
 import { peekItem, handleNoResultsFound } from '../../lib/editorActions';
+import { createResultItem } from '../../utils/quickpickUtils';
 
 suite('QuickPick UI', () => {
   let sandbox: sinon.SinonSandbox;
@@ -513,5 +514,44 @@ suite('QuickPick UI', () => {
     // Verify QuickPick was disposed
     const disposeStub = cx.qp.dispose as sinon.SinonStub;
     assert.strictEqual(disposeStub.calledOnce, true, 'Should dispose QuickPick after selection');
+  });
+
+  test('should format QuickPick items correctly', () => {
+    // Test case 1: Basic item formatting with all fields
+    const basicItem = createResultItem('src/test/file.ts', 'const testVar = "hello";', 42, 13, {
+      type: 'match',
+      data: { path: { text: 'src/test/file.ts' } },
+    });
+
+    assert.strictEqual(basicItem._type, 'QuickPickItemQuery', 'Should have correct type');
+    assert.strictEqual(basicItem.label, 'const testVar = "hello";', 'Should set label to trimmed file contents');
+    assert.strictEqual(basicItem.data.filePath, 'src/test/file.ts', 'Should set correct file path');
+    assert.strictEqual(basicItem.data.linePos, 42, 'Should set correct line position');
+    assert.strictEqual(basicItem.data.colPos, 13, 'Should set correct column position');
+    assert.strictEqual(basicItem.alwaysShow, true, 'Should set alwaysShow for regex support');
+    assert.strictEqual(basicItem.buttons?.length, 1, 'Should have one button');
+    assert.strictEqual(
+      basicItem.buttons?.[0].tooltip,
+      'Open in Horizontal split',
+      'Should have correct button tooltip',
+    );
+
+    // Test case 2: Item formatting with empty content
+    const emptyItem = createResultItem('src/empty.ts', '', 1, 1);
+    assert.strictEqual(emptyItem.label?.trim(), '', 'Should handle empty content');
+    assert.strictEqual(emptyItem.data.filePath, 'src/empty.ts', 'Should set file path for empty content');
+
+    // Test case 3: Item formatting with special characters
+    const specialCharsItem = createResultItem('src/special/file.ts', 'const π = Math.PI; // Unicode π', 1, 1);
+    assert.strictEqual(
+      specialCharsItem.label,
+      'const π = Math.PI; // Unicode π',
+      'Should handle special characters in content',
+    );
+
+    // Test case 4: Item formatting with very long content
+    const longContent = 'a'.repeat(1000);
+    const longItem = createResultItem('src/long.ts', longContent, 1, 1);
+    assert.strictEqual(longItem.label, longContent.trim(), 'Should handle long content without truncation');
   });
 });
