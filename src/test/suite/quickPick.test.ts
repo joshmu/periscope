@@ -252,6 +252,76 @@ suite('QuickPick UI', () => {
     );
   });
 
+  test('should handle menu actions navigation', async () => {
+    // Mock configuration
+    cx.config = {
+      ...cx.config,
+      gotoRgMenuActionsPrefix: '<<',
+      rgMenuActions: [
+        { value: "--type-add 'web:*.{html|css|js}' -t web", label: 'Web Files' },
+        { value: "--type-add 'docs:*.{md|txt}' -t docs", label: 'Documentation Files' },
+      ],
+    };
+
+    // Setup QuickPick handlers
+    setupQuickPickForQuery();
+
+    // Get the handler that was registered
+    const handler = onDidChangeValueStub.args[0][0];
+
+    // Call the handler with a query that starts with the menu actions prefix
+    handler('<<');
+
+    // Verify QuickPick is configured for menu actions
+    assert.strictEqual(cx.qp.canSelectMany, true, 'QuickPick should allow multiple selections');
+    assert.strictEqual(
+      cx.qp.placeholder,
+      '🫧 Select actions or type custom rg options (Space key to check/uncheck)',
+      'QuickPick should show correct placeholder',
+    );
+
+    // Verify menu items are created correctly
+    assert.strictEqual(cx.qp.items.length, 2, 'Should have 2 menu items');
+
+    const firstItem = cx.qp.items[0] as QPItemRgMenuAction;
+    assert.strictEqual(firstItem._type, 'QuickPickItemRgMenuAction');
+    assert.strictEqual(firstItem.label, 'Web Files');
+    assert.strictEqual(firstItem.description, "--type-add 'web:*.{html|css|js}' -t web");
+    assert.strictEqual(firstItem.data.rgOption, "--type-add 'web:*.{html|css|js}' -t web");
+
+    const secondItem = cx.qp.items[1] as QPItemRgMenuAction;
+    assert.strictEqual(secondItem._type, 'QuickPickItemRgMenuAction');
+    assert.strictEqual(secondItem.label, 'Documentation Files');
+    assert.strictEqual(secondItem.description, "--type-add 'docs:*.{md|txt}' -t docs");
+    assert.strictEqual(secondItem.data.rgOption, "--type-add 'docs:*.{md|txt}' -t docs");
+
+    // Test selection handling
+    cx.qp.selectedItems = [cx.qp.items[0]];
+
+    // Setup event emitter for accept action
+    const onDidAcceptEmitter = new vscode.EventEmitter<void>();
+    Object.defineProperty(mockQuickPick, 'onDidAccept', {
+      get: () => onDidAcceptEmitter.event,
+    });
+
+    // Register the handler
+    setupRgMenuActions();
+
+    // Trigger accept
+    onDidAcceptEmitter.fire();
+
+    // Verify selected actions are stored
+    assert.deepStrictEqual(
+      cx.rgMenuActionsSelected,
+      ["--type-add 'web:*.{html|css|js}' -t web"],
+      'Should store selected menu action',
+    );
+
+    // Verify QuickPick is reset for query input
+    assert.strictEqual(cx.qp.canSelectMany, false, 'QuickPick should disable multiple selections');
+    assert.strictEqual(cx.qp.placeholder, '🫧', 'QuickPick should show default placeholder');
+  });
+
   test('should handle native search integration', async () => {
     // Mock configuration
     cx.config = {
