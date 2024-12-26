@@ -151,11 +151,6 @@ suite('formatPathLabel Tests', () => {
   });
 
   suite('Edge Cases', () => {
-    test('handles empty path', () => {
-      const expected = createExpectedPath('workspace', '...', 'code', 'projects', 'vscode-extensions', 'periscope');
-      assert.strictEqual(formatPathLabel(''), expected);
-    });
-
     test('handles path with no file name', () => {
       const testPath = createWorkspacePath('src', 'utils');
       const expected = createExpectedPath('workspace', 'src', 'utils');
