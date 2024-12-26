@@ -11,16 +11,13 @@ import { peekItem } from '../../lib/editorActions';
 suite('QuickPick UI', () => {
   let sandbox: sinon.SinonSandbox;
   let mockQuickPick: vscode.QuickPick<any>;
-  let onDidChangeActiveEmitter: vscode.EventEmitter<readonly AllQPItemVariants[]>;
+  let onDidChangeValueStub: sinon.SinonStub;
 
   setup(() => {
     sandbox = sinon.createSandbox();
 
-    // Create event emitters
-    const onDidChangeValueEmitter = new vscode.EventEmitter<string>();
-    onDidChangeActiveEmitter = new vscode.EventEmitter<readonly AllQPItemVariants[]>();
-    const onDidAcceptEmitter = new vscode.EventEmitter<void>();
-    const onDidTriggerItemButtonEmitter = new vscode.EventEmitter<vscode.QuickPickItemButtonEvent<AllQPItemVariants>>();
+    // Create stubs for event handlers
+    onDidChangeValueStub = sandbox.stub().returns({ dispose: () => undefined });
 
     // Mock QuickPick
     mockQuickPick = {
@@ -33,11 +30,11 @@ suite('QuickPick UI', () => {
       show: sandbox.stub(),
       hide: sandbox.stub(),
       dispose: sandbox.stub(),
-      onDidChangeValue: onDidChangeValueEmitter.event,
-      onDidChangeActive: onDidChangeActiveEmitter.event,
-      onDidAccept: onDidAcceptEmitter.event,
-      onDidTriggerButton: onDidAcceptEmitter.event,
-      onDidTriggerItemButton: onDidTriggerItemButtonEmitter.event,
+      onDidChangeValue: onDidChangeValueStub,
+      onDidChangeActive: sandbox.stub().returns({ dispose: () => undefined }),
+      onDidAccept: sandbox.stub().returns({ dispose: () => undefined }),
+      onDidTriggerButton: sandbox.stub().returns({ dispose: () => undefined }),
+      onDidTriggerItemButton: sandbox.stub().returns({ dispose: () => undefined }),
     } as any;
 
     // Mock context
@@ -253,5 +250,57 @@ suite('QuickPick UI', () => {
       ['--custom-flag'],
       'Should store custom command when no items selected',
     );
+  });
+
+  test('should handle native search integration', async () => {
+    // Mock configuration
+    cx.config = {
+      ...cx.config,
+      enableGotoNativeSearch: true,
+      gotoNativeSearchSuffix: '>>',
+    };
+
+    // Mock VSCode commands
+    const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand').resolves();
+
+    // Setup QuickPick handlers
+    setupQuickPickForQuery();
+
+    // Get the handler that was registered
+    const handler = onDidChangeValueStub.args[0][0];
+    console.log('Handler registered:', !!handler);
+
+    // Set the search query
+    const searchQuery = 'searchTerm >>';
+    cx.query = searchQuery;
+    console.log('Search query:', searchQuery);
+    console.log('Context query:', cx.query);
+    console.log('Config:', JSON.stringify(cx.config, null, 2));
+
+    // Call the handler with the search query
+    handler(searchQuery);
+
+    // Allow async operations to complete
+    await new Promise(setImmediate);
+
+    // Log the command calls
+    console.log('Execute command calls:', executeCommandStub.args);
+
+    // Verify native search was triggered with all required parameters
+    assert.strictEqual(
+      executeCommandStub.calledWith('workbench.action.findInFiles', {
+        query: 'searchTerm ',
+        isRegex: true,
+        isCaseSensitive: false,
+        matchWholeWord: false,
+        triggerSearch: true,
+      }),
+      true,
+      'Should trigger native search with correct parameters',
+    );
+
+    // Verify QuickPick was hidden
+    const hideStub = mockQuickPick.hide as sinon.SinonStub;
+    assert.strictEqual(hideStub.calledOnce, true, 'Should hide QuickPick after native search');
   });
 });
