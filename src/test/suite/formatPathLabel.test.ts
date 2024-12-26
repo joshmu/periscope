@@ -48,32 +48,32 @@ suite('formatPathLabel Tests', () => {
   });
 
   suite('Workspace Folder Handling', () => {
-    test('returns original path when no workspace folders exist', () => {
-      workspaceFoldersStub.get(() => undefined);
-      const testPath = '/some/test/path/file.ts';
-      assert.strictEqual(formatPathLabel(testPath), testPath);
-    });
-
-    test('includes workspace folder name when showWorkspaceFolderInFilePath is true', () => {
+    test('handles single workspace folder', () => {
       const testPath = '/test/workspace/src/utils/file.ts';
       const expected = path.join('workspace', 'src', 'utils', 'file.ts');
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
-    test('excludes workspace folder name when showWorkspaceFolderInFilePath is false', () => {
+    test('handles no workspace folder', () => {
+      workspaceFoldersStub.get(() => undefined);
+      const testPath = '/some/test/path/file.ts';
+      assert.strictEqual(formatPathLabel(testPath), testPath);
+    });
+
+    test('handles workspace folder name toggle', () => {
       getConfigStub.returns({ ...defaultConfig, showWorkspaceFolderInFilePath: false });
       const testPath = '/test/workspace/src/utils/file.ts';
       const expected = path.join('workspace', 'src', 'utils', 'file.ts');
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
-    test('handles paths outside workspace folder by using first workspace as fallback', () => {
+    test('handles file outside workspace folder', () => {
       const testPath = '/different/workspace/src/file.ts';
       const expected = path.join('workspace', '...', 'different', 'workspace', 'src', 'file.ts');
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
-    test('handles multiple workspace folders by using correct workspace', () => {
+    test('handles multiple workspace folders', () => {
       workspaceFoldersStub.get(
         () =>
           [
