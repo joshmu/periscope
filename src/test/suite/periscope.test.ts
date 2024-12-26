@@ -133,7 +133,7 @@ suite('Periscope Core', () => {
     const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand');
 
     // Call search function
-    await PERISCOPE.search();
+    PERISCOPE.search();
 
     // Verify QuickPick is shown
     assert.strictEqual((mockQuickPick.show as sinon.SinonStub).calledOnce, true, 'Should show QuickPick');
