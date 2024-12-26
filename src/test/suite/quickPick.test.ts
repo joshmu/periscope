@@ -442,4 +442,76 @@ suite('QuickPick UI', () => {
       'Should call showTextDocument with correct arguments',
     );
   });
+
+  test('should handle search result selection', async () => {
+    // Mock path.resolve to return the input path
+    sandbox.stub(path, 'resolve').callsFake((p) => p);
+
+    // Sample search result
+    const searchResult: QPItemQuery = {
+      _type: 'QuickPickItemQuery',
+      label: '$(file) src/test.ts:42:13',
+      description: 'const test = "hello world";',
+      data: {
+        filePath: 'src/test.ts',
+        linePos: 42,
+        colPos: 13,
+        rawResult: {},
+      },
+    };
+
+    // Mock document and editor
+    const mockDocument = {
+      lineAt: sandbox.stub().returns({
+        range: new vscode.Range(0, 0, 0, 10),
+      }),
+      uri: vscode.Uri.file('src/test.ts'),
+    };
+    const mockEditor = {
+      document: mockDocument,
+      edit: sandbox.stub().resolves(true),
+      selection: new vscode.Selection(0, 0, 0, 0),
+      revealRange: sandbox.stub(),
+    };
+
+    // Mock workspace and window
+    sandbox.stub(vscode.workspace, 'openTextDocument').resolves(mockDocument as any);
+    sandbox.stub(vscode.window, 'showTextDocument').resolves(mockEditor as any);
+
+    // Setup QuickPick
+    setupQuickPickForQuery();
+    cx.qp.selectedItems = [searchResult];
+
+    // Get the onDidAccept handler
+    const onDidAcceptStub = cx.qp.onDidAccept as sinon.SinonStub;
+    const handler = onDidAcceptStub.args[0][0];
+
+    // Call the handler to simulate selection
+    await handler();
+
+    // Allow async operations to complete
+    await new Promise(setImmediate);
+
+    // Get the stubs
+    const openTextDocumentStub = vscode.workspace.openTextDocument as sinon.SinonStub;
+    const showTextDocumentStub = vscode.window.showTextDocument as sinon.SinonStub;
+
+    // Verify document was opened
+    assert.strictEqual(openTextDocumentStub.calledOnce, true, 'Should open the document');
+    assert.strictEqual(openTextDocumentStub.firstCall.args[0], 'src/test.ts', 'Should open the correct file');
+
+    // Verify document was shown
+    assert.strictEqual(showTextDocumentStub.calledOnce, true, 'Should show the document');
+    assert.deepStrictEqual(showTextDocumentStub.firstCall.args[1], {}, 'Should show document with default options');
+
+    // Verify cursor position was set
+    const editStub = mockEditor.edit as sinon.SinonStub;
+    const revealRangeStub = mockEditor.revealRange as sinon.SinonStub;
+    assert.strictEqual(editStub.calledOnce, true, 'Should set cursor position');
+    assert.strictEqual(revealRangeStub.calledOnce, true, 'Should reveal the range');
+
+    // Verify QuickPick was disposed
+    const disposeStub = cx.qp.dispose as sinon.SinonStub;
+    assert.strictEqual(disposeStub.calledOnce, true, 'Should dispose QuickPick after selection');
+  });
 });
