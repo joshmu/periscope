@@ -2,9 +2,9 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { QPItemQuery, RgLine, AllQPItemVariants } from '../../types';
+import { QPItemQuery, RgLine, AllQPItemVariants, QPItemRgMenuAction } from '../../types';
 import { context as cx } from '../../lib/context';
-import { setupQuickPickForQuery } from '../../lib/quickpickActions';
+import { setupQuickPickForQuery, setupRgMenuActions } from '../../lib/quickpickActions';
 import { getSelectedText } from '../../utils/getSelectedText';
 import { peekItem } from '../../lib/editorActions';
 
@@ -29,12 +29,14 @@ suite('QuickPick UI', () => {
       placeholder: '',
       busy: false,
       canSelectMany: false,
+      buttons: [],
       show: sandbox.stub(),
       hide: sandbox.stub(),
       dispose: sandbox.stub(),
       onDidChangeValue: onDidChangeValueEmitter.event,
       onDidChangeActive: onDidChangeActiveEmitter.event,
       onDidAccept: onDidAcceptEmitter.event,
+      onDidTriggerButton: onDidAcceptEmitter.event,
       onDidTriggerItemButton: onDidTriggerItemButtonEmitter.event,
     } as any;
 
@@ -168,7 +170,88 @@ suite('QuickPick UI', () => {
   });
 
   test('should handle menu actions', async () => {
-    // Test menu actions handling
-    assert.ok(true, 'Placeholder test');
+    // Mock configuration with all required properties
+    const mockConfig = {
+      rgOptions: [] as string[],
+      addSrcPaths: [] as string[],
+      rgGlobExcludes: [] as string[],
+      rgMenuActions: [
+        { value: "--type-add 'web:*.{html|css|js}' -t web", label: 'Web Files' },
+        { value: "--type-add 'docs:*.{md|txt}' -t docs", label: 'Documentation Files' },
+      ],
+      rgQueryParams: [] as Array<{ param?: string; regex: string }>,
+      rgPath: '',
+      showWorkspaceFolderInFilePath: false,
+      startFolderDisplayIndex: 0,
+      startFolderDisplayDepth: 1,
+      gotoRgMenuActionsPrefix: '<<',
+      enableGotoNativeSearch: true,
+      gotoNativeSearchSuffix: '>>',
+      rgQueryParamsShowTitle: true,
+      peekBorderStyle: 'none',
+      peekBorderColor: '#000000',
+      peekBorderWidth: '1px',
+      peekBorderRadius: '3px',
+      peekMaxHeight: 20,
+      peekMinHeight: 3,
+      peekLineNumbers: true,
+      peekWrapText: true,
+      showLineNumbers: true,
+      showColumnNumbers: true,
+      showFullPath: true,
+      endFolderDisplayDepth: 2,
+      alwaysShowRgMenuActions: false,
+      showPreviousResultsWhenNoMatches: true,
+    };
+    cx.config = mockConfig;
+
+    // Setup ripgrep menu actions
+    setupRgMenuActions();
+
+    // Verify QuickPick is configured correctly for menu actions
+    assert.strictEqual(cx.qp.canSelectMany, true, 'QuickPick should allow multiple selections');
+    assert.strictEqual(cx.qp.placeholder, '🫧 Select actions or type custom rg options (Space key to check/uncheck)');
+
+    // Verify menu items are created correctly
+    assert.strictEqual(cx.qp.items.length, 2, 'Should have 2 menu items');
+    const firstItem = cx.qp.items[0] as QPItemRgMenuAction;
+    assert.strictEqual(firstItem._type, 'QuickPickItemRgMenuAction');
+    assert.strictEqual(firstItem.label, 'Web Files');
+    assert.strictEqual(firstItem.description, "--type-add 'web:*.{html|css|js}' -t web");
+    assert.strictEqual(firstItem.data.rgOption, "--type-add 'web:*.{html|css|js}' -t web");
+
+    // Test selection handling
+    cx.qp.selectedItems = [cx.qp.items[0]];
+
+    // Setup event emitter for accept action
+    const onDidAcceptEmitter = new vscode.EventEmitter<void>();
+    Object.defineProperty(mockQuickPick, 'onDidAccept', {
+      get: () => onDidAcceptEmitter.event,
+    });
+
+    // Register the handler
+    setupRgMenuActions();
+
+    // Trigger accept
+    onDidAcceptEmitter.fire();
+
+    // Verify selected actions are stored
+    assert.deepStrictEqual(
+      cx.rgMenuActionsSelected,
+      ["--type-add 'web:*.{html|css|js}' -t web"],
+      'Should store selected menu action',
+    );
+
+    // Test custom command handling
+    cx.qp.selectedItems = [];
+    cx.qp.value = '--custom-flag';
+    onDidAcceptEmitter.fire();
+
+    // Verify custom command is stored
+    assert.deepStrictEqual(
+      cx.rgMenuActionsSelected,
+      ['--custom-flag'],
+      'Should store custom command when no items selected',
+    );
   });
 });
