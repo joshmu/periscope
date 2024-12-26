@@ -72,24 +72,21 @@ suite('Ripgrep Integration', () => {
     assert.deepStrictEqual(config.addSrcPaths, ['/custom/src'], 'Should include additional source paths');
   });
 
-  // Skipping this test as the glob pattern extraction needs to be fixed
-  test.skip('should handle glob patterns', () => {
-    // Mock the config
+  test('should handle glob patterns', () => {
+    // Mock the config with correct parameter template
     const mockConfig = {
       rgQueryParams: [
         {
-          regex: '^(.+) -t ?(\\w+)$',
-          param: '-t $1',
+          regex: '^(.+) -g ?"([^"]+)"$',
+          param: '-g "$1"',
         },
       ],
     };
-    sandbox.stub(vscode.workspace, 'getConfiguration').returns({
-      get: (key: string) => mockConfig[key as keyof typeof mockConfig],
-    } as vscode.WorkspaceConfiguration);
+    sandbox.stub(cx, 'config').value(mockConfig);
 
-    // Test query parameter extraction
-    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('search pattern -t js');
-    assert.deepStrictEqual(extraRgFlags, ['-t js'], 'Should extract ripgrep flags');
+    // Test query parameter extraction with glob pattern
+    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('search pattern -g "*.{js,ts}"');
+    assert.deepStrictEqual(extraRgFlags, ['-g "*.{js,ts}"'], 'Should extract ripgrep glob pattern');
     assert.strictEqual(updatedQuery, 'search pattern', 'Should extract base query');
   });
 
