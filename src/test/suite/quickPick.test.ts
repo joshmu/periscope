@@ -614,4 +614,102 @@ suite('QuickPick UI', () => {
     const lineText = mockDocument.lineAt(0).text;
     assert.strictEqual(lineText, 'const testVar = "hello";', 'Should show correct preview content');
   });
+
+  test('should handle advanced preview content with syntax highlighting', async () => {
+    // Mock document with multi-line TypeScript content
+    const mockContent = `
+import { useState } from 'react';
+
+interface Props {
+  name: string;
+  age: number;
+}
+
+export function UserProfile({ name, age }: Props) {
+  const [isEditing, setIsEditing] = useState(false);
+  
+  return (
+    <div className="user-profile">
+      <h1>{name}</h1>
+      <p>Age: {age}</p>
+    </div>
+  );
+}`.trim();
+
+    const mockDocument = {
+      getText: sandbox.stub().returns(mockContent),
+      lineAt: (line: number) => ({
+        text: mockContent.split('\n')[line],
+        range: new vscode.Range(line, 0, line, mockContent.split('\n')[line].length),
+      }),
+      lineCount: mockContent.split('\n').length,
+      uri: vscode.Uri.file('src/components/UserProfile.tsx'),
+      languageId: 'typescript',
+    };
+
+    // Mock workspace and path resolution
+    const workspaceRoot = '/Users/joshmu/Desktop/code/projects/vscode-extensions/periscope';
+    sandbox
+      .stub(vscode.workspace, 'workspaceFolders')
+      .value([{ uri: vscode.Uri.file(workspaceRoot), name: 'periscope', index: 0 }]);
+
+    // Mock text document opening
+    sandbox.stub(vscode.workspace, 'openTextDocument').callsFake(async (uri) => {
+      let expectedUri: vscode.Uri | undefined;
+
+      if (typeof uri === 'string') {
+        expectedUri = vscode.Uri.file(path.join(workspaceRoot, uri));
+      } else if (uri instanceof vscode.Uri) {
+        expectedUri = uri;
+      }
+
+      if (!expectedUri || !(expectedUri instanceof vscode.Uri)) {
+        throw new Error('Invalid URI provided to openTextDocument');
+      }
+
+      assert.strictEqual(expectedUri.fsPath, path.join(workspaceRoot, 'src/components/UserProfile.tsx'));
+      return mockDocument as any;
+    });
+
+    // Sample QuickPick item with multi-line match
+    const item: QPItemQuery = {
+      _type: 'QuickPickItemQuery',
+      label: '$(file) src/components/UserProfile.tsx:9:3',
+      description: 'const [isEditing, setIsEditing] = useState(false);',
+      data: {
+        filePath: 'src/components/UserProfile.tsx',
+        linePos: 9,
+        colPos: 3,
+        rawResult: {} as any,
+      },
+    };
+
+    // Call peekItem
+    await peekItem([item]);
+
+    // Verify document was opened
+    const openTextDocumentStub = vscode.workspace.openTextDocument as sinon.SinonStub;
+    assert.strictEqual(openTextDocumentStub.calledOnce, true, 'Should open document for preview');
+
+    // Verify preview content
+    const matchedLine = mockDocument.lineAt(9 - 1).text; // Convert 1-based line number to 0-based
+    assert.strictEqual(
+      matchedLine,
+      '  const [isEditing, setIsEditing] = useState(false);',
+      'Should show correct matched line',
+    );
+
+    // Verify context lines are available
+    const previousLine = mockDocument.lineAt(9 - 2).text; // Line before match
+    const nextLine = mockDocument.lineAt(9).text; // Line after match
+    assert.strictEqual(
+      previousLine,
+      'export function UserProfile({ name, age }: Props) {',
+      'Should show previous context line',
+    );
+    assert.strictEqual(nextLine, '  ', 'Should show next context line');
+
+    // Verify language ID for syntax highlighting
+    assert.strictEqual(mockDocument.languageId, 'typescript', 'Should identify TypeScript for syntax highlighting');
+  });
 });
