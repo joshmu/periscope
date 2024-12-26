@@ -143,8 +143,8 @@ suite('formatPathLabel Tests', () => {
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
-    test.skip('handles root path', () => {
-      const expected = '..';
+    test('handles root path', () => {
+      const expected = 'workspace/../..';
       assert.strictEqual(formatPathLabel('/'), expected);
     });
 
