@@ -78,7 +78,14 @@ suite('formatPathLabel Tests', () => {
 
     test('handles file outside workspace folder', () => {
       const testPath = path.join('different', 'workspace', 'src', 'file.ts');
-      const expected = createExpectedPath('workspace', '...', 'different', 'workspace', 'src', 'file.ts');
+      const expected = createExpectedPath(
+        'workspace',
+        '...',
+        'different',
+        'workspace',
+        'src',
+        'file.ts',
+      );
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
@@ -101,7 +108,14 @@ suite('formatPathLabel Tests', () => {
       );
 
       const testPath = path.join(workspace2Path, 'src', 'file.ts');
-      const expected = createExpectedPath('workspace', '...', 'test', 'workspace2', 'src', 'file.ts');
+      const expected = createExpectedPath(
+        'workspace',
+        '...',
+        'test',
+        'workspace2',
+        'src',
+        'file.ts',
+      );
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
@@ -117,8 +131,22 @@ suite('formatPathLabel Tests', () => {
 
   suite('Path Abbreviation', () => {
     test('abbreviates long paths according to config depths', () => {
-      const testPath = createWorkspacePath('src', 'deep', 'nested', 'folder', 'structure', 'file.ts');
-      const expected = createExpectedPath('workspace', '...', 'nested', 'folder', 'structure', 'file.ts');
+      const testPath = createWorkspacePath(
+        'src',
+        'deep',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
+      const expected = createExpectedPath(
+        'workspace',
+        '...',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
@@ -130,22 +158,64 @@ suite('formatPathLabel Tests', () => {
 
     test('handles custom start folder display depth', () => {
       getConfigStub.returns({ ...defaultConfig, startFolderDisplayDepth: 3 });
-      const testPath = createWorkspacePath('src', 'deep', 'nested', 'folder', 'structure', 'file.ts');
-      const expected = createExpectedPath('workspace', '...', 'nested', 'folder', 'structure', 'file.ts');
+      const testPath = createWorkspacePath(
+        'src',
+        'deep',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
+      const expected = createExpectedPath(
+        'workspace',
+        '...',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
     test('handles custom end folder display depth', () => {
       getConfigStub.returns({ ...defaultConfig, endFolderDisplayDepth: 2 });
-      const testPath = createWorkspacePath('src', 'deep', 'nested', 'folder', 'structure', 'file.ts');
-      const expected = createExpectedPath('workspace', '...', 'nested', 'folder', 'structure', 'file.ts');
+      const testPath = createWorkspacePath(
+        'src',
+        'deep',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
+      const expected = createExpectedPath(
+        'workspace',
+        '...',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
     test('handles custom start folder display index', () => {
       getConfigStub.returns({ ...defaultConfig, startFolderDisplayIndex: 1 });
-      const testPath = createWorkspacePath('src', 'deep', 'nested', 'folder', 'structure', 'file.ts');
-      const expected = createExpectedPath('workspace', '...', 'nested', 'folder', 'structure', 'file.ts');
+      const testPath = createWorkspacePath(
+        'src',
+        'deep',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
+      const expected = createExpectedPath(
+        'workspace',
+        '...',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
   });
@@ -171,21 +241,47 @@ suite('formatPathLabel Tests', () => {
 
   suite('Config Edge Cases', () => {
     test('handles zero display depths', () => {
-      getConfigStub.returns({ ...defaultConfig, startFolderDisplayDepth: 0, endFolderDisplayDepth: 0 });
-      const testPath = createWorkspacePath('src', 'deep', 'nested', 'folder', 'structure', 'file.ts');
-      const expected = createExpectedPath('workspace', '...', 'nested', 'folder', 'structure', 'file.ts');
+      getConfigStub.returns({
+        ...defaultConfig,
+        startFolderDisplayDepth: 0,
+        endFolderDisplayDepth: 0,
+      });
+      const testPath = createWorkspacePath(
+        'src',
+        'deep',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
+      const expected = createExpectedPath(
+        'workspace',
+        '...',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
     test('handles display depths larger than path length', () => {
-      getConfigStub.returns({ ...defaultConfig, startFolderDisplayDepth: 10, endFolderDisplayDepth: 10 });
+      getConfigStub.returns({
+        ...defaultConfig,
+        startFolderDisplayDepth: 10,
+        endFolderDisplayDepth: 10,
+      });
       const testPath = createWorkspacePath('src', 'utils', 'file.ts');
       const expected = createExpectedPath('workspace', 'src', 'utils', 'file.ts');
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
 
     test('handles negative display depths', () => {
-      getConfigStub.returns({ ...defaultConfig, startFolderDisplayDepth: -1, endFolderDisplayDepth: -1 });
+      getConfigStub.returns({
+        ...defaultConfig,
+        startFolderDisplayDepth: -1,
+        endFolderDisplayDepth: -1,
+      });
       const testPath = createWorkspacePath('src', 'utils', 'file.ts');
       const expected = createExpectedPath('workspace', 'src', 'utils', 'file.ts');
       assert.strictEqual(formatPathLabel(testPath), expected);
@@ -193,8 +289,22 @@ suite('formatPathLabel Tests', () => {
 
     test('handles negative display index', () => {
       getConfigStub.returns({ ...defaultConfig, startFolderDisplayIndex: -1 });
-      const testPath = createWorkspacePath('src', 'deep', 'nested', 'folder', 'structure', 'file.ts');
-      const expected = createExpectedPath('workspace', '...', 'nested', 'folder', 'structure', 'file.ts');
+      const testPath = createWorkspacePath(
+        'src',
+        'deep',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
+      const expected = createExpectedPath(
+        'workspace',
+        '...',
+        'nested',
+        'folder',
+        'structure',
+        'file.ts',
+      );
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
   });
@@ -206,7 +316,10 @@ suite('formatPathLabel Tests', () => {
 
       const actual = formatPathLabel(testPath);
 
-      assert.deepStrictEqual(actual.split(/[/\\]/).filter(Boolean), expected.split(/[/\\]/).filter(Boolean));
+      assert.deepStrictEqual(
+        actual.split(/[/\\]/).filter(Boolean),
+        expected.split(/[/\\]/).filter(Boolean),
+      );
     });
 
     test('handles consecutive path separators', () => {
@@ -218,12 +331,17 @@ suite('formatPathLabel Tests', () => {
 
   suite('Complex Path Cases', () => {
     test('handles deeply nested paths with parent traversal', () => {
-      const testPath = vscode.Uri.file(path.join('test', 'workspace', '..', '..', 'other', 'path', 'file.ts')).fsPath;
+      const testPath = vscode.Uri.file(
+        path.join('test', 'workspace', '..', '..', 'other', 'path', 'file.ts'),
+      ).fsPath;
 
       const expected = createExpectedPath('workspace', '...', '..', 'other', 'path', 'file.ts');
 
       const actual = formatPathLabel(testPath);
-      assert.deepStrictEqual(actual.split(/[/\\]/).filter(Boolean), expected.split(/[/\\]/).filter(Boolean));
+      assert.deepStrictEqual(
+        actual.split(/[/\\]/).filter(Boolean),
+        expected.split(/[/\\]/).filter(Boolean),
+      );
     });
 
     test('handles paths with unicode characters', () => {

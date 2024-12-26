@@ -35,6 +35,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Format code before testing
+      - name: Format Code
+        run: npm run lint:fix
+
       # Linux requires xvfb to run vscode tests
       - name: Install xvfb (Linux)
         if: runner.os == 'Linux'

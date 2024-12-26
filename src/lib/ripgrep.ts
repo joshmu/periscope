@@ -14,7 +14,14 @@ function getRgCommand(value: string, extraFlags?: string[]) {
 
   const { rgPath } = config;
 
-  const rgRequiredFlags = ['--line-number', '--column', '--no-heading', '--with-filename', '--color=never', '--json'];
+  const rgRequiredFlags = [
+    '--line-number',
+    '--column',
+    '--no-heading',
+    '--with-filename',
+    '--color=never',
+    '--json',
+  ];
 
   const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
 
@@ -106,7 +113,9 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
       log('Nothing to do...');
       return;
     } else if (code === 127) {
-      notifyError(`PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`);
+      notifyError(
+        `PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`,
+      );
     } else if (code === 1) {
       log(`Ripgrep exited with code ${code} (no results found)`);
       handleNoResultsFound();
@@ -151,7 +160,10 @@ export function checkKillProcess() {
 }
 
 // extract rg flags from the query, can match multiple regex's
-export function checkAndExtractRgFlagsFromQuery(query: string): { updatedQuery: string; extraRgFlags: string[] } {
+export function checkAndExtractRgFlagsFromQuery(query: string): {
+  updatedQuery: string;
+  extraRgFlags: string[];
+} {
   const extraRgFlags: string[] = [];
   let updatedQuery = query;
 

@@ -246,7 +246,10 @@ suite('QuickPick UI', () => {
 
     // Verify QuickPick is configured correctly for menu actions
     assert.strictEqual(cx.qp.canSelectMany, true, 'QuickPick should allow multiple selections');
-    assert.strictEqual(cx.qp.placeholder, '🫧 Select actions or type custom rg options (Space key to check/uncheck)');
+    assert.strictEqual(
+      cx.qp.placeholder,
+      '🫧 Select actions or type custom rg options (Space key to check/uncheck)',
+    );
 
     // Verify menu items are created correctly
     assert.strictEqual(cx.qp.items.length, 2, 'Should have 2 menu items');
@@ -284,6 +287,10 @@ suite('QuickPick UI', () => {
     onDidAcceptEmitter.fire();
 
     // Verify custom command is stored
-    assert.deepStrictEqual(cx.rgMenuActionsSelected, ['--custom-flag'], 'Should store custom command');
+    assert.deepStrictEqual(
+      cx.rgMenuActionsSelected,
+      ['--custom-flag'],
+      'Should store custom command',
+    );
   });
 });

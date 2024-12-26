@@ -203,9 +203,10 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run compile",
     "lint": "eslint src --ext ts && prettier --check .",
-    "test": "node ./out/test/runTest.js",
+    "lint:fix": "eslint src --ext ts --fix && prettier --write .",
+    "test": "npm run lint && node ./out/test/runTest.js",
     "prepare": "husky"
   },
   "dependencies": {

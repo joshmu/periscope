@@ -18,7 +18,8 @@ export function formatPathLabel(filePath: string) {
 
   // find correct workspace folder
   const workspaceFolder =
-    workspaceFolders.find((folder) => filePath.startsWith(folder.uri.fsPath)) || workspaceFolders[0];
+    workspaceFolders.find((folder) => filePath.startsWith(folder.uri.fsPath)) ||
+    workspaceFolders[0];
 
   const workspaceFolderName = workspaceFolder.name;
   let relativeFilePath;
@@ -34,7 +35,10 @@ export function formatPathLabel(filePath: string) {
 
   // abbreviate path if too long
   if (folders.length > config.startFolderDisplayDepth + config.endFolderDisplayDepth) {
-    const initialFolders = folders.splice(config.startFolderDisplayIndex, config.startFolderDisplayDepth);
+    const initialFolders = folders.splice(
+      config.startFolderDisplayIndex,
+      config.startFolderDisplayDepth,
+    );
     folders.splice(0, folders.length - config.endFolderDisplayDepth);
     folders.unshift(...initialFolders, '...');
   }

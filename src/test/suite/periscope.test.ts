@@ -92,7 +92,11 @@ suite('Periscope Core', () => {
 
     // Verify command registration
     assert.strictEqual(registerCommandStub.callCount, 2, 'Should register two commands');
-    assert.strictEqual(registerCommandStub.firstCall.args[0], 'periscope.search', 'Should register search command');
+    assert.strictEqual(
+      registerCommandStub.firstCall.args[0],
+      'periscope.search',
+      'Should register search command',
+    );
     assert.strictEqual(
       registerCommandStub.secondCall.args[0],
       'periscope.openInHorizontalSplit',
@@ -127,7 +131,9 @@ suite('Periscope Core', () => {
     };
 
     // Stub the window.createQuickPick
-    sandbox.stub(vscode.window, 'createQuickPick').returns(mockQuickPick as vscode.QuickPick<AllQPItemVariants>);
+    sandbox
+      .stub(vscode.window, 'createQuickPick')
+      .returns(mockQuickPick as vscode.QuickPick<AllQPItemVariants>);
 
     // Stub the setContext command
     const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand');
@@ -136,7 +142,11 @@ suite('Periscope Core', () => {
     PERISCOPE.search();
 
     // Verify QuickPick is shown
-    assert.strictEqual((mockQuickPick.show as sinon.SinonStub).calledOnce, true, 'Should show QuickPick');
+    assert.strictEqual(
+      (mockQuickPick.show as sinon.SinonStub).calledOnce,
+      true,
+      'Should show QuickPick',
+    );
 
     // Verify onDidHide handler is registered
     assert.strictEqual(
@@ -158,7 +168,9 @@ suite('Periscope Core', () => {
     const showTextDocumentStub = sandbox.stub(vscode.window, 'showTextDocument').resolves();
 
     // Stub the workspace.openTextDocument
-    const openTextDocumentStub = sandbox.stub(vscode.workspace, 'openTextDocument').resolves({} as vscode.TextDocument);
+    const openTextDocumentStub = sandbox
+      .stub(vscode.workspace, 'openTextDocument')
+      .resolves({} as vscode.TextDocument);
 
     // Create a new QuickPick instance for testing
     const mockQuickPick: Partial<vscode.QuickPick<AllQPItemVariants>> = {

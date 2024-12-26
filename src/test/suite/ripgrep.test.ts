@@ -67,9 +67,21 @@ suite('Ripgrep Integration', () => {
     const config = getConfig();
 
     // Verify options are included
-    assert.deepStrictEqual(config.rgOptions, ['--case-sensitive', '--follow'], 'Should include custom options');
-    assert.deepStrictEqual(config.rgGlobExcludes, ['**/node_modules/**'], 'Should include glob excludes');
-    assert.deepStrictEqual(config.addSrcPaths, ['/custom/src'], 'Should include additional source paths');
+    assert.deepStrictEqual(
+      config.rgOptions,
+      ['--case-sensitive', '--follow'],
+      'Should include custom options',
+    );
+    assert.deepStrictEqual(
+      config.rgGlobExcludes,
+      ['**/node_modules/**'],
+      'Should include glob excludes',
+    );
+    assert.deepStrictEqual(
+      config.addSrcPaths,
+      ['/custom/src'],
+      'Should include additional source paths',
+    );
   });
 
   test('should handle glob patterns', () => {
@@ -85,7 +97,9 @@ suite('Ripgrep Integration', () => {
     sandbox.stub(cx, 'config').value(mockConfig);
 
     // Test query parameter extraction with glob pattern
-    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('search pattern -g "*.{js,ts}"');
+    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(
+      'search pattern -g "*.{js,ts}"',
+    );
     assert.deepStrictEqual(extraRgFlags, ['-g "*.{js,ts}"'], 'Should extract ripgrep glob pattern');
     assert.strictEqual(updatedQuery, 'search pattern', 'Should extract base query');
   });
@@ -114,7 +128,11 @@ suite('Ripgrep Integration', () => {
       const config = getConfig();
 
       // Verify Windows path is handled correctly
-      assert.strictEqual(config.rgPath, 'C:\\Program Files\\ripgrep\\rg.exe', 'Should handle Windows paths correctly');
+      assert.strictEqual(
+        config.rgPath,
+        'C:\\Program Files\\ripgrep\\rg.exe',
+        'Should handle Windows paths correctly',
+      );
     } finally {
       // Clean up platform sandbox
       platformSandbox.restore();
@@ -312,7 +330,8 @@ suite('checkAndExtractRgFlagsFromQuery', () => {
   });
 
   test('should handle long form type flag', () => {
-    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('searchtext --type=rust');
+    const { updatedQuery, extraRgFlags } =
+      checkAndExtractRgFlagsFromQuery('searchtext --type=rust');
     assert.strictEqual(updatedQuery, 'searchtext');
     assert.deepStrictEqual(extraRgFlags, ['--type=rust']);
   });
@@ -330,7 +349,9 @@ suite('checkAndExtractRgFlagsFromQuery', () => {
   });
 
   test('should handle query with spaces', () => {
-    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('search with spaces -t python');
+    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(
+      'search with spaces -t python',
+    );
     assert.strictEqual(updatedQuery, 'search with spaces');
     assert.deepStrictEqual(extraRgFlags, ['-t python']);
   });

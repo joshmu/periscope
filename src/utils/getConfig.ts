@@ -64,7 +64,10 @@ export function getConfig() {
     startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),
     endFolderDisplayDepth: vsConfig.get<number>('endFolderDisplayDepth', 4),
     alwaysShowRgMenuActions: vsConfig.get<boolean>('alwaysShowRgMenuActions', true),
-    showPreviousResultsWhenNoMatches: vsConfig.get<boolean>('showPreviousResultsWhenNoMatches', false),
+    showPreviousResultsWhenNoMatches: vsConfig.get<boolean>(
+      'showPreviousResultsWhenNoMatches',
+      false,
+    ),
     gotoRgMenuActionsPrefix: vsConfig.get<string>('gotoRgMenuActionsPrefix', '<<') || '<<',
     enableGotoNativeSearch: vsConfig.get<boolean>('enableGotoNativeSearch', true),
     gotoNativeSearchSuffix: vsConfig.get<string>('gotoNativeSearchSuffix', '>>') || '>>',
