@@ -41,7 +41,9 @@ function getRgCommand(value: string, extraFlags?: string[]) {
  */
 function handleSearchTermWithAdditionalRgParams(query: string): string {
   const valueWithinQuotes = /".*?"/.exec(query);
-  if (valueWithinQuotes) return query;
+  if (valueWithinQuotes) {
+    return query;
+  }
   return `"${query}"`;
 }
 
@@ -158,7 +160,9 @@ export function checkAndExtractRgFlagsFromQuery(query: string): { updatedQuery: 
 
   // Try each regex pattern
   rgQueryParams.forEach(({ param, regex }) => {
-    if (!param || !regex) return;
+    if (!param || !regex) {
+      return;
+    }
 
     const regexPattern = new RegExp(regex);
     const match = updatedQuery.match(regexPattern);

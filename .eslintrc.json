@@ -2,34 +2,62 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": true,
-    "tsconfigRootDir": "."
+    "ecmaVersion": 6,
+    "sourceType": "module"
   },
   "plugins": ["@typescript-eslint"],
-  "extends": ["airbnb-base", "plugin:@typescript-eslint/recommended", "prettier"],
-  "settings": {
-    "import/resolver": {
-      "node": {
-        "extensions": [".js", ".jsx", ".ts", ".tsx"],
-        "moduleDirectory": ["node_modules", "src/"]
-      }
-    }
-  },
   "rules": {
-    "@typescript-eslint/naming-convention": "warn",
+    "@typescript-eslint/naming-convention": [
+      "warn",
+      {
+        "selector": "default",
+        "format": ["camelCase"],
+        "filter": {
+          "regex": "^_type$",
+          "match": false
+        }
+      },
+      {
+        "selector": "variable",
+        "format": ["camelCase", "UPPER_CASE"]
+      },
+      {
+        "selector": "parameter",
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow"
+      },
+      {
+        "selector": "memberLike",
+        "modifiers": ["private"],
+        "format": ["camelCase"],
+        "leadingUnderscore": "require"
+      },
+      {
+        "selector": "typeLike",
+        "format": ["PascalCase"]
+      },
+      {
+        "selector": "property",
+        "format": null,
+        "filter": {
+          "regex": "^_type$",
+          "match": true
+        }
+      },
+      {
+        "selector": "objectLiteralProperty",
+        "format": ["camelCase", "UPPER_CASE"],
+        "filter": {
+          "regex": "^(NODE_ENV|VSCODE_TEST)$",
+          "match": true
+        }
+      }
+    ],
     "@typescript-eslint/semi": "warn",
     "curly": "warn",
     "eqeqeq": "warn",
     "no-throw-literal": "warn",
-    "import/prefer-default-export": "off",
-    "import/extensions": "off",
-    "import/no-unresolved": "off",
-    "max-len": ["warn", { "code": 120 }],
-    "no-console": "off",
-    "import/no-extraneous-dependencies": "off",
-    "no-use-before-define": "off",
-    "no-param-reassign": "off",
-    "no-underscore-dangle": "off"
+    "semi": "off"
   },
   "ignorePatterns": ["out", "dist", "**/*.d.ts"]
 }

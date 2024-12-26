@@ -3,6 +3,10 @@ import * as path from 'path';
 import * as Mocha from 'mocha';
 import * as glob from 'glob';
 
+// Set test environment variables
+process.env.NODE_ENV = 'test';
+process.env.VSCODE_TEST = 'true';
+
 export function run(): Promise<void> {
   // Create the mocha test
   const mocha = new Mocha({

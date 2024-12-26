@@ -33,7 +33,9 @@ export const openInHorizontalSplit = async () => {
   const document = await vscode.workspace.openTextDocument(filePath);
   const editor = await vscode.window.showTextDocument(document, options);
 
-  if (editor) setCursorPosition(editor, linePos, colPos);
+  if (editor) {
+    setCursorPosition(editor, linePos, colPos);
+  }
   cx.qp?.dispose();
 };
 
