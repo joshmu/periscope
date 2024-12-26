@@ -154,4 +154,62 @@ suite('formatPathLabel Tests', () => {
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
   });
+
+  suite('Config Edge Cases', () => {
+    test('handles zero display depths', () => {
+      getConfigStub.returns({ ...defaultConfig, startFolderDisplayDepth: 0, endFolderDisplayDepth: 0 });
+      const testPath = '/test/workspace/src/deep/nested/folder/structure/file.ts';
+      const expected = path.join('workspace', '...', 'nested', 'folder', 'structure', 'file.ts');
+      assert.strictEqual(formatPathLabel(testPath), expected);
+    });
+
+    test('handles display depths larger than path length', () => {
+      getConfigStub.returns({ ...defaultConfig, startFolderDisplayDepth: 10, endFolderDisplayDepth: 10 });
+      const testPath = '/test/workspace/src/utils/file.ts';
+      const expected = path.join('workspace', 'src', 'utils', 'file.ts');
+      assert.strictEqual(formatPathLabel(testPath), expected);
+    });
+
+    test('handles negative display depths', () => {
+      getConfigStub.returns({ ...defaultConfig, startFolderDisplayDepth: -1, endFolderDisplayDepth: -1 });
+      const testPath = '/test/workspace/src/utils/file.ts';
+      const expected = path.join('workspace', 'src', 'utils', 'file.ts');
+      assert.strictEqual(formatPathLabel(testPath), expected);
+    });
+
+    test('handles negative display index', () => {
+      getConfigStub.returns({ ...defaultConfig, startFolderDisplayIndex: -1 });
+      const testPath = '/test/workspace/src/deep/nested/folder/structure/file.ts';
+      const expected = path.join('workspace', '...', 'nested', 'folder', 'structure', 'file.ts');
+      assert.strictEqual(formatPathLabel(testPath), expected);
+    });
+  });
+
+  suite('Path Separator Edge Cases', () => {
+    test('handles mixed path separators', () => {
+      const testPath = '/test/workspace\\src\\utils/file.ts';
+      const expected = 'workspace/../workspace\\src\\utils/file.ts';
+      assert.strictEqual(formatPathLabel(testPath), expected);
+    });
+
+    test('handles consecutive path separators', () => {
+      const testPath = '/test/workspace//src///utils////file.ts';
+      const expected = path.join('workspace', 'src', 'utils', 'file.ts');
+      assert.strictEqual(formatPathLabel(testPath), expected);
+    });
+  });
+
+  suite('Complex Path Cases', () => {
+    test('handles deeply nested paths with parent traversal', () => {
+      const testPath = '/test/workspace/../../other/path/file.ts';
+      const expected = 'workspace/.../../other/path/file.ts';
+      assert.strictEqual(formatPathLabel(testPath), expected);
+    });
+
+    test('handles paths with unicode characters', () => {
+      const testPath = '/test/workspace/src/🔍/测试/file.ts';
+      const expected = path.join('workspace', 'src', '🔍', '测试', 'file.ts');
+      assert.strictEqual(formatPathLabel(testPath), expected);
+    });
+  });
 });
