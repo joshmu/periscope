@@ -47,28 +47,6 @@ function resolveRipgrepPath(userPath?: string): string {
   throw new Error('Ripgrep not found');
 }
 
-// CONFIG: this should match the contribution in package.json
-type ConfigItems =
-  | 'rgOptions'
-  | 'addSrcPaths'
-  | 'rgGlobExcludes'
-  | 'rgMenuActions'
-  | 'rgQueryParams'
-  | 'rgQueryParamsShowTitle'
-  | 'rgPath'
-  | 'showWorkspaceFolderInFilePath'
-  | 'startFolderDisplayDepth'
-  | 'startFolderDisplayIndex'
-  | 'endFolderDisplayDepth'
-  | 'alwaysShowRgMenuActions'
-  | 'showPreviousResultsWhenNoMatches'
-  | 'gotoRgMenuActionsPrefix'
-  | 'enableGotoNativeSearch'
-  | 'gotoNativeSearchSuffix'
-  | 'peekBorderColor'
-  | 'peekBorderWidth'
-  | 'peekBorderStyle';
-
 export function getConfig() {
   const vsConfig = vscode.workspace.getConfiguration('periscope');
   const userRgPath = vsConfig.get<string | undefined>('rgPath', undefined);
