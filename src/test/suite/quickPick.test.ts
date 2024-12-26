@@ -554,4 +554,64 @@ suite('QuickPick UI', () => {
     const longItem = createResultItem('src/long.ts', longContent, 1, 1);
     assert.strictEqual(longItem.label, longContent.trim(), 'Should handle long content without truncation');
   });
+
+  test('should generate basic preview content', async () => {
+    // Mock document with simple content
+    const mockDocument = {
+      getText: sandbox.stub().returns('const testVar = "hello";\nfunction test() {}\n'),
+      lineAt: (line: number) => ({
+        text: line === 0 ? 'const testVar = "hello";' : 'function test() {}',
+        range: new vscode.Range(line, 0, line, line === 0 ? 25 : 17),
+      }),
+      lineCount: 2,
+      uri: vscode.Uri.file('src/test.ts'),
+    };
+
+    // Mock workspace and path resolution
+    const workspaceRoot = '/Users/joshmu/Desktop/code/projects/vscode-extensions/periscope';
+    sandbox
+      .stub(vscode.workspace, 'workspaceFolders')
+      .value([{ uri: vscode.Uri.file(workspaceRoot), name: 'periscope', index: 0 }]);
+    sandbox.stub(vscode.workspace, 'openTextDocument').callsFake(async (uri) => {
+      // Ensure we're comparing URIs
+      let expectedUri: vscode.Uri | undefined;
+
+      if (typeof uri === 'string') {
+        expectedUri = vscode.Uri.file(path.join(workspaceRoot, uri));
+      } else if (uri instanceof vscode.Uri) {
+        expectedUri = uri;
+      }
+
+      if (!expectedUri || !(expectedUri instanceof vscode.Uri)) {
+        throw new Error('Invalid URI provided to openTextDocument');
+      }
+
+      assert.strictEqual(expectedUri.fsPath, path.join(workspaceRoot, 'src/test.ts'));
+      return mockDocument as any;
+    });
+
+    // Sample QuickPick item
+    const item: QPItemQuery = {
+      _type: 'QuickPickItemQuery',
+      label: '$(file) src/test.ts:1:1',
+      description: 'const testVar = "hello";',
+      data: {
+        filePath: 'src/test.ts',
+        linePos: 1,
+        colPos: 1,
+        rawResult: {} as any,
+      },
+    };
+
+    // Call peekItem
+    await peekItem([item]);
+
+    // Verify document was opened
+    const openTextDocumentStub = vscode.workspace.openTextDocument as sinon.SinonStub;
+    assert.strictEqual(openTextDocumentStub.calledOnce, true, 'Should open document for preview');
+
+    // Verify preview content
+    const lineText = mockDocument.lineAt(0).text;
+    assert.strictEqual(lineText, 'const testVar = "hello";', 'Should show correct preview content');
+  });
 });
