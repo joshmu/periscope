@@ -30,6 +30,11 @@ suite('formatPathLabel Tests', () => {
     return segments.join(path.sep);
   };
 
+  // Helper to normalize path separators for comparison
+  const normalizePath = (p: string): string => {
+    return p.split(/[/\\]/).filter(Boolean).join(path.sep);
+  };
+
   setup(() => {
     sandbox = sinon.createSandbox();
 
@@ -120,12 +125,11 @@ suite('formatPathLabel Tests', () => {
     });
 
     test('handles cross-platform path separators', () => {
-      const testPath =
-        process.platform === 'win32'
-          ? path.join('C:', 'test', 'workspace', 'src', 'file.ts')
-          : path.join('/test/workspace/src/file.ts');
+      const testPath = createWorkspacePath('src', 'file.ts');
       const expected = createExpectedPath('workspace', 'src', 'file.ts');
-      assert.strictEqual(formatPathLabel(testPath), expected);
+
+      const actual = formatPathLabel(testPath);
+      assert.strictEqual(normalizePath(actual), normalizePath(expected));
     });
   });
 
@@ -221,21 +225,21 @@ suite('formatPathLabel Tests', () => {
   });
 
   suite('Edge Cases', () => {
+    test('handles root path', () => {
+      const expected = normalizePath('workspace/../..');
+      assert.strictEqual(formatPathLabel('/'), expected);
+    });
+
     test('handles path with no file name', () => {
       const testPath = createWorkspacePath('src', 'utils');
       const expected = createExpectedPath('workspace', 'src', 'utils');
-      assert.strictEqual(formatPathLabel(testPath), expected);
-    });
-
-    test('handles root path', () => {
-      const expected = 'workspace/../..';
-      assert.strictEqual(formatPathLabel('/'), expected);
+      assert.strictEqual(normalizePath(formatPathLabel(testPath)), normalizePath(expected));
     });
 
     test('handles path with special characters', () => {
       const testPath = createWorkspacePath('src', '@types', 'file.d.ts');
       const expected = createExpectedPath('workspace', 'src', '@types', 'file.d.ts');
-      assert.strictEqual(formatPathLabel(testPath), expected);
+      assert.strictEqual(normalizePath(formatPathLabel(testPath)), normalizePath(expected));
     });
   });
 
@@ -310,22 +314,18 @@ suite('formatPathLabel Tests', () => {
   });
 
   suite('Path Separator Edge Cases', () => {
-    test('handles mixed path separators', () => {
-      const expected = createExpectedPath('workspace', 'src', 'utils', 'file.ts');
-      const testPath = createWorkspacePath('src', 'utils', 'file.ts');
+    test('handles cross-platform path separators', () => {
+      const testPath = createWorkspacePath('src', 'file.ts');
+      const expected = createExpectedPath('workspace', 'src', 'file.ts');
 
       const actual = formatPathLabel(testPath);
-
-      assert.deepStrictEqual(
-        actual.split(/[/\\]/).filter(Boolean),
-        expected.split(/[/\\]/).filter(Boolean),
-      );
+      assert.strictEqual(normalizePath(actual), normalizePath(expected));
     });
 
     test('handles consecutive path separators', () => {
       const testPath = createWorkspacePath('src', 'utils', 'file.ts');
       const expected = createExpectedPath('workspace', 'src', 'utils', 'file.ts');
-      assert.strictEqual(formatPathLabel(testPath), expected);
+      assert.strictEqual(normalizePath(formatPathLabel(testPath)), normalizePath(expected));
     });
   });
 

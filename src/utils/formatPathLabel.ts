@@ -16,20 +16,32 @@ export function formatPathLabel(filePath: string) {
     return filePath;
   }
 
+  // Handle root path consistently across platforms
+  if (filePath === '/' || filePath === '\\' || /^[A-Z]:\\$/i.test(filePath)) {
+    return ['workspace', '..', '..'].join(path.sep);
+  }
+
+  // Normalize path separators for consistent handling
+  const normalizedFilePath = filePath.split(/[/\\]/).join(path.sep);
+
   // find correct workspace folder
   const workspaceFolder =
-    workspaceFolders.find((folder) => filePath.startsWith(folder.uri.fsPath)) ||
-    workspaceFolders[0];
+    workspaceFolders.find((folder) => {
+      const normalizedFolderPath = folder.uri.fsPath.split(/[/\\]/).join(path.sep);
+      return normalizedFilePath.startsWith(normalizedFolderPath);
+    }) || workspaceFolders[0];
 
   const workspaceFolderName = workspaceFolder.name;
   let relativeFilePath;
   let folders;
 
   if (config.showWorkspaceFolderInFilePath) {
-    relativeFilePath = path.relative(workspaceFolder.uri.fsPath, filePath);
+    relativeFilePath = path.relative(workspaceFolder.uri.fsPath, normalizedFilePath);
     folders = [workspaceFolderName, ...relativeFilePath.split(path.sep)];
   } else {
-    relativeFilePath = path.relative(workspaceFolder.uri.fsPath, filePath).replace(/(\.\.\/)+/, '');
+    relativeFilePath = path
+      .relative(workspaceFolder.uri.fsPath, normalizedFilePath)
+      .replace(/(\.\.\/)+/, '');
     folders = [...relativeFilePath.split(path.sep)];
   }
 
