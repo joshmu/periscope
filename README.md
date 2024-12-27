@@ -1,5 +1,7 @@
 # Periscope 🫧
 
+![Visual Studio Marketplace Last Updated](https://img.shields.io/visual-studio-marketplace/last-updated/JoshMu.periscope)
+
 Periscope is a VSCode extension that supercharges your ability to search workspace contents using [ripgrep](https://github.com/BurntSushi/ripgrep), providing an intuitive interface with real-time previews of search results.
 
 _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim)_
