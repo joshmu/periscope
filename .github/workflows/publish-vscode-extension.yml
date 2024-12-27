@@ -6,7 +6,12 @@ on:
       - master
 
 jobs:
+  # Add test job dependency
+  test:
+    uses: ./.github/workflows/test.yml
+
   semantic-release:
+    needs: test # Require tests to pass before release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

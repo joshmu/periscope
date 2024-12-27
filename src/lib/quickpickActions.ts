@@ -63,7 +63,8 @@ function onDidChangeValue(value: string) {
 
   // update the quickpick title with a preview of the rgQueryParam command if utilised
   if (cx.config.rgQueryParamsShowTitle) {
-    cx.qp.title = extraRgFlags.length > 0 ? `rg '${cx.query}' ${extraRgFlags.join(' ')}` : undefined;
+    cx.qp.title =
+      extraRgFlags.length > 0 ? `rg '${cx.query}' ${extraRgFlags.join(' ')}` : undefined;
   }
 
   rgSearch(updatedQuery, extraRgFlags);
@@ -96,7 +97,10 @@ function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<AllQPItemVari
 export function onDidHide() {
   if (!cx.qp.selectedItems[0]) {
     if (cx.previousActiveEditor) {
-      vscode.window.showTextDocument(cx.previousActiveEditor.document, cx.previousActiveEditor.viewColumn);
+      vscode.window.showTextDocument(
+        cx.previousActiveEditor.document,
+        cx.previousActiveEditor.viewColumn,
+      );
     }
   }
 
@@ -121,7 +125,9 @@ export function setupRgMenuActions() {
   }));
 
   function next() {
-    cx.rgMenuActionsSelected = (cx.qp.selectedItems as QPItemRgMenuAction[]).map((item) => item.data.rgOption);
+    cx.rgMenuActionsSelected = (cx.qp.selectedItems as QPItemRgMenuAction[]).map(
+      (item) => item.data.rgOption,
+    );
 
     // if no actions selected, then use the current query as a custom command to rg
     if (!cx.rgMenuActionsSelected.length && cx.qp.value) {

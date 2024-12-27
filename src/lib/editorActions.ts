@@ -11,7 +11,7 @@ export function closePreviewEditor() {
 }
 
 // Open the current qp selected item in a horizontal split
-export const openInHorizontalSplit = () => {
+export const openInHorizontalSplit = async () => {
   if (!cx.qp) {
     return;
   }
@@ -30,12 +30,13 @@ export const openInHorizontalSplit = () => {
   closePreviewEditor();
 
   const { filePath, linePos, colPos } = currentItem.data;
-  vscode.workspace.openTextDocument(filePath).then((document) => {
-    vscode.window.showTextDocument(document, options).then((editor) => {
-      setCursorPosition(editor, linePos, colPos);
-      cx.qp?.dispose();
-    });
-  });
+  const document = await vscode.workspace.openTextDocument(filePath);
+  const editor = await vscode.window.showTextDocument(document, options);
+
+  if (editor) {
+    setCursorPosition(editor, linePos, colPos);
+  }
+  cx.qp?.dispose();
 };
 
 // Open the native VSCode search with the provided query and enable regex

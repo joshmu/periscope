@@ -1,0 +1,73 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, master]
+  # Add workflow_call to allow other workflows to depend on this
+  workflow_call:
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      # Keep fail-fast true to ensure all tests must pass
+      fail-fast: true
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        node-version: [20.x]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install Dependencies
+        run: npm install
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Format code before testing
+      - name: Format Code
+        run: npm run lint:fix
+
+      # Linux requires xvfb to run vscode tests
+      - name: Install xvfb (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      # Run tests based on platform
+      - name: Run Tests (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm test
+
+      - name: Run Tests (macOS/Windows)
+        if: runner.os != 'Linux'
+        run: npm test
+
+      # Report test status on PR
+      - name: Update PR Status
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const jobName = process.env.MATRIX_OS;
+            github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: number,
+              body: `✅ Tests passed on ${jobName}`
+            });
+        env:
+          MATRIX_OS: ${{ matrix.os }}

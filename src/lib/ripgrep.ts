@@ -1,4 +1,3 @@
-import { rgPath as vscodeRgPath } from '@vscode/ripgrep';
 import { spawn } from 'child_process';
 import * as vscode from 'vscode';
 import { getConfig } from '../utils/getConfig';
@@ -9,22 +8,20 @@ import { log, notifyError } from '../utils/log';
 import { createResultItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
 
-// grab the bundled ripgrep binary from vscode
-function ripgrepPath(optionsPath?: string) {
-  if (optionsPath?.trim()) {
-    return optionsPath.trim();
-  }
-
-  return vscodeRgPath;
-}
-
 function getRgCommand(value: string, extraFlags?: string[]) {
   const config = getConfig();
   const { workspaceFolders } = vscode.workspace;
 
-  const rgPath = ripgrepPath(config.rgPath);
+  const { rgPath } = config;
 
-  const rgRequiredFlags = ['--line-number', '--column', '--no-heading', '--with-filename', '--color=never', '--json'];
+  const rgRequiredFlags = [
+    '--line-number',
+    '--column',
+    '--no-heading',
+    '--with-filename',
+    '--color=never',
+    '--json',
+  ];
 
   const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
 
@@ -51,7 +48,9 @@ function getRgCommand(value: string, extraFlags?: string[]) {
  */
 function handleSearchTermWithAdditionalRgParams(query: string): string {
   const valueWithinQuotes = /".*?"/.exec(query);
-  if (valueWithinQuotes) return query;
+  if (valueWithinQuotes) {
+    return query;
+  }
   return `"${query}"`;
 }
 
@@ -114,7 +113,9 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
       log('Nothing to do...');
       return;
     } else if (code === 127) {
-      notifyError(`PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`);
+      notifyError(
+        `PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`,
+      );
     } else if (code === 1) {
       log(`Ripgrep exited with code ${code} (no results found)`);
       handleNoResultsFound();
@@ -159,7 +160,10 @@ export function checkKillProcess() {
 }
 
 // extract rg flags from the query, can match multiple regex's
-export function checkAndExtractRgFlagsFromQuery(query: string): { updatedQuery: string; extraRgFlags: string[] } {
+export function checkAndExtractRgFlagsFromQuery(query: string): {
+  updatedQuery: string;
+  extraRgFlags: string[];
+} {
   const extraRgFlags: string[] = [];
   const queries = [query];
 

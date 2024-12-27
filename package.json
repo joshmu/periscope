@@ -58,7 +58,7 @@
         },
         "periscope.rgPath": {
           "type": "string",
-          "description": "Override the path to the 'rg' command, eg: '/usr/local/bin/rg'. If not specified the vscode-ripgrep package will be used."
+          "description": "Override the path to the 'rg' command, eg: '/usr/local/bin/rg'. If not specified the @vscode/ripgrep package will be used."
         },
         "periscope.rgGlobExcludes": {
           "type": "array",
@@ -203,9 +203,10 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run compile",
     "lint": "eslint src --ext ts && prettier --check .",
-    "test": "node ./out/test/runTest.js",
+    "lint:fix": "eslint src --ext ts --fix && prettier --write .",
+    "test": "npm run lint && node ./out/test/runTest.js",
     "prepare": "husky"
   },
   "dependencies": {
@@ -216,7 +217,9 @@
     "@semantic-release/git": "^10.0.1",
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.1",
+    "@types/mock-fs": "^4.13.4",
     "@types/node": "16.x",
+    "@types/sinon": "^17.0.3",
     "@types/vscode": "^1.88.0",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
@@ -229,8 +232,10 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "mocha": "^10.2.0",
+    "mock-fs": "^5.4.1",
     "prettier": "3.2.5",
     "semantic-release": "^23.0.8",
+    "sinon": "^19.0.2",
     "typescript": "^5.5.4"
   },
   "lint-staged": {
