@@ -1,18 +1,23 @@
 import * as vscode from 'vscode';
 import { resolveRipgrepPath } from './ripgrepPath';
 
+// * resolve ripgrep path on initial load only as its a blocking operation
+const userRgPath = vscode.workspace
+  .getConfiguration('periscope')
+  .get<string | undefined>('rgPath', undefined);
+const rgPath = resolveRipgrepPath(userRgPath);
+
 export function getConfig() {
   const vsConfig = vscode.workspace.getConfiguration('periscope');
-  const userRgPath = vsConfig.get<string | undefined>('rgPath', undefined);
 
   return {
+    rgPath,
     rgOptions: vsConfig.get<string[]>('rgOptions', ['--smart-case', '--sortr path']),
     addSrcPaths: vsConfig.get<string[]>('addSrcPaths', []),
     rgGlobExcludes: vsConfig.get<string[]>('rgGlobExcludes', []),
     rgMenuActions: vsConfig.get<{ label?: string; value: string }[]>('rgMenuActions', []),
     rgQueryParams: vsConfig.get<{ param?: string; regex: string }[]>('rgQueryParams', []),
     rgQueryParamsShowTitle: vsConfig.get<boolean>('rgQueryParamsShowTitle', true),
-    rgPath: resolveRipgrepPath(userRgPath),
     showWorkspaceFolderInFilePath: vsConfig.get<boolean>('showWorkspaceFolderInFilePath', true),
     startFolderDisplayIndex: vsConfig.get<number>('startFolderDisplayIndex', 0),
     startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),

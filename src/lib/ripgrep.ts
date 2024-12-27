@@ -165,33 +165,24 @@ export function checkAndExtractRgFlagsFromQuery(query: string): {
   extraRgFlags: string[];
 } {
   const extraRgFlags: string[] = [];
-  let updatedQuery = query;
+  const queries = [query];
 
-  // Get the config parameters for regex matching
-  const rgQueryParams = cx.config.rgQueryParams || [];
-
-  // Try each regex pattern
-  rgQueryParams.forEach(({ param, regex }) => {
-    if (!param || !regex) {
-      return;
-    }
-
-    const regexPattern = new RegExp(regex);
-    const match = updatedQuery.match(regexPattern);
-
-    if (match && match.length > 1) {
-      // Extract the base query (first capture group)
-      updatedQuery = match[1].trim();
-
-      // Replace placeholders in param with captured values
-      let newParam = param;
-      match.slice(2).forEach((value, index) => {
-        newParam = newParam.replace(`$${index + 1}`, value);
-      });
-      extraRgFlags.push(newParam);
+  cx.config.rgQueryParams.forEach(({ param, regex }) => {
+    if (param && regex) {
+      const match = query.match(regex);
+      if (match && match.length > 1) {
+        let newParam = param;
+        match.slice(2).forEach((value, index) => {
+          newParam = newParam.replace(`$${index + 1}`, value);
+        });
+        extraRgFlags.push(newParam);
+        queries.push(match[1]);
+      }
     }
   });
 
+  // prefer the first query match or the original one
+  const updatedQuery = queries.length > 1 ? queries[1] : queries[0];
   return { updatedQuery, extraRgFlags };
 }
 

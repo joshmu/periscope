@@ -8,8 +8,9 @@ import { findRipgrepSystemPath } from './findRipgrepSystemPath';
  */
 export function resolveRipgrepPath(userPath?: string): string {
   // Try user-specified override path first
-  if (userPath?.trim()) {
-    const path = userPath.trim();
+  const userPathTrimmed = userPath?.trim();
+  if (userPathTrimmed) {
+    const path = userPathTrimmed;
     let isValid = false;
     try {
       isValid = fs.existsSync(path);
@@ -21,16 +22,16 @@ export function resolveRipgrepPath(userPath?: string): string {
       // Path is not valid, continue to next option
     }
 
-    log(`PERISCOPE: User-specified ripgrep path not found: ${path}`);
+    log(`User-specified ripgrep path not found: ${path}`);
   }
 
   // Try system PATH if user path is provided and not valid
   const systemPath = findRipgrepSystemPath();
-  if (userPath?.trim() && systemPath && fs.existsSync(systemPath)) {
+  if (userPathTrimmed && systemPath && fs.existsSync(systemPath)) {
     try {
       fs.accessSync(systemPath);
       log(
-        `PERISCOPE: User-specified path not found, did you mean to use ripgrep from system PATH: ${systemPath}`,
+        `User-specified path not found, did you mean to use ripgrep from system PATH? ${systemPath}`,
       );
       return systemPath;
     } catch {
@@ -42,7 +43,7 @@ export function resolveRipgrepPath(userPath?: string): string {
   if (vscodeRgPath && fs.existsSync(vscodeRgPath)) {
     try {
       fs.accessSync(vscodeRgPath);
-      log(`PERISCOPE: Using @vscode/ripgrep bundled binary: ${vscodeRgPath}`);
+      log(`Using @vscode/ripgrep bundled binary: ${vscodeRgPath}`);
       return vscodeRgPath;
     } catch {
       // VSCode ripgrep is not accessible, continue to error
