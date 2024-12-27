@@ -21,6 +21,34 @@ To get started with contributing, please follow these steps:
 5. Commit your changes and push them to your forked repository.
 6. Open a pull request to the main repository.
 
+### Running Tests
+
+The project uses Mocha for testing. To run the test suite:
+
+1. Run all tests: `npm test`
+2. Run specific test file: `npm test -- path/to/test`
+
+When writing tests:
+
+- Place test files in `src/test/suite/`
+- Use the naming convention `*.test.ts`
+- Group related tests using `suite()` and `test()`
+- Keep tests focused and simple
+- Mock external dependencies
+- Use descriptive test names that explain the expected behavior
+
+Example test structure:
+
+```typescript
+suite('Feature Name', () => {
+  test('should handle specific case', async () => {
+    // Arrange
+    // Act
+    // Assert
+  });
+});
+```
+
 ### Running the extension
 
 Open the extension project in VS Code (e.g. by running `code .` in the project folder).
