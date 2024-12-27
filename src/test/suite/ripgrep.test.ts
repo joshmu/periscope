@@ -20,20 +20,7 @@ suite('Ripgrep Integration', () => {
     sandbox.restore();
   });
 
-  test('should resolve ripgrep binary path', () => {
-    // Mock the config
-    const mockRgPath = '/custom/path/to/rg';
-    sandbox.stub(vscodeRipgrep, 'rgPath').value(mockRgPath);
-
-    // Mock file system operations
-    sandbox.stub(fs, 'existsSync').returns(true);
-    sandbox.stub(fs, 'accessSync').returns(undefined);
-
-    // Test direct path resolution
-    const resolvedPath = resolveRipgrepPath('/custom/path/to/rg');
-    assert.strictEqual(resolvedPath, '/custom/path/to/rg', 'Should resolve custom ripgrep path');
-  });
-
+  // TODO: requires comparison with ripgrepPath.test.ts - possible duplicate
   test('uses user-specified path when valid', () => {
     // Mock the config with a valid path
     const mockRgPath = '/path/to/vscode/ripgrep';
@@ -48,6 +35,7 @@ suite('Ripgrep Integration', () => {
     assert.strictEqual(resolvedPath, mockRgPath, 'Should use user-specified path when valid');
   });
 
+  // TODO: requires comparison with ripgrepPath.test.ts - possible duplicate
   test('falls back to system PATH when user path is invalid', () => {
     // Mock the config with an invalid path
     const mockRgPath = '/usr/local/bin/rg';
@@ -73,6 +61,7 @@ suite('Ripgrep Integration', () => {
     assert.strictEqual(resolvedPath, mockRgPath, 'Should fall back to system PATH');
   });
 
+  // TODO: requires comparison with ripgrepPath.test.ts - possible duplicate
   test('uses @vscode/ripgrep when no other options available', () => {
     // Mock the config with no path specified
     const mockRgPath = '/path/to/vscode/ripgrep';
@@ -94,6 +83,7 @@ suite('Ripgrep Integration', () => {
     assert.strictEqual(resolvedPath, mockRgPath, 'Should use vscode ripgrep as fallback');
   });
 
+  // TODO: should be in ripgrepPath.test.ts
   test('handles empty or whitespace user path', () => {
     // Mock the config with whitespace path
     const mockRgPath = '/path/to/vscode/ripgrep';
@@ -115,6 +105,7 @@ suite('Ripgrep Integration', () => {
     assert.strictEqual(resolvedPath, mockRgPath, 'Should handle empty path gracefully');
   });
 
+  // TODO: should be in ripgrepPath.test.ts
   test('notifies error when ripgrep is not found anywhere', () => {
     // Mock VSCode window.showErrorMessage
     const showErrorMessageStub = sandbox.stub(vscode.window, 'showErrorMessage');

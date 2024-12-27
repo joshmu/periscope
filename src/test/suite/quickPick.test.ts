@@ -61,7 +61,8 @@ suite('QuickPick UI', () => {
     sandbox.restore();
   });
 
-  test('should format search results correctly', async () => {
+  // TODO: this test is incomplete, it should evaluate rgResult and ensure it is formatted to be QPItemQuery
+  test('TODO - should format search results correctly', async () => {
     // Sample ripgrep result
     const rgResult: RgLine = {
       type: 'match',
@@ -178,7 +179,7 @@ suite('QuickPick UI', () => {
     assert.strictEqual(cx.disposables.query.length, 4, 'Should register 4 handlers');
 
     // Call peekItem directly to test preview functionality
-    await peekItem([item]);
+    peekItem([item]);
 
     // Allow async operations to complete
     await new Promise(setImmediate);

@@ -19,66 +19,23 @@ suite('Periscope Core', () => {
 
   test('should register commands on activation', async () => {
     // Create a mock extension context
-    const mockMemento = {
-      get: () => undefined,
-      update: () => Promise.resolve(),
-      keys: () => [],
-    };
-
-    const mockSecretStorage = {
-      get: () => Promise.resolve(''),
-      store: () => Promise.resolve(),
-      delete: () => Promise.resolve(),
-      onDidChange: new vscode.EventEmitter<vscode.SecretStorageChangeEvent>().event,
-    };
-
-    const mockEnvCollection = {
-      persistent: true,
-      description: undefined,
-      replace: () => undefined,
-      append: () => undefined,
-      prepend: () => undefined,
-      get: () => undefined,
-      forEach: () => undefined,
-      delete: () => undefined,
-      clear: () => undefined,
-      getScoped: () => mockEnvCollection,
-      *[Symbol.iterator]() {
-        yield ['', { value: '', type: vscode.EnvironmentVariableMutatorType.Replace }];
-      },
-    };
-
-    const mockExtension = {
-      id: 'test-extension',
-      extensionUri: vscode.Uri.file(''),
-      extensionPath: '',
-      isActive: true,
-      packageJSON: {},
-      exports: undefined,
-      activate: () => Promise.resolve(),
-      extensionKind: vscode.ExtensionKind.UI,
-    };
-
-    const context = {
+    const mockContext = {
       subscriptions: [] as { dispose(): void }[],
-      extensionPath: '',
-      globalStoragePath: '',
-      logPath: '',
-      asAbsolutePath: () => '',
-      storagePath: '',
-      globalState: mockMemento,
-      workspaceState: mockMemento,
-      secrets: mockSecretStorage,
-      extensionUri: vscode.Uri.file(''),
-      environmentVariableCollection: mockEnvCollection,
+      globalState: {
+        get: () => undefined,
+        update: () => Promise.resolve(),
+        keys: () => [],
+      },
+      workspaceState: {
+        get: () => undefined,
+        update: () => Promise.resolve(),
+        keys: () => [],
+      },
       extensionMode: vscode.ExtensionMode.Test,
-      storageUri: vscode.Uri.file(''),
-      globalStorageUri: vscode.Uri.file(''),
-      logUri: vscode.Uri.file(''),
-      extension: mockExtension,
-      languageModelAccessInformation: {
-        keyId: 'test-key',
-        endpoint: 'test-endpoint',
+      extensionUri: vscode.Uri.file(''),
+      extension: {
+        id: 'test-extension',
+        extensionKind: vscode.ExtensionKind.UI,
       },
     } as unknown as vscode.ExtensionContext;
 
@@ -88,7 +45,7 @@ suite('Periscope Core', () => {
     });
 
     // Call activate function
-    activate(context);
+    activate(mockContext);
 
     // Verify command registration
     assert.strictEqual(registerCommandStub.callCount, 2, 'Should register two commands');
@@ -104,7 +61,7 @@ suite('Periscope Core', () => {
     );
 
     // Verify commands are added to subscriptions
-    assert.strictEqual(context.subscriptions.length, 2, 'Should add commands to subscriptions');
+    assert.strictEqual(mockContext.subscriptions.length, 2, 'Should add commands to subscriptions');
   });
 
   test('should perform search operation', async () => {
