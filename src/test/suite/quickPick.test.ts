@@ -7,8 +7,6 @@ import { context as cx } from '../../lib/context';
 import { setupQuickPickForQuery, setupRgMenuActions } from '../../lib/quickpickActions';
 import { getSelectedText } from '../../utils/getSelectedText';
 import { peekItem } from '../../lib/editorActions';
-import { formatPathLabel } from '../../utils/formatPathLabel';
-import { createResultItem } from '../../utils/quickpickUtils';
 import { rgSearch } from '../../lib/ripgrep';
 import * as cp from 'child_process';
 import { EventEmitter } from 'events';
@@ -66,31 +64,32 @@ suite('QuickPick UI', () => {
     sandbox.restore();
   });
 
-  test('should format search results correctly', async () => {
-    // Create event emitters for stdout and process
-    const stdoutEmitter = new EventEmitter();
-    const processEmitter = new EventEmitter();
-
-    // Mock spawn at the module level
-    const mockSpawn = sandbox.stub(cp, 'spawn');
-    const mockProcess = {
+  function createMockProcess(stdoutEmitter: EventEmitter, processEmitter: EventEmitter) {
+    return {
       stdout: {
         on: stdoutEmitter.on.bind(stdoutEmitter),
-        destroy: sandbox.stub(),
+        destroy: sinon.stub(),
       },
       stderr: {
-        on: sandbox.stub(),
-        destroy: sandbox.stub(),
+        on: sinon.stub(),
+        destroy: sinon.stub(),
       },
-      kill: sandbox.stub(),
+      kill: sinon.stub(),
       on: processEmitter.on.bind(processEmitter),
       connected: false,
       killed: false,
       pid: 123,
-      stdin: null as any,
-      stdio: [] as any[],
+      stdin: null,
+      stdio: [],
     } as unknown as cp.ChildProcessWithoutNullStreams;
-    mockSpawn.returns(mockProcess);
+  }
+
+  test('should format search results correctly', async () => {
+    // Setup event emitters and process
+    const stdoutEmitter = new EventEmitter();
+    const processEmitter = new EventEmitter();
+    const mockSpawn = sandbox.stub(cp, 'spawn');
+    mockSpawn.returns(createMockProcess(stdoutEmitter, processEmitter));
 
     // Sample ripgrep result
     const rgResult: RgLine = {
@@ -112,57 +111,46 @@ suite('QuickPick UI', () => {
       },
     };
 
-    // Mock config and context
-    cx.config = {
-      rgPath: 'rg',
-      rgOptions: [],
-      rgGlobExcludes: [],
-      addSrcPaths: [],
-    } as any;
-
-    // Set initial app state
+    // Setup context
+    cx.config = { rgPath: 'rg' } as any;
     Object.defineProperty(cx, 'appState', {
       value: 'SEARCHING',
       writable: true,
     });
 
-    // Perform search
+    // Execute search and emit results
     rgSearch('hello');
-
-    // Emit the sample result and wait for processing
-    console.log('Emitting stdout data...');
     stdoutEmitter.emit('data', Buffer.from(JSON.stringify(rgResult) + '\n'));
-
-    // Wait for the stdout data to be processed
     await new Promise(setImmediate);
-    console.log('After stdout data processing, items:', cx.qp.items);
-
-    // Emit exit code and wait for processing
-    console.log('Emitting exit code...');
     processEmitter.emit('exit', 0);
-
-    // Allow async operations to complete
     await new Promise(setImmediate);
-    console.log('After exit processing, items:', cx.qp.items);
 
-    // Verify item formatting
+    // Verify results
     const formattedItem = cx.qp.items[0] as QPItemQuery;
     assert.ok(formattedItem, 'No items found in QuickPick');
+
+    // Verify type and basic properties
     assert.strictEqual(formattedItem._type, 'QuickPickItemQuery');
+    assert.strictEqual(formattedItem.alwaysShow, true);
+    assert.strictEqual(formattedItem.detail, 'src/test.ts');
+
+    // Verify content
     assert.strictEqual(formattedItem.label, 'const test = "hello world";');
-    assert.strictEqual(formattedItem.data.filePath, 'src/test.ts');
-    assert.strictEqual(formattedItem.data.linePos, 42);
-    assert.strictEqual(formattedItem.data.colPos, 13);
     assert.deepStrictEqual(formattedItem.data.rawResult, {
       filePath: 'src/test.ts',
       linePos: 42,
       colPos: 13,
       textResult: 'const test = "hello world";',
     });
-    assert.strictEqual(formattedItem.alwaysShow, true);
+
+    // Verify location data
+    assert.strictEqual(formattedItem.data.filePath, 'src/test.ts');
+    assert.strictEqual(formattedItem.data.linePos, 42);
+    assert.strictEqual(formattedItem.data.colPos, 13);
+
+    // Verify UI elements
     assert.strictEqual(formattedItem.buttons?.length, 1);
     assert.strictEqual(formattedItem.buttons[0].tooltip, 'Open in Horizontal split');
-    assert.strictEqual(formattedItem.detail, 'src/test.ts');
   });
 
   test('should handle preview functionality', async () => {
