@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.9.1](https://github.com/joshmu/periscope/compare/v1.9.0...v1.9.1) (2024-12-27)
+
+### Bug Fixes
+
+- correct async support for openInHorizontalSplit ([493f5dd](https://github.com/joshmu/periscope/commit/493f5dd13201c834c1d551719389a65d26868436))
+- update ripgrep path handling and improve query extraction logic ([04d1ad3](https://github.com/joshmu/periscope/commit/04d1ad32080f4201128c49efb3acda4f8a9407d2))
+
 # [1.9.0](https://github.com/joshmu/periscope/compare/v1.8.2...v1.9.0) (2024-12-21)
 
 ### Features
