@@ -1,51 +1,5 @@
 import * as vscode from 'vscode';
-import { execSync } from 'child_process';
-import * as fs from 'fs';
-import { rgPath as vscodeRgPath } from '@vscode/ripgrep';
-import { log, notifyError } from './log';
-
-function findRipgrepInPath(): string | null {
-  const command = process.platform === 'win32' ? 'where' : 'which';
-  try {
-    const result = execSync(`${command} rg`, { stdio: 'pipe' }).toString().trim();
-    return result && fs.existsSync(result) ? result : null;
-  } catch {
-    return null;
-  }
-}
-
-function resolveRipgrepPath(userPath?: string): string {
-  // Try user-specified path first
-  if (userPath?.trim()) {
-    const path = userPath.trim();
-    if (fs.existsSync(path)) {
-      try {
-        fs.accessSync(path);
-        return path;
-      } catch (error) {
-        log(`PERISCOPE: Error checking ripgrep path: ${error}`);
-      }
-    }
-    log(`PERISCOPE: User-specified ripgrep path not found: ${path}`);
-  }
-
-  // Try system PATH
-  const systemPath = findRipgrepInPath();
-  if (systemPath) {
-    log(`PERISCOPE: Using ripgrep from system PATH: ${systemPath}`);
-    return systemPath;
-  }
-
-  // Fallback to vscode ripgrep
-  if (vscodeRgPath && fs.existsSync(vscodeRgPath)) {
-    log(`PERISCOPE: Using @vscode/ripgrep bundled binary: ${vscodeRgPath}`);
-    return vscodeRgPath;
-  }
-
-  // If all else fails, show error and throw
-  notifyError('Ripgrep not found. Please install ripgrep or configure a valid path.');
-  throw new Error('Ripgrep not found');
-}
+import { resolveRipgrepPath } from './ripgrepPath';
 
 export function getConfig() {
   const vsConfig = vscode.workspace.getConfiguration('periscope');
