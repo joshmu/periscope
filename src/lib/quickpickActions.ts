@@ -62,7 +62,7 @@ function onDidChangeValue(value: string) {
 
   // update the quickpick title with a preview of the rgQueryParam command if utilised
   if (cx.config.rgQueryParamsShowTitle) {
-    cx.qp.title = extraRgFlags.length > 0 ? `rg '${rgQuery}' ${extraRgFlags.join(' ')}` : undefined;
+    cx.qp.title = getRgQueryParamsTitle(rgQuery, extraRgFlags);
   }
 
   rgSearch(rgQuery, extraRgFlags);
@@ -137,4 +137,15 @@ export function setupRgMenuActions() {
   }
 
   cx.disposables.rgMenuActions.push(cx.qp.onDidTriggerButton(next), cx.qp.onDidAccept(next));
+}
+
+// get rgQueryParams info title
+export function getRgQueryParamsTitle(rgQuery: string, extraRgFlags: string[]): string | undefined {
+  // don't bother showing if there are no extraRgFlags
+  if (!extraRgFlags.length) {
+    return undefined;
+  }
+
+  // hint in the title the expanded rgQueryParams command
+  return `rg '${rgQuery}' ${extraRgFlags.join(' ')}`;
 }
