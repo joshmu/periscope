@@ -33,35 +33,34 @@ suite('checkAndExtractRgFlagsFromQuery', () => {
   });
 
   test('should handle simple type flag', () => {
-    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('myquery -t js');
-    assert.strictEqual(updatedQuery, 'myquery');
+    const { rgQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('myquery -t js');
+    assert.strictEqual(rgQuery, 'myquery');
     assert.deepStrictEqual(extraRgFlags, ['-t js']);
   });
 
   test('should handle long form type flag', () => {
-    const { updatedQuery, extraRgFlags } =
-      checkAndExtractRgFlagsFromQuery('searchtext --type=rust');
-    assert.strictEqual(updatedQuery, 'searchtext');
+    const { rgQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('searchtext --type=rust');
+    assert.strictEqual(rgQuery, 'searchtext');
     assert.deepStrictEqual(extraRgFlags, ['--type=rust']);
   });
 
   test('should handle glob pattern with quotes', () => {
-    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('findme -g "*.{js,ts}"');
-    assert.strictEqual(updatedQuery, 'findme');
+    const { rgQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('findme -g "*.{js,ts}"');
+    assert.strictEqual(rgQuery, 'findme');
     assert.deepStrictEqual(extraRgFlags, ['-g "*.{js,ts}"']);
   });
 
   test('should return original query when no flags match', () => {
-    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('plain search query');
-    assert.strictEqual(updatedQuery, 'plain search query');
+    const { rgQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery('plain search query');
+    assert.strictEqual(rgQuery, 'plain search query');
     assert.deepStrictEqual(extraRgFlags, []);
   });
 
   test('should handle query with spaces', () => {
-    const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(
+    const { rgQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(
       'search with spaces -t python',
     );
-    assert.strictEqual(updatedQuery, 'search with spaces');
+    assert.strictEqual(rgQuery, 'search with spaces');
     assert.deepStrictEqual(extraRgFlags, ['-t python']);
   });
 });
