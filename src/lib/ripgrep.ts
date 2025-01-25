@@ -160,16 +160,16 @@ export function checkKillProcess() {
 }
 
 // extract rg flags from the query, can match multiple regex's
-export function checkAndExtractRgFlagsFromQuery(query: string): {
-  updatedQuery: string;
+export function checkAndExtractRgFlagsFromQuery(userInput: string): {
+  rgQuery: string;
   extraRgFlags: string[];
 } {
   const extraRgFlags: string[] = [];
-  const queries = [query];
+  const queries = [userInput];
 
   cx.config.rgQueryParams.forEach(({ param, regex }) => {
     if (param && regex) {
-      const match = query.match(regex);
+      const match = userInput.match(regex);
       if (match && match.length > 1) {
         let newParam = param;
         match.slice(2).forEach((value, index) => {
@@ -182,8 +182,8 @@ export function checkAndExtractRgFlagsFromQuery(query: string): {
   });
 
   // prefer the first query match or the original one
-  const updatedQuery = queries.length > 1 ? queries[1] : queries[0];
-  return { updatedQuery, extraRgFlags };
+  const rgQuery = queries.length > 1 ? queries[1] : queries[0];
+  return { rgQuery, extraRgFlags };
 }
 
 /**

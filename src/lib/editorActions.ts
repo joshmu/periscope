@@ -39,13 +39,25 @@ export const openInHorizontalSplit = async () => {
   cx.qp?.dispose();
 };
 
+/**
+ * Util to ensure correct value is passed to the native vscode search
+ */
+export function formatNativeVscodeQuery(query: string, suffix: string): string {
+  // remove the config suffix from the query and trim any whitespace
+  let output = query;
+  if (suffix) {
+    const index = output.indexOf(suffix);
+    if (index !== -1) {
+      output = output.slice(0, index);
+    }
+  }
+  return output.trim();
+}
+
 // Open the native VSCode search with the provided query and enable regex
 export function openNativeVscodeSearch(query: string, qp: vscode.QuickPick<AllQPItemVariants>) {
-  // remove the config suffix from the query
-  const trimmedQuery = query.slice(0, query.indexOf(cx.config.gotoNativeSearchSuffix));
-
   vscode.commands.executeCommand('workbench.action.findInFiles', {
-    query: trimmedQuery,
+    query: formatNativeVscodeQuery(query, cx.config.gotoNativeSearchSuffix),
     isRegex: true,
     isCaseSensitive: false,
     matchWholeWord: false,

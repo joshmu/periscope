@@ -40,7 +40,9 @@ function onDidChangeValue(value: string) {
     return;
   }
 
-  cx.query = value;
+  // update the query if rgQueryParams are available and found
+  const { rgQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(value);
+  cx.query = rgQuery;
 
   // jump to rg custom menu if the prefix is found in the query
   if (cx.config.gotoRgMenuActionsPrefix && value.startsWith(cx.config.gotoRgMenuActionsPrefix)) {
@@ -54,20 +56,16 @@ function onDidChangeValue(value: string) {
     cx.config.gotoNativeSearchSuffix &&
     value.endsWith(cx.config.gotoNativeSearchSuffix)
   ) {
-    openNativeVscodeSearch(cx.query, cx.qp);
+    openNativeVscodeSearch(rgQuery, cx.qp);
     return;
   }
 
-  // update the query if rgQueryParams are available and found
-  const { updatedQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(value);
-
   // update the quickpick title with a preview of the rgQueryParam command if utilised
   if (cx.config.rgQueryParamsShowTitle) {
-    cx.qp.title =
-      extraRgFlags.length > 0 ? `rg '${cx.query}' ${extraRgFlags.join(' ')}` : undefined;
+    cx.qp.title = getRgQueryParamsTitle(rgQuery, extraRgFlags);
   }
 
-  rgSearch(updatedQuery, extraRgFlags);
+  rgSearch(rgQuery, extraRgFlags);
 }
 
 // when item is 'FOCUSSED'
@@ -139,4 +137,15 @@ export function setupRgMenuActions() {
   }
 
   cx.disposables.rgMenuActions.push(cx.qp.onDidTriggerButton(next), cx.qp.onDidAccept(next));
+}
+
+// get rgQueryParams info title
+export function getRgQueryParamsTitle(rgQuery: string, extraRgFlags: string[]): string | undefined {
+  // don't bother showing if there are no extraRgFlags
+  if (!extraRgFlags.length) {
+    return undefined;
+  }
+
+  // hint in the title the expanded rgQueryParams command
+  return `rg '${rgQuery}' ${extraRgFlags.join(' ')}`;
 }
