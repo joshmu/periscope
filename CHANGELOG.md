@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.9.2](https://github.com/joshmu/periscope/compare/v1.9.1...v1.9.2) (2025-01-25)
+
+### Bug Fixes
+
+- **native-search:** update to trim whitespace to return valid results ([462b66f](https://github.com/joshmu/periscope/commit/462b66fb5f3669be4d8ca0c491ea1ebdc2402ec0))
+- **rgQueryParams:** show correct query in title info after extracting ([219a820](https://github.com/joshmu/periscope/commit/219a82041a9b35a23648eef03349abdbfbac0881))
+
 ## [1.9.1](https://github.com/joshmu/periscope/compare/v1.9.0...v1.9.1) (2024-12-27)
 
 ### Bug Fixes
