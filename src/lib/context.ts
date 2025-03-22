@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ChildProcessWithoutNullStreams } from 'child_process';
 import { AllQPItemVariants, DisposablesMap } from '../types';
 import { getConfig } from '../utils/getConfig';
-import { initHighlightLineInstance } from '../utils/highlightLineDecorationType';
+import { createPeekDecorationManager } from '../utils/createPeekDecorationManager';
 
 // simple context for each invoke of periscope search
 // @see https://code.visualstudio.com/api/references/vscode-api#QuickPick
@@ -13,7 +13,7 @@ const query = '';
 const spawnRegistry: ChildProcessWithoutNullStreams[] = [];
 const config = getConfig();
 const rgMenuActionsSelected: string[] = [];
-const highlightDecoration = initHighlightLineInstance();
+const matchDecoration = createPeekDecorationManager();
 const disposables: DisposablesMap = {
   general: [],
   rgMenuActions: [],
@@ -30,7 +30,7 @@ export const context = {
   spawnRegistry,
   config,
   rgMenuActionsSelected,
-  highlightDecoration,
+  matchDecoration,
   disposables,
   appState,
 };
@@ -44,7 +44,7 @@ function resetContext() {
   context.spawnRegistry = [];
   context.config = getConfig();
   context.rgMenuActionsSelected = [];
-  context.highlightDecoration = initHighlightLineInstance();
+  context.matchDecoration = createPeekDecorationManager();
   context.disposables = {
     general: [],
     rgMenuActions: [],

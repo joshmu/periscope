@@ -27,7 +27,7 @@ export function confirm(payload: ConfirmPayload = { context: 'unknown' }) {
     return;
   }
 
-  const { filePath, linePos, colPos } = currentItem.data;
+  const { filePath, linePos, colPos, rawResult } = currentItem.data;
   vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
     const options: vscode.TextDocumentShowOptions = {};
 
@@ -37,7 +37,7 @@ export function confirm(payload: ConfirmPayload = { context: 'unknown' }) {
     }
 
     vscode.window.showTextDocument(document, options).then((editor) => {
-      setCursorPosition(editor, linePos, colPos);
+      setCursorPosition(editor, linePos, colPos, rawResult);
       cx.qp.dispose();
     });
   });
@@ -55,7 +55,7 @@ export function finished() {
   setExtensionActiveContext(false);
   updateAppState('FINISHED');
   checkKillProcess();
-  cx.highlightDecoration.remove();
+  cx.matchDecoration.remove();
   disposeAll();
   cx.previousActiveEditor = undefined;
   log('finished');

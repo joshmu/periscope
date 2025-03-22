@@ -3,7 +3,8 @@ import * as vscode from 'vscode';
 import { getConfig } from '../utils/getConfig';
 import { context as cx, updateAppState } from './context';
 import { tryJsonParse } from '../utils/jsonUtils';
-import { QPItemQuery, RgLine } from '../types';
+import { QPItemQuery } from '../types';
+import { RgMatchResult } from '../types/ripgrep';
 import { log, notifyError } from '../utils/log';
 import { createResultItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
@@ -60,7 +61,7 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
   const rgCmd = getRgCommand(value, rgExtraFlags);
   log('rgCmd:', rgCmd);
   checkKillProcess();
-  const searchResults: ReturnType<typeof normaliseRgResult>[] = [];
+  const searchResults: RgMatchResult[] = [];
 
   const spawnProcess = spawn(rgCmd, [], { shell: true });
   cx.spawnRegistry.push(spawnProcess);
@@ -69,7 +70,7 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
     const lines = data.toString().split('\n').filter(Boolean);
 
     lines.forEach((line) => {
-      const parsedLine = tryJsonParse<RgLine>(line);
+      const parsedLine = tryJsonParse<RgMatchResult['rawResult']>(line);
 
       if (parsedLine?.type === 'match') {
         searchResults.push(normaliseRgResult(parsedLine));
@@ -97,7 +98,6 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
     if (code === 0 && searchResults.length && cx.appState === 'SEARCHING') {
       cx.qp.items = searchResults
         .map((searchResult) => {
-          // break the filename via regext ':line:col:'
           const { filePath, linePos, colPos, textResult } = searchResult;
 
           // if all data is not available then remove the item
@@ -105,7 +105,7 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
             return false;
           }
 
-          return createResultItem(filePath, textResult, linePos, colPos, searchResult);
+          return createResultItem(searchResult);
         })
         .filter(Boolean) as QPItemQuery[];
     } else if (code === null || code === 0) {
@@ -130,7 +130,7 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
   });
 }
 
-function normaliseRgResult(parsedLine: RgLine) {
+function normaliseRgResult(parsedLine: RgMatchResult['rawResult']): RgMatchResult {
   // eslint-disable-next-line camelcase, @typescript-eslint/naming-convention
   const { path, lines, line_number } = parsedLine.data;
   const filePath = path.text;
@@ -144,6 +144,7 @@ function normaliseRgResult(parsedLine: RgLine) {
     linePos,
     colPos,
     textResult,
+    rawResult: parsedLine,
   };
 }
 
