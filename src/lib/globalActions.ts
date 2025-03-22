@@ -55,7 +55,7 @@ export function finished() {
   setExtensionActiveContext(false);
   updateAppState('FINISHED');
   checkKillProcess();
-  cx.highlightDecoration.remove();
+  cx.matchDecoration.remove();
   disposeAll();
   cx.previousActiveEditor = undefined;
   log('finished');

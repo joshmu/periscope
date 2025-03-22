@@ -13,7 +13,7 @@ const query = '';
 const spawnRegistry: ChildProcessWithoutNullStreams[] = [];
 const config = getConfig();
 const rgMenuActionsSelected: string[] = [];
-const highlightDecoration = createPeekDecorationManager();
+const matchDecoration = createPeekDecorationManager();
 const disposables: DisposablesMap = {
   general: [],
   rgMenuActions: [],
@@ -30,7 +30,7 @@ export const context = {
   spawnRegistry,
   config,
   rgMenuActionsSelected,
-  highlightDecoration,
+  matchDecoration,
   disposables,
   appState,
 };
@@ -44,7 +44,7 @@ function resetContext() {
   context.spawnRegistry = [];
   context.config = getConfig();
   context.rgMenuActionsSelected = [];
-  context.highlightDecoration = createPeekDecorationManager();
+  context.matchDecoration = createPeekDecorationManager();
   context.disposables = {
     general: [],
     rgMenuActions: [],

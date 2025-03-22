@@ -92,7 +92,7 @@ export function setCursorPosition(
       editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
       // Extract submatches from rgLine
       const matches = rgLine.data.submatches.map(({ start, end }) => ({ start, end }));
-      cx.highlightDecoration.set(editor, matches);
+      cx.matchDecoration.set(editor, matches);
     });
 }
 
