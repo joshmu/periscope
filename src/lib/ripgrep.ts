@@ -4,7 +4,7 @@ import { getConfig } from '../utils/getConfig';
 import { context as cx, updateAppState } from './context';
 import { tryJsonParse } from '../utils/jsonUtils';
 import { QPItemQuery } from '../types';
-import { RgMatchRawResult, RgMatchResult } from '../types/ripgrep';
+import { RgMatchResult } from '../types/ripgrep';
 import { log, notifyError } from '../utils/log';
 import { createResultItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
@@ -61,7 +61,7 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
   const rgCmd = getRgCommand(value, rgExtraFlags);
   log('rgCmd:', rgCmd);
   checkKillProcess();
-  const searchResults: ReturnType<typeof normaliseRgResult>[] = [];
+  const searchResults: RgMatchResult[] = [];
 
   const spawnProcess = spawn(rgCmd, [], { shell: true });
   cx.spawnRegistry.push(spawnProcess);
@@ -70,7 +70,7 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
     const lines = data.toString().split('\n').filter(Boolean);
 
     lines.forEach((line) => {
-      const parsedLine = tryJsonParse<RgMatchRawResult>(line);
+      const parsedLine = tryJsonParse<RgMatchResult['rawResult']>(line);
 
       if (parsedLine?.type === 'match') {
         searchResults.push(normaliseRgResult(parsedLine));
@@ -98,7 +98,6 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
     if (code === 0 && searchResults.length && cx.appState === 'SEARCHING') {
       cx.qp.items = searchResults
         .map((searchResult) => {
-          // break the filename via regext ':line:col:'
           const { filePath, linePos, colPos, textResult } = searchResult;
 
           // if all data is not available then remove the item
@@ -131,7 +130,7 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
   });
 }
 
-function normaliseRgResult(parsedLine: RgMatchRawResult): RgMatchResult {
+function normaliseRgResult(parsedLine: RgMatchResult['rawResult']): RgMatchResult {
   // eslint-disable-next-line camelcase, @typescript-eslint/naming-convention
   const { path, lines, line_number } = parsedLine.data;
   const filePath = path.text;

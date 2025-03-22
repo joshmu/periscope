@@ -22,7 +22,7 @@ export function getConfig() {
     startFolderDisplayIndex: vsConfig.get<number>('startFolderDisplayIndex', 0),
     startFolderDisplayDepth: vsConfig.get<number>('startFolderDisplayDepth', 1),
     endFolderDisplayDepth: vsConfig.get<number>('endFolderDisplayDepth', 4),
-    alwaysShowRgMenuActions: vsConfig.get<boolean>('alwaysShowRgMenuActions', true),
+    alwaysShowRgMenuActions: vsConfig.get<boolean>('alwaysShowRgMenuActions', false),
     showPreviousResultsWhenNoMatches: vsConfig.get<boolean>(
       'showPreviousResultsWhenNoMatches',
       false,

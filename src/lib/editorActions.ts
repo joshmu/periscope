@@ -2,8 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { AllQPItemVariants, QPItemQuery } from '../types';
 import { context as cx } from './context';
-import { RgMatchRawResult } from '../types/ripgrep';
-import { log } from '../utils/log';
+import { RgMatchResult } from '../types/ripgrep';
 
 export function closePreviewEditor() {
   if (cx.previousActiveEditor) {
@@ -74,7 +73,7 @@ export function setCursorPosition(
   editor: vscode.TextEditor,
   linePos: number,
   colPos: number,
-  rgLine: RgMatchRawResult,
+  rgLine: RgMatchResult['rawResult'],
 ) {
   const selection = new vscode.Selection(0, 0, 0, 0);
   editor.selection = selection;

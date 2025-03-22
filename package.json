@@ -146,7 +146,7 @@
         },
         "periscope.alwaysShowRgMenuActions": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "If true, then open rg menu actions every time the search is invoked."
         },
         "periscope.rgQueryParamsShowTitle": {

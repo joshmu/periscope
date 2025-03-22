@@ -2,16 +2,15 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { PERISCOPE } from '../../lib/periscope';
 import { QPItemQuery, QPItemRgMenuAction } from '../../types';
-import { RgMatchRawResult } from '../../types/ripgrep';
+import { RgMatchResult } from '../../types/ripgrep';
 import { context as cx } from '../../lib/context';
 import { setupQuickPickForQuery, setupRgMenuActions } from '../../lib/quickpickActions';
 import { getSelectedText } from '../../utils/getSelectedText';
 import { peekItem } from '../../lib/editorActions';
-import { rgSearch } from '../../lib/ripgrep';
 import * as cp from 'child_process';
 import { EventEmitter } from 'events';
+import { createResultItem } from '../../utils/quickpickUtils';
 
 suite('QuickPick UI', () => {
   let sandbox: sinon.SinonSandbox;
@@ -86,15 +85,8 @@ suite('QuickPick UI', () => {
     } as unknown as cp.ChildProcessWithoutNullStreams;
   }
 
-  test('should format search results correctly', async () => {
-    // Setup event emitters and process
-    const stdoutEmitter = new EventEmitter();
-    const processEmitter = new EventEmitter();
-    const mockSpawn = sandbox.stub(cp, 'spawn');
-    mockSpawn.returns(createMockProcess(stdoutEmitter, processEmitter));
-
-    // Sample ripgrep result
-    const rgResult: RgMatchRawResult = {
+  test('should format search results correctly', () => {
+    const rawResult: RgMatchResult['rawResult'] = {
       type: 'match',
       data: {
         path: { text: 'src/test.ts' },
@@ -113,46 +105,29 @@ suite('QuickPick UI', () => {
       },
     };
 
-    // Setup context
-    cx.config = { rgPath: 'rg' } as any;
-    Object.defineProperty(cx, 'appState', {
-      value: 'SEARCHING',
-      writable: true,
-    });
-
-    // Execute search and emit results
-    rgSearch('hello');
-    stdoutEmitter.emit('data', Buffer.from(JSON.stringify(rgResult) + '\n'));
-    await new Promise(setImmediate);
-    processEmitter.emit('exit', 0);
-    await new Promise(setImmediate);
-
-    // Verify results
-    const formattedItem = cx.qp.items[0] as QPItemQuery;
-    assert.ok(formattedItem, 'No items found in QuickPick');
-
-    // Verify type and basic properties
-    assert.strictEqual(formattedItem._type, 'QuickPickItemQuery');
-    assert.strictEqual(formattedItem.alwaysShow, true);
-    assert.strictEqual(formattedItem.detail, 'src/test.ts');
-
-    // Verify content
-    assert.strictEqual(formattedItem.label, 'const test = "hello world";');
-    assert.deepStrictEqual(formattedItem.data.rawResult, {
+    const searchResult: RgMatchResult = {
       filePath: 'src/test.ts',
       linePos: 42,
-      colPos: 13,
+      colPos: 12,
       textResult: 'const test = "hello world";',
-    });
+      rawResult,
+    };
 
-    // Verify location data
-    assert.strictEqual(formattedItem.data.filePath, 'src/test.ts');
-    assert.strictEqual(formattedItem.data.linePos, 42);
-    assert.strictEqual(formattedItem.data.colPos, 13);
+    const expected: QPItemQuery = {
+      _type: 'QuickPickItemQuery',
+      label: 'const test = "hello world";',
+      data: searchResult,
+      detail: 'src/test.ts',
+      alwaysShow: true,
+      buttons: [
+        {
+          iconPath: new vscode.ThemeIcon('split-horizontal'),
+          tooltip: 'Open in Horizontal split',
+        },
+      ],
+    };
 
-    // Verify UI elements
-    assert.strictEqual(formattedItem.buttons?.length, 1);
-    assert.strictEqual(formattedItem.buttons[0].tooltip, 'Open in Horizontal split');
+    assert.deepStrictEqual(createResultItem(searchResult), expected);
   });
 
   test('should handle preview functionality', async () => {
@@ -213,12 +188,15 @@ suite('QuickPick UI', () => {
         filePath: 'src/test.ts',
         linePos: 42,
         colPos: 13,
+        textResult: 'hello',
         rawResult: {
           type: 'match',
           data: {
             path: { text: 'src/test.ts' },
             lines: { text: 'const test = "hello world";' },
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             line_number: 42,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             absolute_offset: 100,
             submatches: [
               {

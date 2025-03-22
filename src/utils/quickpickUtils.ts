@@ -8,12 +8,7 @@ export function createResultItem(searchResult: RgMatchResult): QPItemQuery {
   return {
     _type: 'QuickPickItemQuery',
     label: searchResult.textResult?.trim(),
-    data: {
-      filePath: searchResult.filePath,
-      linePos: searchResult.linePos,
-      colPos: searchResult.colPos,
-      rawResult: searchResult.rawResult,
-    },
+    data: searchResult,
     // description: `${folders.join(path.sep)}`,
     detail: formatPathLabel(searchResult.filePath),
     /**

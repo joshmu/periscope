@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { RgMatchRawResult } from './ripgrep';
+import { RgMatchResult } from './ripgrep';
 
 export interface QPItemDefault extends vscode.QuickPickItem {
   _type: 'QuickPickItemDefault';
@@ -7,12 +7,7 @@ export interface QPItemDefault extends vscode.QuickPickItem {
 export interface QPItemQuery extends vscode.QuickPickItem {
   _type: 'QuickPickItemQuery';
   // custom payload
-  data: {
-    filePath: string;
-    linePos: number;
-    colPos: number;
-    rawResult: RgMatchRawResult;
-  };
+  data: RgMatchResult;
 }
 export interface QPItemRgMenuAction extends vscode.QuickPickItem {
   _type: 'QuickPickItemRgMenuAction';
