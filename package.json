@@ -195,6 +195,11 @@
             "ridge"
           ],
           "default": "solid"
+        },
+        "periscope.peekMatchColor": {
+          "type": "string",
+          "default": "rgba(255, 255, 0, 0.3)",
+          "description": "Color used to highlight matching text in preview ('white', '#FFF', 'rgb(255,255,255)', 'rgba(255,255,255,0.5)')"
         }
       }
     }

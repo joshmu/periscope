@@ -3,7 +3,8 @@ import * as vscode from 'vscode';
 import { getConfig } from '../utils/getConfig';
 import { context as cx, updateAppState } from './context';
 import { tryJsonParse } from '../utils/jsonUtils';
-import { QPItemQuery, RgLine } from '../types';
+import { QPItemQuery } from '../types';
+import { RgMatchRawResult, RgMatchResult } from '../types/ripgrep';
 import { log, notifyError } from '../utils/log';
 import { createResultItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
@@ -69,7 +70,7 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
     const lines = data.toString().split('\n').filter(Boolean);
 
     lines.forEach((line) => {
-      const parsedLine = tryJsonParse<RgLine>(line);
+      const parsedLine = tryJsonParse<RgMatchRawResult>(line);
 
       if (parsedLine?.type === 'match') {
         searchResults.push(normaliseRgResult(parsedLine));
@@ -105,7 +106,7 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
             return false;
           }
 
-          return createResultItem(filePath, textResult, linePos, colPos, searchResult);
+          return createResultItem(searchResult);
         })
         .filter(Boolean) as QPItemQuery[];
     } else if (code === null || code === 0) {
@@ -130,7 +131,7 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
   });
 }
 
-function normaliseRgResult(parsedLine: RgLine) {
+function normaliseRgResult(parsedLine: RgMatchRawResult): RgMatchResult {
   // eslint-disable-next-line camelcase, @typescript-eslint/naming-convention
   const { path, lines, line_number } = parsedLine.data;
   const filePath = path.text;
@@ -144,6 +145,7 @@ function normaliseRgResult(parsedLine: RgLine) {
     linePos,
     colPos,
     textResult,
+    rawResult: parsedLine,
   };
 }
 

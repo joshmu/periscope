@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { AllQPItemVariants, QPItemQuery } from '../types';
 import { context as cx } from './context';
+import { RgMatchRawResult } from '../types/ripgrep';
+import { log } from '../utils/log';
 
 export function closePreviewEditor() {
   if (cx.previousActiveEditor) {
@@ -29,12 +31,12 @@ export const openInHorizontalSplit = async () => {
 
   closePreviewEditor();
 
-  const { filePath, linePos, colPos } = currentItem.data;
+  const { filePath, linePos, colPos, rawResult } = currentItem.data;
   const document = await vscode.workspace.openTextDocument(filePath);
   const editor = await vscode.window.showTextDocument(document, options);
 
   if (editor) {
-    setCursorPosition(editor, linePos, colPos);
+    setCursorPosition(editor, linePos, colPos, rawResult);
   }
   cx.qp?.dispose();
 };
@@ -68,7 +70,12 @@ export function openNativeVscodeSearch(query: string, qp: vscode.QuickPick<AllQP
   qp.hide();
 }
 
-export function setCursorPosition(editor: vscode.TextEditor, linePos: number, colPos: number) {
+export function setCursorPosition(
+  editor: vscode.TextEditor,
+  linePos: number,
+  colPos: number,
+  rgLine: RgMatchRawResult,
+) {
   const selection = new vscode.Selection(0, 0, 0, 0);
   editor.selection = selection;
 
@@ -84,7 +91,9 @@ export function setCursorPosition(editor: vscode.TextEditor, linePos: number, co
       const { range } = editor.document.lineAt(newPosition);
       editor.selection = new vscode.Selection(newPosition, newPosition);
       editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
-      cx.highlightDecoration.set(editor);
+      // Extract submatches from rgLine
+      const matches = rgLine.data.submatches.map(({ start, end }) => ({ start, end }));
+      cx.highlightDecoration.set(editor, matches);
     });
 }
 
@@ -119,7 +128,7 @@ export function peekItem(items: readonly QPItemQuery[]) {
     return;
   }
 
-  const { filePath, linePos, colPos } = currentItem.data;
+  const { filePath, linePos, colPos, rawResult } = currentItem.data;
   vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
     vscode.window
       .showTextDocument(document, {
@@ -127,7 +136,7 @@ export function peekItem(items: readonly QPItemQuery[]) {
         preserveFocus: true,
       })
       .then((editor) => {
-        setCursorPosition(editor, linePos, colPos);
+        setCursorPosition(editor, linePos, colPos, rawResult);
       });
   });
 }

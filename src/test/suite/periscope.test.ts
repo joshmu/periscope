@@ -144,7 +144,22 @@ suite('Periscope Core', () => {
         filePath: 'test/file.ts',
         linePos: 1,
         colPos: 1,
-        rawResult: {},
+        rawResult: {
+          type: 'match',
+          data: {
+            path: { text: 'test/file.ts' },
+            lines: { text: 'test content' },
+            line_number: 1,
+            absolute_offset: 0,
+            submatches: [
+              {
+                match: { text: 'test' },
+                start: 0,
+                end: 4,
+              },
+            ],
+          },
+        },
       },
     };
     mockQuickPick.activeItems = [mockItem];

@@ -33,5 +33,6 @@ export function getConfig() {
     peekBorderColor: vsConfig.get<string>('peekBorderColor', 'rgb(150,200,200)'),
     peekBorderWidth: vsConfig.get<string>('peekBorderWidth', '2px'),
     peekBorderStyle: vsConfig.get<string>('peekBorderStyle', 'solid'),
+    peekMatchColor: vsConfig.get<string>('peekMatchColor', 'rgba(255, 255, 0, 0.3)'),
   };
 }

@@ -2,7 +2,9 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { QPItemQuery, RgLine, QPItemRgMenuAction } from '../../types';
+import { PERISCOPE } from '../../lib/periscope';
+import { QPItemQuery, QPItemRgMenuAction } from '../../types';
+import { RgMatchRawResult } from '../../types/ripgrep';
 import { context as cx } from '../../lib/context';
 import { setupQuickPickForQuery, setupRgMenuActions } from '../../lib/quickpickActions';
 import { getSelectedText } from '../../utils/getSelectedText';
@@ -92,7 +94,7 @@ suite('QuickPick UI', () => {
     mockSpawn.returns(createMockProcess(stdoutEmitter, processEmitter));
 
     // Sample ripgrep result
-    const rgResult: RgLine = {
+    const rgResult: RgMatchRawResult = {
       type: 'match',
       data: {
         path: { text: 'src/test.ts' },
@@ -211,7 +213,22 @@ suite('QuickPick UI', () => {
         filePath: 'src/test.ts',
         linePos: 42,
         colPos: 13,
-        rawResult: {} as RgLine,
+        rawResult: {
+          type: 'match',
+          data: {
+            path: { text: 'src/test.ts' },
+            lines: { text: 'const test = "hello world";' },
+            line_number: 42,
+            absolute_offset: 100,
+            submatches: [
+              {
+                match: { text: 'hello' },
+                start: 12,
+                end: 17,
+              },
+            ],
+          },
+        },
       },
     };
 
@@ -282,6 +299,7 @@ suite('QuickPick UI', () => {
       endFolderDisplayDepth: 2,
       alwaysShowRgMenuActions: false,
       showPreviousResultsWhenNoMatches: true,
+      peekMatchColor: 'rgba(255, 255, 0, 0.3)',
     };
     cx.config = mockConfig;
 
