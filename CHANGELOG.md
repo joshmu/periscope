@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+# [1.10.0](https://github.com/joshmu/periscope/compare/v1.9.2...v1.10.0) (2025-03-22)
+
+### Features
+
+- **config:** enhance peek decoration options ([5a5b7be](https://github.com/joshmu/periscope/commit/5a5b7bec7e29452624c5a15d2d9de8b2c193b47f))
+- **highlight:** highlight text match ([d245bbd](https://github.com/joshmu/periscope/commit/d245bbd6dd1547f086210956d1fe2c3367023921))
+- **ripgrep:** update rgMatch handling and configuration defaults ([31d78fd](https://github.com/joshmu/periscope/commit/31d78fd6bbe395676af74699f8ec18c60401532f))
+
 ## [1.9.2](https://github.com/joshmu/periscope/compare/v1.9.1...v1.9.2) (2025-01-25)
 
 ### Bug Fixes
