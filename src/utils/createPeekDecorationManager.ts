@@ -2,28 +2,46 @@ import * as vscode from 'vscode';
 import { getConfig } from './getConfig';
 
 /**
- * Creates highlight decorations for both the current line and matching text when 'peeking' at a file
+ * Creates and manages decorations for both the current line and matching text when 'peeking' at a file
  */
-export function initHighlightLineInstance() {
+export function createPeekDecorationManager() {
   const {
     peekBorderColor: borderColor,
     peekBorderWidth: borderWidth,
     peekBorderStyle: borderStyle,
-    peekMatchColor: matchColor = 'rgba(255, 255, 0, 0.3)',
+    peekMatchColor: matchColor,
+    peekMatchBorderColor: matchBorderColor,
+    peekMatchBorderWidth: matchBorderWidth = '1px',
+    peekMatchBorderStyle: matchBorderStyle = 'solid',
   } = getConfig();
 
   // Create decorations for both line and text match highlighting
   function createDecorationTypes() {
+    // Use theme color for match highlighting if no custom color is set
+    const matchBackgroundColor =
+      matchColor ?? new vscode.ThemeColor('editor.findMatchHighlightBackground');
+
+    // Use theme color for match border if no custom color is set
+    const matchBorderThemeColor =
+      matchBorderColor ?? new vscode.ThemeColor('editor.findMatchHighlightBorder');
+
+    // Use theme color for peek border if no custom color is set
+    const peekBorderThemeColor =
+      borderColor ?? new vscode.ThemeColor('editor.findMatchHighlightBorder');
+
     return {
       line: vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
         borderWidth: `0 0 ${borderWidth} 0`,
         borderStyle: `${borderStyle}`,
-        borderColor,
+        borderColor: peekBorderThemeColor,
       }),
       match: vscode.window.createTextEditorDecorationType({
-        backgroundColor: matchColor,
+        backgroundColor: matchBackgroundColor,
         borderRadius: '2px',
+        borderWidth: matchBorderWidth,
+        borderStyle: matchBorderStyle,
+        borderColor: matchBorderThemeColor,
       }),
     };
   }

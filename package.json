@@ -175,13 +175,17 @@
           "description": "If the query ends with this suffix, then swap to the native search with the query applied."
         },
         "periscope.peekBorderColor": {
-          "type": "string",
-          "default": "rgb(150,200,200)",
-          "description": "Change the peek color ('white', '#FFF' '#FFFFFFF', 'rgb(255,255,255)','rgba(255, 255, 255. 0.5) )"
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Color of the peek border. If not set, uses the editor's find match highlight border color. ('white', '#FFF', 'rgb(255,255,255)', 'rgba(255,255,255,0.5)')"
         },
         "periscope.peekBorderWidth": {
           "type": "string",
-          "default": "2px"
+          "default": "2px",
+          "description": "Width of the peek border"
         },
         "periscope.peekBorderStyle": {
           "type": "string",
@@ -194,12 +198,43 @@
             "outset",
             "ridge"
           ],
-          "default": "solid"
+          "default": "solid",
+          "description": "Style of the peek border"
         },
         "periscope.peekMatchColor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Color used to highlight matching text in preview. If not set, uses the editor's find match highlight color. ('white', '#FFF', 'rgb(255,255,255)', 'rgba(255,255,255,0.5)')"
+        },
+        "periscope.peekMatchBorderColor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Border color for highlighted matching text. If not set, uses a slightly darker version of the highlight color."
+        },
+        "periscope.peekMatchBorderWidth": {
           "type": "string",
-          "default": "rgba(255, 255, 0, 0.3)",
-          "description": "Color used to highlight matching text in preview ('white', '#FFF', 'rgb(255,255,255)', 'rgba(255,255,255,0.5)')"
+          "default": "1px",
+          "description": "Border width for highlighted matching text"
+        },
+        "periscope.peekMatchBorderStyle": {
+          "type": "string",
+          "enum": [
+            "solid",
+            "dashed",
+            "inset",
+            "double",
+            "groove",
+            "outset",
+            "ridge"
+          ],
+          "default": "solid",
+          "description": "Border style for highlighted matching text"
         }
       }
     }

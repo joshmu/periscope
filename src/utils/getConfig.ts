@@ -30,9 +30,12 @@ export function getConfig() {
     gotoRgMenuActionsPrefix: vsConfig.get<string>('gotoRgMenuActionsPrefix', '<<') || '<<',
     enableGotoNativeSearch: vsConfig.get<boolean>('enableGotoNativeSearch', true),
     gotoNativeSearchSuffix: vsConfig.get<string>('gotoNativeSearchSuffix', '>>') || '>>',
-    peekBorderColor: vsConfig.get<string>('peekBorderColor', 'rgb(150,200,200)'),
+    peekBorderColor: vsConfig.get<string | null>('peekBorderColor', null),
     peekBorderWidth: vsConfig.get<string>('peekBorderWidth', '2px'),
     peekBorderStyle: vsConfig.get<string>('peekBorderStyle', 'solid'),
-    peekMatchColor: vsConfig.get<string>('peekMatchColor', 'rgba(255, 255, 0, 0.3)'),
+    peekMatchColor: vsConfig.get<string | null>('peekMatchColor', null),
+    peekMatchBorderColor: vsConfig.get<string | null>('peekMatchBorderColor', null),
+    peekMatchBorderWidth: vsConfig.get<string>('peekMatchBorderWidth', '1px'),
+    peekMatchBorderStyle: vsConfig.get<string>('peekMatchBorderStyle', 'solid'),
   };
 }

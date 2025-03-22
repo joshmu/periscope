@@ -49,9 +49,13 @@ For optimal performance, ensure that the VSCode configuration _Editor: Enable Pr
 - `gotoRgMenuActionsPrefix`: If the query starts with this prefix, then open rg menu actions.
 - `enableGotoNativeSearch`: If true, then swap to native vscode search if the custom suffix is entered using the current query.
 - `gotoNativeSearchSuffix`: If the query ends with this suffix, then swap to the native search with the query applied.
-- `peekBorderColor`: Change the peek color ('white', '#FFF' '#FFFFFFF', 'rgb(255,255,255)','rgba(255, 255, 255. 0.5) )
-- `peekBorderWidth`: Change the peek border width (px)
-- `peekBorderStyle`: Change the peek border style (solid, dashed, inset, double, groove, outset, ridge)
+- `peekBorderColor`: Color of the peek border. If not set, uses the editor's find match highlight border color.
+- `peekBorderWidth`: Width of the peek border (default: '2px')
+- `peekBorderStyle`: Style of the peek border (solid, dashed, inset, double, groove, outset, ridge)
+- `peekMatchColor`: Color used to highlight matching text. If not set, uses the editor's find match highlight color.
+- `peekMatchBorderColor`: Border color for highlighted matching text. If not set, uses the editor's find match highlight border color.
+- `peekMatchBorderWidth`: Border width for highlighted matching text (default: '1px')
+- `peekMatchBorderStyle`: Border style for highlighted matching text (solid, dashed, inset, double, groove, outset, ridge)
 
 ## Advanced Configurations
 

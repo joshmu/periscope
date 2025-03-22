@@ -300,6 +300,9 @@ suite('QuickPick UI', () => {
       alwaysShowRgMenuActions: false,
       showPreviousResultsWhenNoMatches: true,
       peekMatchColor: 'rgba(255, 255, 0, 0.3)',
+      peekMatchBorderColor: 'rgba(255, 255, 0, 0.5)',
+      peekMatchBorderWidth: '1px',
+      peekMatchBorderStyle: 'solid',
     };
     cx.config = mockConfig;
 
