@@ -1,11 +1,12 @@
 import { context as cx, setSearchType } from './context';
-import { onDidHide, setupQuickPickForQuery, setupRgMenuActions } from './quickpickActions';
+import { onDidHide, setupQuickPickForQuery, setupRgMenuActions, preSelectRgMenuActions } from './quickpickActions';
 import { start } from './globalActions';
 import { openInHorizontalSplit } from './editorActions';
 
 function search() {
   start();
   setSearchType('RG');
+  preSelectRgMenuActions();
 
   // if ripgrep actions are available then open preliminary quickpick
   const showRgMenuActions = cx.config.alwaysShowRgMenuActions && cx.config.rgMenuActions.length > 0;
@@ -24,7 +25,7 @@ function search() {
 function searchFiles() {
   start();
   setSearchType('FZF');
-
+  preSelectRgMenuActions();
   // if ripgrep actions are available then open preliminary quickpick
   const showRgMenuActions = cx.config.alwaysShowRgMenuActions && cx.config.rgMenuActions.length > 0;
   if (showRgMenuActions) {

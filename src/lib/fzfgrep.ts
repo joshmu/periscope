@@ -32,6 +32,8 @@ function getFzfCommand(value: string, extraFlags?: string[]) {
     '--color=never',
     '--files',
     '--follow',
+    '--no-ignore',
+    '--hidden',
   ];
   const fzfRequiredFlags = ['-i', '--filter'];
 

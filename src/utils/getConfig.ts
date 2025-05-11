@@ -24,12 +24,23 @@ type ConfigItems =
 
 export function getConfig() {
   const vsConfig = vscode.workspace.getConfiguration('periscope');
+  const gConfig = vscode.workspace.getConfiguration('');
+
+  // Add excluded files from search into the rg menu actions by default
+  const excludedFiles = Object.keys(gConfig.get('files.exclude', {})).map((excludePattern) => ({
+    label: excludePattern,
+    value: `--glob "!${excludePattern}"`,
+  }));
+
+  const rgMenuActions = vsConfig.get<{ label?: string; value: string }[]>('rgMenuActions', []);
+
+  const rgMenuActionsMerged = [...rgMenuActions, ...excludedFiles];
 
   return {
     rgOptions: vsConfig.get<string[]>('rgOptions', ['--smart-case', '--sortr path']),
     addSrcPaths: vsConfig.get<string[]>('addSrcPaths', []),
     rgGlobExcludes: vsConfig.get<string[]>('rgGlobExcludes', []),
-    rgMenuActions: vsConfig.get<{ label?: string; value: string }[]>('rgMenuActions', []),
+    rgMenuActions: rgMenuActionsMerged,
     rgQueryParams: vsConfig.get<{ param?: string; regex: string }[]>('rgQueryParams', []),
     rgQueryParamsShowTitle: vsConfig.get<boolean>('rgQueryParamsShowTitle', true),
     rgPath: vsConfig.get<string | undefined>('rgPath', undefined),

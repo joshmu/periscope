@@ -42,7 +42,6 @@ function onDidChangeValue(value: string) {
   }
 
   cx.query = value;
-
   // jump to rg custom menu if the prefix is found in the query
   if (cx.config.gotoRgMenuActionsPrefix && value.startsWith(cx.config.gotoRgMenuActionsPrefix)) {
     setupRgMenuActions();
@@ -112,6 +111,12 @@ export function onDidHide() {
 export function setupRgMenuActions() {
   reset();
   updateAppState('IDLE');
+  const gConfig = vscode.workspace.getConfiguration('');
+  const excludedFiles = Object.keys(gConfig.get('files.exclude', {})).map((excludePattern) => ({
+    label: excludePattern,
+    value: excludePattern,
+  }));
+
   cx.qp.placeholder = '🫧 Select actions or type custom rg options (Space key to check/uncheck)';
   cx.qp.canSelectMany = true;
 
@@ -124,6 +129,12 @@ export function setupRgMenuActions() {
       rgOption: value,
     },
   }));
+
+  const matchingItems = (cx.qp.items as QPItemRgMenuAction[]).filter((item) =>
+    excludedFiles.some((excludedFile) => `--glob "!${excludedFile.value}"` === item.data.rgOption),
+  );
+
+  cx.qp.selectedItems = matchingItems;
 
   function next() {
     cx.rgMenuActionsSelected = (cx.qp.selectedItems as QPItemRgMenuAction[]).map((item) => item.data.rgOption);
@@ -138,4 +149,30 @@ export function setupRgMenuActions() {
   }
 
   cx.disposables.rgMenuActions.push(cx.qp.onDidTriggerButton(next), cx.qp.onDidAccept(next));
+}
+
+export function preSelectRgMenuActions() {
+  const gConfig = vscode.workspace.getConfiguration('');
+  const excludedFiles = Object.keys(gConfig.get('files.exclude', {})).map((excludePattern) => ({
+    label: excludePattern,
+    value: excludePattern,
+  }));
+
+  // add items from the config
+  cx.qp.items = cx.config.rgMenuActions.map(({ value, label }) => ({
+    _type: 'QuickPickItemRgMenuAction',
+    label: label ?? value,
+    description: label ? value : undefined,
+    data: {
+      rgOption: value,
+    },
+  }));
+
+  const matchingItems = (cx.qp.items as QPItemRgMenuAction[]).filter((item) =>
+    excludedFiles.some((excludedFile) => `--glob "!${excludedFile.value}"` === item.data.rgOption),
+  );
+
+  cx.qp.selectedItems = matchingItems;
+
+  cx.rgMenuActionsSelected = (cx.qp.selectedItems as QPItemRgMenuAction[]).map((item) => item.data.rgOption);
 }
