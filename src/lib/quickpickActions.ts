@@ -131,7 +131,7 @@ export function setupRgMenuActions() {
   }));
 
   const matchingItems = (cx.qp.items as QPItemRgMenuAction[]).filter((item) =>
-    excludedFiles.some((excludedFile) => `--glob "!${excludedFile.value}"` === item.data.rgOption),
+    excludedFiles.some((excludedFile) => `--glob '!${excludedFile.value}'` === item.data.rgOption),
   );
 
   cx.qp.selectedItems = matchingItems;

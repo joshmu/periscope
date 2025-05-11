@@ -7,7 +7,6 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 ## Key Features
 
 - **Fast Search**: Utilizes `ripgrep` for lightning-fast search capabilities.
-- **Fast Fuzzy Search**: Utilizes `fzf` for lightning-fast file search capabilities.
 - **Real-Time Preview**: See preview of files right in the search pane as you navigate through search results.
 - **Customizable**: Extensive configuration options to tailor search behavior and UI to your needs.
 
@@ -22,7 +21,6 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 ## Requirements
 
 For optimal performance, ensure that the VSCode configuration _Editor: Enable Preview_ is enabled. This allows files to be previewed before opening them completely.
-For file searching install fzf library. Read the instructions here: https://github.com/junegunn/fzf?tab=readme-ov-file#installation
 
 ## Tips
 

@@ -29,7 +29,7 @@ export function getConfig() {
   // Add excluded files from search into the rg menu actions by default
   const excludedFiles = Object.keys(gConfig.get('files.exclude', {})).map((excludePattern) => ({
     label: excludePattern,
-    value: `--glob "!${excludePattern}"`,
+    value: `--glob '!${excludePattern}'`,
   }));
 
   const rgMenuActions = vsConfig.get<{ label?: string; value: string }[]>('rgMenuActions', []);

@@ -20,6 +20,7 @@ function ripgrepPath(optionsPath?: string) {
 
 function getFzfCommand(value: string, extraFlags?: string[]) {
   const config = getConfig();
+  const gConfig = vscode.workspace.getConfiguration('');
   const { workspaceFolders } = vscode.workspace;
 
   const rgPath = ripgrepPath(config.rgPath);
@@ -35,29 +36,31 @@ function getFzfCommand(value: string, extraFlags?: string[]) {
     '--no-ignore',
     '--hidden',
   ];
-  const fzfRequiredFlags = ['-i', '--filter'];
 
   const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
 
-  const excludes = config.rgGlobExcludes.map((exclude) => `--glob "!${exclude}"`);
+  const excludedFiles = Object.keys(gConfig.get('files.exclude', {}));
+  const excludedGlobFiles = excludedFiles.map((exclude) => `--glob '!${exclude}'`);
+
+  const combinedExcludes = cx.rgMenuActionsSelected.length > 0 ? cx.rgMenuActionsSelected : excludedGlobFiles;
+  const excludes = config.rgGlobExcludes.map((exclude) => `--glob '!${exclude}'`);
 
   const rgFlags = [
     ...rgRequiredFlags,
     ...config.rgOptions,
-    ...cx.rgMenuActionsSelected,
     ...rootPaths,
     ...config.addSrcPaths.map(ensureQuotedPath),
     ...(extraFlags || []),
     ...excludes,
+    ...combinedExcludes,
   ];
 
-  const fzfFlags = [...fzfRequiredFlags];
-
   const normalizedQuery = handleSearchTermWithCursorPositions(value);
+  const fuzzyQuery = toFuzzyRegex(normalizedQuery);
   const workspaceFolder = rootPaths[0];
   const sedCmd = `| sed 's|${workspaceFolder}/||'`;
 
-  return `"${rgPath}" "" ${rgFlags.join(' ')} ${sedCmd} | fzf ${fzfFlags.join(' ')} ${normalizedQuery}`;
+  return `"${rgPath}" ${rgFlags.join(' ')} ${sedCmd} | "${rgPath}" -i ${fuzzyQuery}`;
 }
 
 /**
@@ -68,6 +71,18 @@ function handleSearchTermWithCursorPositions(query: string): string {
 
   if (valuePath) return valuePath[0];
   return `"${query}"`;
+}
+
+function toFuzzyRegex(input: string): string {
+  return input
+    .split('')
+    .map((char) => `${escapeRegex(char)}.*`)
+    .join('')
+    .replace(/\.\*$/, '');
+}
+
+function escapeRegex(char: string): string {
+  return char.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
 function extractLineAndColPos(query: string): { linePos: number; colPos: number } {
