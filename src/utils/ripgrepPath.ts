@@ -27,27 +27,17 @@ export function resolveRipgrepPath(userPath?: string): string {
 
   // Try system PATH if user path is provided and not valid
   const systemPath = findRipgrepSystemPath();
-  if (userPathTrimmed && systemPath && fs.existsSync(systemPath)) {
-    try {
-      fs.accessSync(systemPath);
-      log(
-        `User-specified path not found, did you mean to use ripgrep from system PATH? ${systemPath}`,
-      );
-      return systemPath;
-    } catch {
-      // System path is not accessible, continue to next option
-    }
+  if (systemPath) {
+    log(
+      `User-specified path not found, did you mean to use ripgrep from system PATH? ${systemPath}`,
+    );
+    return systemPath;
   }
 
   // Default to vscode ripgrep
-  if (vscodeRgPath && fs.existsSync(vscodeRgPath)) {
-    try {
-      fs.accessSync(vscodeRgPath);
-      log(`Using @vscode/ripgrep bundled binary: ${vscodeRgPath}`);
-      return vscodeRgPath;
-    } catch {
-      // VSCode ripgrep is not accessible, continue to error
-    }
+  if (vscodeRgPath) {
+    log(`Using @vscode/ripgrep bundled binary: ${vscodeRgPath}`);
+    return vscodeRgPath;
   }
 
   // If all else fails, show error and throw
