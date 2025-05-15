@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.10.1](https://github.com/joshmu/periscope/compare/v1.10.0...v1.10.1) (2025-05-15)
+
+### Bug Fixes
+
+- **rg:** fix resolving rg system path ([09a7d35](https://github.com/joshmu/periscope/commit/09a7d3531bcd1c1b83a34887344cf46ba9f4d9a1)), closes [#78](https://github.com/joshmu/periscope/issues/78)
+
 # [1.10.0](https://github.com/joshmu/periscope/compare/v1.9.2...v1.10.0) (2025-03-22)
 
 ### Features
