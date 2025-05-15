@@ -35,7 +35,7 @@ For optimal performance, ensure that the VSCode configuration _Editor: Enable Pr
 
 - `rgOptions`: Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'.
 - `rgGlobExcludes`: Additional glob paths to exclude from the 'rg' search, eg: '**/dist/**'.
-- `rgPath`: Optional path to the `rg` binary. If not specified, the ripgrep bundled with vscode will be used.
+- `rgPath`: Option to explicitly set the `rg` binary to use. If not specified, an attempt to locate your rg binary occurs otherwise falling back to `@vscode/ripgrep`.
 - `addSrcPaths`: Additional source paths to include in the rg search. You may want to add this as a workspace specific setting.
 - `rgMenuActions`: Create menu items which can be selected prior to any query, these items will be added to the ripgrep command to generate the results. Eg: Add `{ "label": "JS/TS", "value": "--type-add 'jsts:*.{js|ts|tsx|jsx}' -t jsts" },` as a menu option to only show js & ts files in the results.
 - `rgQueryParams`: Match ripgrep parameters from the input query directly. E.g: `{ "regex": \"^(.+) -t ?(\\w+)$\", "param": \"-t $1\" },` will translate the query `hello -t rust` to `rg 'hello' -t rust` to enable a filetype filter.
