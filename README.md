@@ -31,6 +31,22 @@ For optimal performance, ensure that the VSCode configuration _Editor: Enable Pr
 - **Raw Queries**: Enclosing your `search_term` in quotes will allow additional ripgrep parameters to be passed through. eg: `"foobar" -t js` will search for `foobar` in js files.
 - **Utilise `rgQueryParams`**: Create shortcuts for common ripgrep search queries via regex matching against your current query. This provides a way to map your query to ripgrep parameters via capture groups in the regex for faster lookups.
 
+If you use vim within vscode you can bind `periscope.search` in your `settings.json`:
+
+```json
+"vim.normalModeKeyBindingsNonRecursive": [
+  {
+    "before": ["<leader>", "f", "w"],
+    "commands": [
+      {
+        "command": "periscope.search",
+        "when": "editorTextFocus"
+      }
+    ]
+  }
+]
+```
+
 ## Configuration
 
 - `rgOptions`: Additional options to pass to the 'rg' command, you can view all options in your terminal via 'rg --help'.
