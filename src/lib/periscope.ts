@@ -2,6 +2,7 @@ import { context as cx } from './context';
 import { onDidHide, setupQuickPickForQuery, setupRgMenuActions } from './quickpickActions';
 import { start } from './globalActions';
 import { openInHorizontalSplit } from './editorActions';
+import { checkKillProcess } from './ripgrep'; // Import checkKillProcess
 
 function search() {
   start();
@@ -23,4 +24,5 @@ function search() {
 export const PERISCOPE = {
   search,
   openInHorizontalSplit,
+  checkKillProcess, // Add checkKillProcess to the exported object
 };

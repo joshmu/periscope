@@ -15,3 +15,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(periscopeQpCmd, periscopeSplitCmd);
 }
+
+export function deactivate() {
+  log('deactivate Periscope extension');
+  // Call checkKillProcess from the PERISCOPE object to clean up any running Ripgrep processes.
+  PERISCOPE.checkKillProcess();
+}
