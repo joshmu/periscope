@@ -151,13 +151,15 @@ function normaliseRgResult(parsedLine: RgMatchResult['rawResult']): RgMatchResul
 export function checkKillProcess() {
   const { spawnRegistry } = cx;
   spawnRegistry.forEach((spawnProcess) => {
-    spawnProcess.stdout.destroy();
-    spawnProcess.stderr.destroy();
-    spawnProcess.kill();
+    if (!spawnProcess.killed) { // Check if the process is not already killed
+      spawnProcess.stdout.destroy();
+      spawnProcess.stderr.destroy();
+      spawnProcess.kill();
+    }
   });
 
-  // check if spawn process is no longer running and if so remove from registry
-  cx.spawnRegistry = spawnRegistry.filter((spawnProcess) => !spawnProcess.killed);
+  // Clear the registry after attempting to kill all processes
+  cx.spawnRegistry = [];
 }
 
 // extract rg flags from the query, can match multiple regex's
