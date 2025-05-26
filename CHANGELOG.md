@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.10.4](https://github.com/joshmu/periscope/compare/v1.10.3...v1.10.4) (2025-05-26)
+
+### Bug Fixes
+
+- **kill-process:** ensure all process are killed on extension deactivation ([24872cb](https://github.com/joshmu/periscope/commit/24872cbae9404e9b39b93d76aeae2ddb92bbaf43))
+
 ## [1.10.3](https://github.com/joshmu/periscope/compare/v1.10.2...v1.10.3) (2025-05-16)
 
 ## [1.10.2](https://github.com/joshmu/periscope/compare/v1.10.1...v1.10.2) (2025-05-15)
