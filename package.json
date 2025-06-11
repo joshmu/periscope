@@ -37,6 +37,10 @@
         "title": "Periscope: Search"
       },
       {
+        "command": "periscope.searchCurrentFile",
+        "title": "Periscope: Search Current File"
+      },
+      {
         "command": "periscope.openInHorizontalSplit",
         "title": "Periscope: Open Result in Horizontal Split",
         "enablement": "periscopeActive"
