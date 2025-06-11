@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+# [1.11.0](https://github.com/joshmu/periscope/compare/v1.10.4...v1.11.0) (2025-06-11)
+
+### Features
+
+- **current-file:** support for extension command to automatically scope search to current file ([2cf7544](https://github.com/joshmu/periscope/commit/2cf75448db362eceb2804f6338ee262b28219756)), closes [#84](https://github.com/joshmu/periscope/issues/84)
+
 ## [1.10.4](https://github.com/joshmu/periscope/compare/v1.10.3...v1.10.4) (2025-05-26)
 
 ### Bug Fixes
