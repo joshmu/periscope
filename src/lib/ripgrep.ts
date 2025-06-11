@@ -8,6 +8,7 @@ import { RgMatchResult } from '../types/ripgrep';
 import { log, notifyError } from '../utils/log';
 import { createResultItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
+import { getCurrentFilePath } from '../utils/searchCurrentFile';
 
 function getRgCommand(value: string, extraFlags?: string[]) {
   const config = getConfig();
@@ -25,6 +26,7 @@ function getRgCommand(value: string, extraFlags?: string[]) {
   ];
 
   const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
+  const paths = cx.currentFileOnly ? [getCurrentFilePath()] : rootPaths;
 
   const excludes = config.rgGlobExcludes.map((exclude) => `--glob "!${exclude}"`);
 
@@ -32,7 +34,7 @@ function getRgCommand(value: string, extraFlags?: string[]) {
     ...rgRequiredFlags,
     ...config.rgOptions,
     ...cx.rgMenuActionsSelected,
-    ...rootPaths,
+    ...paths,
     ...config.addSrcPaths.map(ensureQuotedPath),
     ...(extraFlags || []),
     ...excludes,

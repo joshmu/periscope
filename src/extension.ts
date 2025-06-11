@@ -14,11 +14,16 @@ export function activate(context: vscode.ExtensionContext) {
     PERISCOPE.search(),
   );
 
+  const periscopeSearchCurrentFileQpCmd = vscode.commands.registerCommand(
+    'periscope.searchCurrentFile',
+    () => PERISCOPE.search({ currentFileOnly: true }),
+  );
+
   const periscopeSplitCmd = vscode.commands.registerCommand('periscope.openInHorizontalSplit', () =>
     PERISCOPE.openInHorizontalSplit(),
   );
 
-  context.subscriptions.push(periscopeQpCmd, periscopeSplitCmd);
+  context.subscriptions.push(periscopeQpCmd, periscopeSearchCurrentFileQpCmd, periscopeSplitCmd);
 }
 
 export function deactivate() {

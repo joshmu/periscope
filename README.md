@@ -30,6 +30,7 @@ For optimal performance, ensure that the VSCode configuration _Editor: Enable Pr
 - **Selected Text Search**: Highlight text in the editor and invoke `periscope.search` to have it automatically used as the initial query.
 - **Raw Queries**: Enclosing your `search_term` in quotes will allow additional ripgrep parameters to be passed through. eg: `"foobar" -t js` will search for `foobar` in js files.
 - **Utilise `rgQueryParams`**: Create shortcuts for common ripgrep search queries via regex matching against your current query. This provides a way to map your query to ripgrep parameters via capture groups in the regex for faster lookups.
+- **Search Current File Only**: Use `periscope.searchCurrentFile` command if you wish to narrow your search to the current file only
 
 If you use vim within vscode you can bind `periscope.search` in your `settings.json`:
 
@@ -122,6 +123,10 @@ Add the following to your `settings.json`:
 ],
 ```
 
+### periscope.searchCurrentFileOnly
+
+Scope the ripgrep search to only the current file.
+
 ### periscope.openInHorizontalSplit
 
 Open the result preview in a horizontal split.
@@ -141,6 +146,7 @@ Add a keybinding (`keybindings.json`):
 This extension contributes the following settings:
 
 - `periscope.search`: Enable Periscope Search
+- `periscope.searchCurrentFile`: Enable Periscope Search (current file only)
 - `periscope.openInHorizontalSplit`: Open the result preview in a horizontal split.
 
 ## Troubleshooting

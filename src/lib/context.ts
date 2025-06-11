@@ -33,6 +33,10 @@ export const context = {
   matchDecoration,
   disposables,
   appState,
+  /**
+   * Disabled by default, is set if extension is invoked with the current file only flag
+   */
+  currentFileOnly: false,
 };
 
 // reset the context

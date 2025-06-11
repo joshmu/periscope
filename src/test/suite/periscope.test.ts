@@ -48,7 +48,7 @@ suite('Periscope Core', () => {
     activate(mockContext);
 
     // Verify command registration
-    assert.strictEqual(registerCommandStub.callCount, 2, 'Should register two commands');
+    assert.strictEqual(registerCommandStub.callCount, 3, 'Should register three commands');
     assert.strictEqual(
       registerCommandStub.firstCall.args[0],
       'periscope.search',
@@ -56,12 +56,17 @@ suite('Periscope Core', () => {
     );
     assert.strictEqual(
       registerCommandStub.secondCall.args[0],
+      'periscope.searchCurrentFile',
+      'Should register search current file command',
+    );
+    assert.strictEqual(
+      registerCommandStub.thirdCall.args[0],
       'periscope.openInHorizontalSplit',
       'Should register horizontal split command',
     );
 
     // Verify commands are added to subscriptions
-    assert.strictEqual(mockContext.subscriptions.length, 2, 'Should add commands to subscriptions');
+    assert.strictEqual(mockContext.subscriptions.length, 3, 'Should add commands to subscriptions');
   });
 
   test('should perform search operation', async () => {
