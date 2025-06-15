@@ -54,6 +54,7 @@ function resetContext() {
     rgMenuActions: [],
     query: [],
   };
+  context.currentFileOnly = false;
 }
 
 type AppState = 'IDLE' | 'SEARCHING' | 'FINISHED';
