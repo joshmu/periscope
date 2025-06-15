@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.11.1](https://github.com/joshmu/periscope/compare/v1.11.0...v1.11.1) (2025-06-15)
+
+### Bug Fixes
+
+- **current-file:** resolves current file search persisting across search invocations ([e1b8132](https://github.com/joshmu/periscope/commit/e1b8132ff6fc0555ee7a7fe976c5eca5b54fbf76))
+
 # [1.11.0](https://github.com/joshmu/periscope/compare/v1.10.4...v1.11.0) (2025-06-11)
 
 ### Features
