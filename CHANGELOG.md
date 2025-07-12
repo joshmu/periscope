@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+# [1.12.0](https://github.com/joshmu/periscope/compare/v1.11.1...v1.12.0) (2025-07-12)
+
+### Features
+
+- add periscope.resumeSearch command to restore previous queries ([ea21ac5](https://github.com/joshmu/periscope/commit/ea21ac569c61040f2e143ce96a3d9c08844ca10a)), closes [#90](https://github.com/joshmu/periscope/issues/90)
+
 ## [1.11.1](https://github.com/joshmu/periscope/compare/v1.11.0...v1.11.1) (2025-06-15)
 
 ### Bug Fixes
