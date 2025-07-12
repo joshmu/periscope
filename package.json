@@ -45,6 +45,10 @@
         "command": "periscope.openInHorizontalSplit",
         "title": "Periscope: Open Result in Horizontal Split",
         "enablement": "periscopeActive"
+      },
+      {
+        "command": "periscope.resumeSearch",
+        "title": "Periscope: Resume Search"
       }
     ],
     "configuration": {

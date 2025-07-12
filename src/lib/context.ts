@@ -37,6 +37,10 @@ export const context = {
    * Disabled by default, is set if extension is invoked with the current file only flag
    */
   currentFileOnly: false,
+  /**
+   * Extension context for storage operations
+   */
+  extensionContext: undefined as vscode.ExtensionContext | undefined,
 };
 
 // reset the context
@@ -55,6 +59,7 @@ function resetContext() {
     query: [],
   };
   context.currentFileOnly = false;
+  // Keep 'extensionContext' across resets to preserve search history
 }
 
 type AppState = 'IDLE' | 'SEARCHING' | 'FINISHED';
