@@ -11,6 +11,7 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 - **Fast Search**: Utilizes `ripgrep` for lightning-fast search capabilities.
 - **Real-Time Preview**: See preview of files right in the search pane as you navigate through search results.
 - **Customizable**: Extensive configuration options to tailor search behavior and UI to your needs.
+- **Resume Search**: Quickly resume your last search with a single command.
 
 ![Demo](https://github.com/joshmu/periscope/blob/master/assets/demo.gif?raw=true)
 
@@ -31,6 +32,7 @@ For optimal performance, ensure that the VSCode configuration _Editor: Enable Pr
 - **Raw Queries**: Enclosing your `search_term` in quotes will allow additional ripgrep parameters to be passed through. eg: `"foobar" -t js` will search for `foobar` in js files.
 - **Utilise `rgQueryParams`**: Create shortcuts for common ripgrep search queries via regex matching against your current query. This provides a way to map your query to ripgrep parameters via capture groups in the regex for faster lookups.
 - **Search Current File Only**: Use `periscope.searchCurrentFile` command if you wish to narrow your search to the current file only
+- **Resume Last Search**: Use `periscope.resumeSearch` to instantly restore your previous search query. The extension remembers whether you were searching the workspace or current file.
 
 If you use vim within vscode you can bind `periscope.search` in your `settings.json`:
 
@@ -147,6 +149,7 @@ This extension contributes the following settings:
 
 - `periscope.search`: Enable Periscope Search
 - `periscope.searchCurrentFile`: Enable Periscope Search (current file only)
+- `periscope.resumeSearch`: Resume the last search query
 - `periscope.openInHorizontalSplit`: Open the result preview in a horizontal split.
 
 ## Troubleshooting

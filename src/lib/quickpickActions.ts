@@ -6,13 +6,14 @@ import { context as cx, updateAppState } from './context';
 import { getSelectedText } from '../utils/getSelectedText';
 import { log } from '../utils/log';
 import { confirm, finished } from './globalActions';
+import { saveQuery } from './storage';
 
 // update quickpick event listeners for the query
-export function setupQuickPickForQuery() {
+export function setupQuickPickForQuery(initialQuery: string = '') {
   cx.qp.placeholder = '🫧';
   cx.qp.items = [];
   cx.qp.canSelectMany = false;
-  cx.qp.value = getSelectedText();
+  cx.qp.value = initialQuery || getSelectedText();
   cx.disposables.query.push(
     cx.qp.onDidChangeValue(onDidChangeValue),
     cx.qp.onDidChangeActive(onDidChangeActive),
@@ -46,7 +47,7 @@ function onDidChangeValue(value: string) {
 
   // jump to rg custom menu if the prefix is found in the query
   if (cx.config.gotoRgMenuActionsPrefix && value.startsWith(cx.config.gotoRgMenuActionsPrefix)) {
-    setupRgMenuActions();
+    setupRgMenuActions(value.substring(cx.config.gotoRgMenuActionsPrefix.length));
     return;
   }
 
@@ -66,6 +67,11 @@ function onDidChangeValue(value: string) {
   }
 
   rgSearch(rgQuery, extraRgFlags);
+
+  // Save the query for resume functionality
+  if (rgQuery.trim()) {
+    saveQuery(cx.extensionContext, rgQuery, cx.currentFileOnly);
+  }
 }
 
 // when item is 'FOCUSSED'
@@ -106,7 +112,7 @@ export function onDidHide() {
 }
 
 // when ripgrep actions are available show preliminary quickpick for those options to add to the query
-export function setupRgMenuActions() {
+export function setupRgMenuActions(initialQuery: string = '') {
   reset();
   updateAppState('IDLE');
   cx.qp.placeholder = '🫧 Select actions or type custom rg options (Space key to check/uncheck)';
@@ -133,7 +139,7 @@ export function setupRgMenuActions() {
       cx.qp.value = '';
     }
 
-    setupQuickPickForQuery();
+    setupQuickPickForQuery(initialQuery);
   }
 
   cx.disposables.rgMenuActions.push(cx.qp.onDidTriggerButton(next), cx.qp.onDidAccept(next));
