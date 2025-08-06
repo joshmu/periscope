@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { PERISCOPE } from './lib/periscope';
-import { log } from './utils/log';
+import { log, initializeOutputChannel } from './utils/log';
 import { finished } from './lib/globalActions';
 
 /**
@@ -8,6 +8,9 @@ import { finished } from './lib/globalActions';
  */
 
 export function activate(context: vscode.ExtensionContext) {
+  // Initialize the output channel for logging
+  initializeOutputChannel(context);
+
   log('activate');
 
   const periscopeQpCmd = vscode.commands.registerCommand('periscope.search', () =>

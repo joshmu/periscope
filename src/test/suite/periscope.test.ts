@@ -70,8 +70,12 @@ suite('Periscope Core', () => {
       'Should register resume search command',
     );
 
-    // Verify commands are added to subscriptions
-    assert.strictEqual(mockContext.subscriptions.length, 4, 'Should add commands to subscriptions');
+    // Verify commands are added to subscriptions (4 commands + 1 output channel)
+    assert.strictEqual(
+      mockContext.subscriptions.length,
+      5,
+      'Should add commands and output channel to subscriptions',
+    );
   });
 
   test('should perform search operation', async () => {
