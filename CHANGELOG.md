@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+# [1.13.0](https://github.com/joshmu/periscope/compare/v1.12.0...v1.13.0) (2025-08-06)
+
+### Features
+
+- **logging:** add output channel for extension logs ([10fd944](https://github.com/joshmu/periscope/commit/10fd944fc43771a48d9d030423c1b375822e862e))
+
 # [1.12.0](https://github.com/joshmu/periscope/compare/v1.11.1...v1.12.0) (2025-07-12)
 
 ### Features
