@@ -70,7 +70,7 @@ function onDidChangeValue(value: string) {
 
   // Save the query for resume functionality
   if (rgQuery.trim()) {
-    saveQuery(cx.extensionContext, rgQuery, cx.currentFileOnly);
+    saveQuery(cx.extensionContext, rgQuery);
   }
 }
 
