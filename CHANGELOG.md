@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.13.1](https://github.com/joshmu/periscope/compare/v1.13.0...v1.13.1) (2025-08-08)
+
+### Bug Fixes
+
+- resolve sticky context bug in resume search ([5409bf6](https://github.com/joshmu/periscope/commit/5409bf6634550a4fc93d5dce71f1804e15dcf3d5))
+
 # [1.13.0](https://github.com/joshmu/periscope/compare/v1.12.0...v1.13.0) (2025-08-06)
 
 ### Features
