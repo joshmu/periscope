@@ -40,7 +40,7 @@ function resumeSearch(extensionContext: vscode.ExtensionContext) {
   const lastSearch = getLastQuery(extensionContext);
   if (lastSearch) {
     search(extensionContext, {
-      currentFileOnly: lastSearch.type === 'currentFile',
+      currentFileOnly: false,
       initialQuery: lastSearch.query,
     });
   } else {
@@ -49,8 +49,22 @@ function resumeSearch(extensionContext: vscode.ExtensionContext) {
   }
 }
 
+function resumeSearchCurrentFile(extensionContext: vscode.ExtensionContext) {
+  const lastSearch = getLastQuery(extensionContext);
+  if (lastSearch) {
+    search(extensionContext, {
+      currentFileOnly: true,
+      initialQuery: lastSearch.query,
+    });
+  } else {
+    // No history, just open empty search with current file context
+    search(extensionContext, { currentFileOnly: true });
+  }
+}
+
 export const PERISCOPE = {
   search,
   resumeSearch,
+  resumeSearchCurrentFile,
   openInHorizontalSplit,
 };

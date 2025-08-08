@@ -7,7 +7,6 @@ const MAX_HISTORY_SIZE = 10;
 interface StoredQuery {
   query: string;
   timestamp: number;
-  type: 'workspace' | 'currentFile';
 }
 
 // In-memory fallback storage
@@ -16,7 +15,6 @@ let inMemoryHistory: StoredQuery[] = [];
 export function saveQuery(
   extensionContext: vscode.ExtensionContext | undefined,
   query: string,
-  isCurrentFileSearch: boolean,
 ): void {
   if (!query.trim()) {
     return;
@@ -25,7 +23,6 @@ export function saveQuery(
   const storedQuery: StoredQuery = {
     query,
     timestamp: Date.now(),
-    type: isCurrentFileSearch ? 'currentFile' : 'workspace',
   };
 
   try {
