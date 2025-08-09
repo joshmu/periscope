@@ -3,7 +3,7 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { activate } from '../../src/extension';
 import { context as cx } from '../../src/lib/context';
-import { setSearchMode } from '../../src/utils/searchCurrentFile';
+import { waitForQuickPick, waitForCondition } from '../utils/periscopeTestHelper';
 
 suite('Periscope Extension', () => {
   let sandbox: sinon.SinonSandbox;
@@ -60,34 +60,103 @@ suite('Periscope Extension', () => {
   });
 
   suite('Search Modes', () => {
-    test('periscope.search uses "all" mode', () => {
+    test('periscope.search uses "all" mode', async () => {
+      cx.resetContext();
+
+      // Execute the actual command
+      await vscode.commands.executeCommand('periscope.search');
+
+      // Wait for QuickPick to be ready
+      await waitForQuickPick(200);
+
+      // Assert the mode and title set by the command
       assert.strictEqual(cx.searchMode, 'all');
-      assert.strictEqual(cx.qp.title, undefined);
+      // Title should be undefined for 'all' mode
+      assert.strictEqual(cx.qp?.title, undefined);
+
+      // Clean up
+      if (cx.qp) {
+        cx.qp.hide();
+        cx.qp.dispose();
+      }
     });
 
-    test('periscope.searchCurrentFile uses "currentFile" mode', () => {
-      setSearchMode('currentFile');
+    test('periscope.searchCurrentFile uses "currentFile" mode', async () => {
+      cx.resetContext();
+
+      // Open a file first
+      const doc = await vscode.workspace.openTextDocument({
+        content: 'test content',
+        language: 'typescript',
+      });
+      await vscode.window.showTextDocument(doc);
+
+      // Execute the actual command
+      await vscode.commands.executeCommand('periscope.searchCurrentFile');
+
+      // Wait for QuickPick to be ready
+      await waitForQuickPick(200);
+
+      // Assert the mode and title set by the command
       assert.strictEqual(cx.searchMode, 'currentFile');
-      assert.strictEqual(cx.qp.title, 'Search current file only');
+      assert.strictEqual(cx.qp?.title, 'Search current file only');
+
+      // Clean up
+      if (cx.qp) {
+        cx.qp.hide();
+        cx.qp.dispose();
+      }
     });
 
-    test('periscope.searchFiles uses "files" mode', () => {
-      setSearchMode('files');
+    test('periscope.searchFiles uses "files" mode', async () => {
+      cx.resetContext();
+
+      // Execute the actual command
+      await vscode.commands.executeCommand('periscope.searchFiles');
+
+      // Wait for QuickPick to be ready
+      await waitForQuickPick(200);
+
+      // Assert the mode and title set by the command
       assert.strictEqual(cx.searchMode, 'files');
-      assert.strictEqual(cx.qp.title, 'File Search');
+      assert.strictEqual(cx.qp?.title, 'File Search');
+
+      // Clean up
+      if (cx.qp) {
+        cx.qp.hide();
+        cx.qp.dispose();
+      }
     });
 
-    test('--files flag switches to file search mode', () => {
-      // Simulate user typing --files
-      const query = '--files package.json';
-      const hasFilesFlag = query.includes('--files');
+    test('--files flag switches to file search mode', async () => {
+      cx.resetContext();
 
-      if (hasFilesFlag) {
-        setSearchMode('files');
+      // Execute search command
+      await vscode.commands.executeCommand('periscope.search');
+
+      // Wait for QuickPick to be ready
+      await waitForQuickPick(200);
+
+      // Simulate user typing --files
+      if (cx.qp) {
+        cx.qp.value = '--files package.json';
+
+        // The extension should detect the --files flag and switch modes
+        // Wait for the mode to switch
+        await waitForCondition(() => cx.searchMode === 'files', 300);
+
+        // Assert that the mode switched and title changed
+        assert.strictEqual(cx.searchMode, 'files');
+        assert.strictEqual(cx.qp.title, 'File Search');
+      } else {
+        assert.fail('QuickPick not initialized');
       }
 
-      assert.strictEqual(cx.searchMode, 'files');
-      assert.strictEqual(cx.qp.title, 'File Search');
+      // Clean up
+      if (cx.qp) {
+        cx.qp.hide();
+        cx.qp.dispose();
+      }
     });
   });
 

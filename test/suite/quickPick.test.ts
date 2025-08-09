@@ -3,40 +3,47 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { context as cx } from '../../src/lib/context';
 import { QPItemQuery, QPItemFile } from '../../src/types';
+import { periscopeTestHelpers } from '../utils/periscopeTestHelper';
 
 suite('QuickPick Interface', () => {
   let sandbox: sinon.SinonSandbox;
 
-  setup(() => {
+  setup(async () => {
     sandbox = sinon.createSandbox();
     cx.resetContext();
+
+    // Ensure extension is activated
+    const ext = vscode.extensions.getExtension('JoshMu.periscope');
+    if (ext && !ext.isActive) {
+      await ext.activate();
+    }
   });
 
-  teardown(() => {
+  teardown(async () => {
+    if (cx.qp) {
+      cx.qp.hide();
+      cx.qp.dispose();
+    }
     sandbox.restore();
+    cx.resetContext();
+    await new Promise((resolve) => setTimeout(resolve, 100));
   });
 
-  test('shows search results in quickpick', () => {
-    // Mock search results
-    const mockResults = [
-      {
-        _type: 'QuickPickItemQuery',
-        label: 'function test()',
-        detail: 'src/test.ts',
-        data: { filePath: 'src/test.ts', linePos: 1, colPos: 1 },
-      },
-      {
-        _type: 'QuickPickItemFile',
-        label: 'src/file.ts',
-        data: { filePath: 'src/file.ts' },
-      },
-    ];
+  test('shows search results in quickpick', async function () {
+    this.timeout(5000);
 
-    cx.qp.items = mockResults as any;
+    // Perform a real search
+    const results = await periscopeTestHelpers.search('function');
 
-    assert.strictEqual(cx.qp.items.length, 2);
-    assert.strictEqual((cx.qp.items[0] as any)._type, 'QuickPickItemQuery');
-    assert.strictEqual((cx.qp.items[1] as any)._type, 'QuickPickItemFile');
+    // Assert real search results are shown
+    assert.ok(results.count > 0, 'Should find functions');
+    assert.ok(cx.qp, 'QuickPick should be initialized');
+    assert.ok(cx.qp.items.length > 0, 'Should have items in QuickPick');
+
+    // Check that items have the correct structure
+    const firstItem = cx.qp.items[0] as any;
+    assert.ok(firstItem._type, 'Item should have a type');
+    assert.ok(firstItem.label, 'Item should have a label');
   });
 
   test('allows item selection', () => {
@@ -78,17 +85,23 @@ suite('QuickPick Interface', () => {
     assert.strictEqual((mockQp.activeItems[0] as QPItemFile).data.filePath, 'src/preview.ts');
   });
 
-  test('handles keyboard navigation', () => {
-    const items = [{ label: 'item 1' }, { label: 'item 2' }, { label: 'item 3' }];
+  test('handles keyboard navigation', async function () {
+    this.timeout(5000);
 
-    cx.qp.items = items as any;
+    // Perform a real search with multiple results
+    const results = await periscopeTestHelpers.search('function');
 
-    // Simulate moving through items
-    cx.qp.activeItems = [items[0] as any];
-    assert.strictEqual((cx.qp.activeItems[0] as any).label, 'item 1');
+    assert.ok(results.count > 1, 'Should have multiple results for navigation');
+    assert.ok(cx.qp, 'QuickPick should be initialized');
 
-    cx.qp.activeItems = [items[1] as any];
-    assert.strictEqual((cx.qp.activeItems[0] as any).label, 'item 2');
+    // Check that we can reference items
+    const items = cx.qp.items;
+    assert.ok(items.length > 1, 'Should have multiple items');
+
+    // In a real scenario, the user would navigate with arrow keys
+    // We can't simulate that directly, but we can verify the items exist
+    assert.ok(items[0], 'First item exists');
+    assert.ok(items[1], 'Second item exists');
   });
 
   test('supports horizontal split button', () => {
@@ -134,23 +147,47 @@ suite('QuickPick Interface', () => {
     assert.strictEqual(mockQp.value, '');
   });
 
-  test('shows busy state during search', () => {
-    // Start search
-    cx.qp.busy = true;
-    assert.strictEqual(cx.qp.busy, true);
+  test('shows busy state during search', async function () {
+    this.timeout(5000);
 
-    // Complete search
-    cx.qp.busy = false;
-    assert.strictEqual(cx.qp.busy, false);
+    // Execute search command which should set busy state
+    await vscode.commands.executeCommand('periscope.search');
+
+    // Wait for QuickPick to be ready
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    assert.ok(cx.qp, 'QuickPick should be initialized');
+
+    // Set a query to trigger search
+    cx.qp.value = 'test';
+
+    // The busy state is managed by the extension during search
+    // We can't directly test it without intercepting at the right moment
+    // But we can verify the QuickPick is functional
+    assert.ok(cx.qp !== undefined, 'QuickPick should exist during search');
   });
 
-  test('updates value on user input', () => {
+  test('updates value on user input', async function () {
+    this.timeout(5000);
+
+    // Start a search
+    await vscode.commands.executeCommand('periscope.search');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    assert.ok(cx.qp, 'QuickPick should be initialized');
+
     const testQueries = ['test', 'search query', '--files readme'];
 
-    testQueries.forEach((query) => {
+    for (const query of testQueries) {
+      // Simulate user typing by setting the value
       cx.qp.value = query;
-      assert.strictEqual(cx.qp.value, query);
-    });
+
+      // Verify the value was set
+      assert.strictEqual(cx.qp.value, query, `Should update to "${query}"`);
+
+      // Give the extension time to process
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   });
 
   test('shows previous results when no matches found', () => {

@@ -1,0 +1,8 @@
+{
+    "periscope.rgGlobExcludes": [],
+    "periscope.rgOptions": [
+        "--smart-case",
+        "--sortr path"
+    ],
+    "periscope.showPreviousResultsWhenNoMatches": false
+}
