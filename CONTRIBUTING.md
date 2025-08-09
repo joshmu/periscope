@@ -23,31 +23,12 @@ To get started with contributing, please follow these steps:
 
 ### Running Tests
 
-The project uses Mocha for testing. To run the test suite:
+- Run all tests: `npm test`
+- Tests run against the fixture workspace in `test/fixtures/workspace/`
+- Test helpers are available in `test/utils/periscopeTestHelper.ts`
+- If a test needs specific files/content, add them to the fixtures workspace
 
-1. Run all tests: `npm test`
-2. Run specific test file: `npm test -- path/to/test`
-
-When writing tests:
-
-- Place test files in `src/test/suite/`
-- Use the naming convention `*.test.ts`
-- Group related tests using `suite()` and `test()`
-- Keep tests focused and simple
-- Mock external dependencies
-- Use descriptive test names that explain the expected behavior
-
-Example test structure:
-
-```typescript
-suite('Feature Name', () => {
-  test('should handle specific case', async () => {
-    // Arrange
-    // Act
-    // Assert
-  });
-});
-```
+Test files go in `test/suite/` with naming convention `*.test.ts`
 
 ### Running the extension
 
