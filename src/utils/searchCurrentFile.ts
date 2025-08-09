@@ -1,8 +1,19 @@
 import { context as cx } from '../lib/context';
+import { SearchMode } from '../types';
 
-export function setCurrentFileContext() {
-  cx.currentFileOnly = true;
-  cx.qp.title = 'Search current file only';
+export function setSearchMode(mode: SearchMode) {
+  cx.searchMode = mode;
+
+  switch (mode) {
+    case 'currentFile':
+      cx.qp.title = 'Search current file only';
+      break;
+    case 'files':
+      cx.qp.title = 'File Search';
+      break;
+    default:
+      cx.qp.title = undefined;
+  }
 }
 
 export function getCurrentFilePath() {

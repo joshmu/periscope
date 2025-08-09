@@ -53,6 +53,10 @@
       {
         "command": "periscope.resumeSearchCurrentFile",
         "title": "Periscope: Resume Search (Current File)"
+      },
+      {
+        "command": "periscope.searchFiles",
+        "title": "Periscope: Search Files"
       }
     ],
     "configuration": {

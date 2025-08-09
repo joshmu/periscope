@@ -35,12 +35,17 @@ export function activate(context: vscode.ExtensionContext) {
     () => PERISCOPE.resumeSearchCurrentFile(context),
   );
 
+  const periscopeSearchFilesCmd = vscode.commands.registerCommand('periscope.searchFiles', () =>
+    PERISCOPE.searchFiles(context),
+  );
+
   context.subscriptions.push(
     periscopeQpCmd,
     periscopeSearchCurrentFileQpCmd,
     periscopeSplitCmd,
     periscopeResumeCmd,
     periscopeResumeCurrentFileCmd,
+    periscopeSearchFilesCmd,
   );
 }
 

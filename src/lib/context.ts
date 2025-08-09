@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ChildProcessWithoutNullStreams } from 'child_process';
-import { AllQPItemVariants, DisposablesMap } from '../types';
+import { AllQPItemVariants, DisposablesMap, SearchMode } from '../types';
 import { getConfig } from '../utils/getConfig';
 import { createPeekDecorationManager } from '../utils/createPeekDecorationManager';
 
@@ -34,9 +34,9 @@ export const context = {
   disposables,
   appState,
   /**
-   * Disabled by default, is set if extension is invoked with the current file only flag
+   * Search mode for the current operation
    */
-  currentFileOnly: false,
+  searchMode: 'all' as SearchMode,
   /**
    * Extension context for storage operations
    */
@@ -58,7 +58,7 @@ function resetContext() {
     rgMenuActions: [],
     query: [],
   };
-  context.currentFileOnly = false;
+  context.searchMode = 'all';
   // Keep 'extensionContext' across resets to preserve search history
 }
 

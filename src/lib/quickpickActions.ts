@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { AllQPItemVariants, QPItemQuery, QPItemRgMenuAction } from '../types';
+import { AllQPItemVariants, QPItemFile, QPItemQuery, QPItemRgMenuAction } from '../types';
 import { openNativeVscodeSearch, peekItem } from './editorActions';
 import { checkKillProcess, checkAndExtractRgFlagsFromQuery, rgSearch } from './ripgrep';
 import { context as cx, updateAppState } from './context';
@@ -41,8 +41,19 @@ function onDidChangeValue(value: string) {
     return;
   }
 
+  // Check if user wants to search for files using --files flag
+  const hasFilesFlag = value.includes('--files');
+
+  // If --files flag is present and we're not already in file search mode, switch to it
+  if (hasFilesFlag && cx.searchMode !== 'files') {
+    cx.searchMode = 'files';
+    cx.qp.title = 'File Search';
+  }
+
+  const cleanedQuery = hasFilesFlag ? value.replace('--files', '').trim() : value;
+
   // update the query if rgQueryParams are available and found
-  const { rgQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(value);
+  const { rgQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(cleanedQuery);
   cx.query = rgQuery;
 
   // jump to rg custom menu if the prefix is found in the query
@@ -62,10 +73,11 @@ function onDidChangeValue(value: string) {
   }
 
   // update the quickpick title with a preview of the rgQueryParam command if utilised
-  if (cx.config.rgQueryParamsShowTitle) {
+  if (cx.config.rgQueryParamsShowTitle && cx.searchMode !== 'files') {
     cx.qp.title = getRgQueryParamsTitle(rgQuery, extraRgFlags);
   }
 
+  // Perform search using the unified function
   rgSearch(rgQuery, extraRgFlags);
 
   // Save the query for resume functionality
@@ -76,7 +88,13 @@ function onDidChangeValue(value: string) {
 
 // when item is 'FOCUSSED'
 function onDidChangeActive(items: readonly AllQPItemVariants[]) {
-  peekItem(items as readonly QPItemQuery[]);
+  // Filter to only pass items that can be peeked (QPItemQuery or QPItemFile)
+  const peekableItems = items.filter(
+    (item) => item._type === 'QuickPickItemQuery' || item._type === 'QuickPickItemFile',
+  );
+  if (peekableItems.length > 0) {
+    peekItem(peekableItems as readonly (QPItemQuery | QPItemFile)[]);
+  }
 }
 
 // when item is 'SELECTED'
@@ -88,7 +106,7 @@ function onDidAccept() {
 // this is the rightmost button on the quickpick item
 function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<AllQPItemVariants>) {
   log('item button triggered');
-  if (e.item._type === 'QuickPickItemQuery') {
+  if (e.item._type === 'QuickPickItemQuery' || e.item._type === 'QuickPickItemFile') {
     // as there is only horizontal split as an option we can assume this
     confirm({
       context: 'openInHorizontalSplit',

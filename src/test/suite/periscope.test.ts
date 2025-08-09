@@ -48,7 +48,7 @@ suite('Periscope Core', () => {
     activate(mockContext);
 
     // Verify command registration
-    assert.strictEqual(registerCommandStub.callCount, 5, 'Should register five commands');
+    assert.strictEqual(registerCommandStub.callCount, 6, 'Should register six commands');
     assert.strictEqual(
       registerCommandStub.firstCall.args[0],
       'periscope.search',
@@ -74,11 +74,16 @@ suite('Periscope Core', () => {
       'periscope.resumeSearchCurrentFile',
       'Should register resume search current file command',
     );
+    assert.strictEqual(
+      registerCommandStub.getCall(5).args[0],
+      'periscope.searchFiles',
+      'Should register search files command',
+    );
 
-    // Verify commands are added to subscriptions (5 commands + 1 output channel)
+    // Verify commands are added to subscriptions (6 commands + 1 output channel)
     assert.strictEqual(
       mockContext.subscriptions.length,
-      6,
+      7,
       'Should add commands and output channel to subscriptions',
     );
   });

@@ -3,7 +3,7 @@ import { context as cx } from './context';
 import { onDidHide, setupQuickPickForQuery, setupRgMenuActions } from './quickpickActions';
 import { start } from './globalActions';
 import { openInHorizontalSplit } from './editorActions';
-import { setCurrentFileContext } from '../utils/searchCurrentFile';
+import { setSearchMode } from '../utils/searchCurrentFile';
 import { getLastQuery } from './storage';
 
 function search(
@@ -19,7 +19,7 @@ function search(
   cx.extensionContext = extensionContext;
 
   if (currentFileOnly) {
-    setCurrentFileContext();
+    setSearchMode('currentFile');
   }
 
   // if ripgrep actions are available then open preliminary quickpick
@@ -62,9 +62,29 @@ function resumeSearchCurrentFile(extensionContext: vscode.ExtensionContext) {
   }
 }
 
+function searchFiles(extensionContext?: vscode.ExtensionContext) {
+  // Start the search in file search mode
+  start();
+
+  // Store the extension context for storage operations
+  cx.extensionContext = extensionContext;
+
+  // Set file search mode
+  setSearchMode('files');
+
+  // Setup quickpick for file search
+  setupQuickPickForQuery();
+
+  cx.disposables.general.push(cx.qp.onDidHide(onDidHide));
+
+  // search logic is triggered from the QuickPick event handlers...
+  cx.qp.show();
+}
+
 export const PERISCOPE = {
   search,
   resumeSearch,
   resumeSearchCurrentFile,
+  searchFiles,
   openInHorizontalSplit,
 };
