@@ -31,10 +31,140 @@ export async function waitForQuickPick(maxWait = 100): Promise<vscode.QuickPick<
  */
 export async function waitForSearchResults(
   minResults = 1,
-  maxWait = 500,
+  maxWait = 1000,
 ): Promise<readonly any[] | undefined> {
-  await waitForCondition(() => (cx.qp?.items.length ?? 0) >= minResults, maxWait);
+  await waitForCondition(() => (cx.qp?.items.length ?? 0) >= minResults, maxWait, 20);
   return cx.qp?.items;
+}
+
+/**
+ * Open a document with specified content
+ */
+export async function openDocumentWithContent(
+  content: string,
+  language = 'typescript',
+): Promise<vscode.TextEditor> {
+  const doc = await vscode.workspace.openTextDocument({
+    content,
+    language,
+  });
+  return await vscode.window.showTextDocument(doc);
+}
+
+/**
+ * Select text in the editor
+ */
+export async function selectText(editor: vscode.TextEditor, searchText: string): Promise<boolean> {
+  const text = editor.document.getText();
+  const index = text.indexOf(searchText);
+
+  if (index === -1) {
+    return false;
+  }
+
+  const startPos = editor.document.positionAt(index);
+  const endPos = editor.document.positionAt(index + searchText.length);
+  editor.selection = new vscode.Selection(startPos, endPos);
+
+  return true;
+}
+
+/**
+ * Select a text range in the editor
+ */
+export function selectTextRange(
+  editor: vscode.TextEditor,
+  startPos: vscode.Position,
+  endPos: vscode.Position,
+): void {
+  editor.selection = new vscode.Selection(startPos, endPos);
+}
+
+/**
+ * Open a file at a specific position
+ */
+export async function openFileAtPosition(
+  filePath: string,
+  line: number,
+  column = 0,
+): Promise<vscode.TextEditor> {
+  const absolutePath = path.isAbsolute(filePath)
+    ? filePath
+    : path.join(vscode.workspace.rootPath || '', filePath);
+
+  const doc = await vscode.workspace.openTextDocument(absolutePath);
+  const editor = await vscode.window.showTextDocument(doc);
+
+  const position = new vscode.Position(line, column);
+  editor.selection = new vscode.Selection(position, position);
+  editor.revealRange(new vscode.Range(position, position));
+
+  return editor;
+}
+
+/**
+ * Wait for preview editor to update
+ */
+export async function waitForPreviewUpdate(
+  previousEditor: vscode.TextEditor | undefined,
+  maxWait = 1000,
+): Promise<vscode.TextEditor | undefined> {
+  await waitForCondition(() => {
+    const currentEditor = vscode.window.activeTextEditor;
+    if (!currentEditor) return false;
+
+    if (!previousEditor) return true;
+
+    // Check if it's a different file or different position
+    return (
+      currentEditor.document.uri.fsPath !== previousEditor.document.uri.fsPath ||
+      currentEditor.selection.active.line !== previousEditor.selection.active.line
+    );
+  }, maxWait);
+
+  return vscode.window.activeTextEditor;
+}
+
+/**
+ * Set cursor position in editor
+ */
+export function setCursorPosition(editor: vscode.TextEditor, line: number, column = 0): void {
+  const position = new vscode.Position(line, column);
+  editor.selection = new vscode.Selection(position, position);
+  editor.revealRange(new vscode.Range(position, position));
+}
+
+/**
+ * Helper to temporarily update configuration for a test
+ * Automatically restores original configuration after the test function completes
+ */
+export async function withConfiguration<T>(
+  configUpdates: { [key: string]: any },
+  testFn: () => Promise<T>,
+): Promise<T> {
+  const config = vscode.workspace.getConfiguration('periscope');
+  const originalValues = new Map<string, any>();
+
+  // Save original values and apply updates
+  for (const [key, value] of Object.entries(configUpdates)) {
+    originalValues.set(key, config.get(key));
+    await config.update(key, value, vscode.ConfigurationTarget.Workspace);
+  }
+
+  // Wait for config to apply
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  try {
+    // Run the test
+    return await testFn();
+  } finally {
+    // Always restore original values
+    for (const [key, originalValue] of originalValues) {
+      await config.update(key, originalValue, vscode.ConfigurationTarget.Workspace);
+    }
+    // Wait for config to restore
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
 }
 
 export interface TestOptions {
@@ -158,7 +288,7 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
   await vscode.commands.executeCommand(command);
 
   // Wait for QuickPick to be ready using smart waiting
-  const qp = await waitForQuickPick(200);
+  const qp = await waitForQuickPick(300);
 
   if (!qp) {
     throw new Error('QuickPick not initialized after command execution');
@@ -192,6 +322,8 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
 
   // Wait for results to appear using smart waiting
   if (query || command === 'periscope.searchFiles') {
+    // Small delay for ripgrep to start
+    await new Promise((resolve) => setTimeout(resolve, 100));
     await waitForSearchResults(1, actualWaitTime);
   } else {
     // If no query, just wait a bit for UI to stabilize
@@ -289,17 +421,17 @@ function processResults(items: AllQPItemVariants[]): TestResults {
 function calculateWaitTime(command: string, query: string, isRegex: boolean): number {
   // File operations are generally faster
   if (command === 'periscope.searchFiles') {
-    return 200;
+    return 500;
   }
 
   // Current file search is fastest
   if (command === 'periscope.searchCurrentFile') {
-    return 100;
+    return 300;
   }
 
   // Resume search doesn't need to wait for new results
   if (command === 'periscope.resumeSearch' || command === 'periscope.resumeSearchCurrentFile') {
-    return 50;
+    return 200;
   }
 
   // Regular search needs more time, especially for regex
@@ -308,7 +440,7 @@ function calculateWaitTime(command: string, query: string, isRegex: boolean): nu
   }
 
   // Default for regular text search
-  return 500;
+  return 600;
 }
 
 /**

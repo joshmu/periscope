@@ -1,8 +1,8 @@
 {
     "periscope.rgGlobExcludes": [],
-    "periscope.rgOptions": [
-        "--smart-case",
-        "--sortr path"
-    ],
-    "periscope.showPreviousResultsWhenNoMatches": false
+    "periscope.rgOptions": [],
+    "periscope.showPreviousResultsWhenNoMatches": false,
+    "periscope.peekBorderColor": "#0000FF",
+    "periscope.peekMatchColor": "#FFFF00",
+    "periscope.rgQueryParams": []
 }

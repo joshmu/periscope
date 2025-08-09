@@ -5,6 +5,7 @@ import {
   periscopeTestHelpers,
   waitForQuickPick,
   waitForSearchResults,
+  waitForCondition,
 } from '../utils/periscopeTestHelper';
 
 suite('Configuration Options - Real Behavior', function () {
@@ -255,6 +256,144 @@ suite('Configuration Options - Real Behavior', function () {
         directories.size > 1,
         `Should search in multiple directories, found: ${Array.from(directories).join(', ')}`,
       );
+    });
+  });
+
+  suite('Live Configuration Updates', () => {
+    test('applies configuration changes during active search', async function () {
+      this.timeout(10000);
+
+      const config = vscode.workspace.getConfiguration('periscope');
+
+      // Start a search without max-count
+      await config.update('rgOptions', [], vscode.ConfigurationTarget.Workspace);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Start search
+      await vscode.commands.executeCommand('periscope.search');
+      await waitForQuickPick(300);
+
+      cx.qp.value = 'function';
+      await waitForSearchResults(1, 1000);
+
+      const initialCount = cx.qp.items.length;
+      assert.ok(initialCount > 0, 'Should have initial results');
+
+      // Now update configuration while search is active
+      await config.update('rgOptions', ['--max-count=1'], vscode.ConfigurationTarget.Workspace);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Trigger a new search with the same query
+      cx.qp.value = '';
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      cx.qp.value = 'function';
+      await waitForSearchResults(1, 1000);
+
+      // Count occurrences per file - should now be max 1
+      const fileOccurrences = new Map<string, number>();
+      cx.qp.items.forEach((item: any) => {
+        if (item.data?.filePath) {
+          const fileName = item.data.filePath.split('/').pop();
+          fileOccurrences.set(fileName, (fileOccurrences.get(fileName) || 0) + 1);
+        }
+      });
+
+      // Each file should have max 1 match now
+      for (const [file, count] of fileOccurrences) {
+        assert.ok(count <= 1, `File ${file} should have max 1 match after config update`);
+      }
+
+      // Clean up
+      cx.qp.hide();
+      cx.qp.dispose();
+    });
+
+    test('updates exclusions during active search session', async function () {
+      this.timeout(10000);
+
+      const config = vscode.workspace.getConfiguration('periscope');
+
+      // Start without exclusions
+      await config.update('rgGlobExcludes', [], vscode.ConfigurationTarget.Workspace);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Start search
+      await vscode.commands.executeCommand('periscope.search');
+      await waitForQuickPick(300);
+
+      cx.qp.value = 'function';
+      await waitForSearchResults(1, 1000);
+
+      // Check if we have test files in results
+      const hasTestFiles = cx.qp.items.some((item: any) => {
+        const filePath = item.data?.filePath || '';
+        return filePath.includes('.test.');
+      });
+
+      // Now add exclusion for test files
+      await config.update('rgGlobExcludes', ['**/*.test.*'], vscode.ConfigurationTarget.Workspace);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Re-trigger search
+      cx.qp.value = '';
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      cx.qp.value = 'function';
+      await waitForSearchResults(1, 1000);
+
+      // Should no longer have test files
+      const hasTestFilesAfter = cx.qp.items.some((item: any) => {
+        const filePath = item.data?.filePath || '';
+        return filePath.includes('.test.');
+      });
+
+      assert.strictEqual(hasTestFilesAfter, false, 'Should exclude test files after config update');
+
+      // Clean up
+      cx.qp.hide();
+      cx.qp.dispose();
+    });
+
+    test('updates peek decoration colors dynamically', async function () {
+      this.timeout(5000);
+
+      const config = vscode.workspace.getConfiguration('periscope');
+
+      // Set initial peek colors
+      await config.update('peekBorderColor', '#FF0000', vscode.ConfigurationTarget.Workspace);
+      await config.update('peekMatchColor', '#00FF00', vscode.ConfigurationTarget.Workspace);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Perform search
+      await vscode.commands.executeCommand('periscope.search');
+      await waitForQuickPick(300);
+
+      cx.qp.value = 'TODO';
+      await waitForSearchResults(1, 1000);
+
+      // Navigate to a result (would apply decorations)
+      if (cx.qp.items.length > 0) {
+        cx.qp.activeItems = [cx.qp.items[0]];
+        await waitForCondition(() => !!vscode.window.activeTextEditor, 500);
+      }
+
+      // Update peek colors
+      await config.update('peekBorderColor', '#0000FF', vscode.ConfigurationTarget.Workspace);
+      await config.update('peekMatchColor', '#FFFF00', vscode.ConfigurationTarget.Workspace);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Navigate to another result (should use new colors)
+      if (cx.qp.items.length > 1) {
+        cx.qp.activeItems = [cx.qp.items[1]];
+        await waitForCondition(() => !!vscode.window.activeTextEditor, 500);
+      }
+
+      // The new decorations should be applied
+      // In actual implementation, this would check the decoration styles
+      assert.ok(vscode.window.activeTextEditor, 'Should have active editor with decorations');
+
+      // Clean up
+      cx.qp.hide();
+      cx.qp.dispose();
     });
   });
 

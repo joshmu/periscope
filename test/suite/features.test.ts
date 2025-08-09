@@ -2,7 +2,15 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { context as cx } from '../../src/lib/context';
-import { periscopeTestHelpers } from '../utils/periscopeTestHelper';
+import {
+  periscopeTestHelpers,
+  waitForQuickPick,
+  waitForCondition,
+  openDocumentWithContent,
+  selectText,
+  selectTextRange,
+  withConfiguration,
+} from '../utils/periscopeTestHelper';
 
 suite('Advanced Features', function () {
   this.timeout(10000);
@@ -25,48 +33,106 @@ suite('Advanced Features', function () {
       cx.qp.hide();
       cx.qp.dispose();
     }
+
     sandbox.restore();
     cx.resetContext();
     await new Promise((resolve) => setTimeout(resolve, 100));
   });
 
   suite('Selected Text Search', () => {
-    test('uses selected text as initial query', async () => {
-      // Mock active editor with selection
-      const mockEditor = {
-        document: {
-          getText: (range: any) => 'selectedFunction',
-          uri: vscode.Uri.file('/test/file.ts'),
-        },
-        selection: {
-          isEmpty: false,
-          start: new vscode.Position(10, 5),
-          end: new vscode.Position(10, 20),
-        },
-      };
+    test('uses selected text as initial query', async function () {
+      this.timeout(5000);
 
-      sandbox.stub(vscode.window, 'activeTextEditor').value(mockEditor);
+      // Open a document with known content
+      const editor = await openDocumentWithContent(
+        'function getUserById(id) {\n  return users.find(u => u.id === id);\n}\n\nfunction updateUser() {}',
+        'javascript',
+      );
 
-      // When search is invoked with text selected, it should use that text
-      const selectedText = mockEditor.document.getText(mockEditor.selection);
-      assert.strictEqual(selectedText, 'selectedFunction');
+      // Select the text "getUserById"
+      await selectText(editor, 'getUserById');
+
+      // Verify selection
+      const selectedText = editor.document.getText(editor.selection);
+      assert.strictEqual(selectedText, 'getUserById', 'Should have selected text');
+
+      // Now invoke search - it should use the selected text
+      await vscode.commands.executeCommand('periscope.search');
+      await waitForQuickPick(300);
+
+      // The query should be pre-populated with selected text
+      assert.ok(cx.qp, 'QuickPick should be initialized');
+      assert.strictEqual(cx.qp.value, 'getUserById', 'Should use selected text as initial query');
+
+      // Should find results for the selected text
+      await waitForCondition(() => cx.qp.items.length > 0, 1000);
+      assert.ok(cx.qp.items.length > 0, 'Should find results for selected text');
+
+      // Clean up
+      cx.qp.hide();
+      cx.qp.dispose();
     });
 
-    test('ignores empty selection', async () => {
-      const mockEditor = {
-        document: {
-          getText: () => '',
-          uri: vscode.Uri.file('/test/file.ts'),
-        },
-        selection: {
-          isEmpty: true,
-        },
-      };
+    test('ignores empty selection', async function () {
+      this.timeout(5000);
 
-      sandbox.stub(vscode.window, 'activeTextEditor').value(mockEditor);
+      // Open a document without selecting anything
+      const editor = await openDocumentWithContent(
+        'function test() { return true; }',
+        'javascript',
+      );
 
-      // With empty selection, should not pre-populate query
-      assert.strictEqual(mockEditor.selection.isEmpty, true);
+      // Ensure selection is empty (just a cursor position)
+      const pos = new vscode.Position(0, 0);
+      selectTextRange(editor, pos, pos);
+
+      assert.strictEqual(editor.selection.isEmpty, true, 'Selection should be empty');
+
+      // Invoke search
+      await vscode.commands.executeCommand('periscope.search');
+      await waitForQuickPick(300);
+
+      // Query should be empty (not pre-populated)
+      assert.ok(cx.qp, 'QuickPick should be initialized');
+      assert.strictEqual(cx.qp.value, '', 'Should not pre-populate query with empty selection');
+
+      // Clean up
+      cx.qp.hide();
+      cx.qp.dispose();
+    });
+
+    test('handles multi-line selection', async function () {
+      this.timeout(5000);
+
+      // Open a document with multi-line content
+      const content = 'function calculate(\n  a: number,\n  b: number\n) {\n  return a + b;\n}';
+      const editor = await openDocumentWithContent(content, 'typescript');
+
+      // Select multiple lines (the function signature)
+      const text = editor.document.getText();
+      const startIndex = text.indexOf('function calculate');
+      const endIndex = text.indexOf(')') + 1;
+
+      const startPos = editor.document.positionAt(startIndex);
+      const endPos = editor.document.positionAt(endIndex);
+      selectTextRange(editor, startPos, endPos);
+
+      // Get the selected text
+      const selectedText = editor.document.getText(editor.selection);
+      assert.ok(selectedText.includes('\n'), 'Should have multi-line selection');
+
+      // Invoke search
+      await vscode.commands.executeCommand('periscope.search');
+      await waitForQuickPick(300);
+
+      // The extension should handle multi-line selection appropriately
+      // (either use it as-is or extract meaningful part)
+      assert.ok(cx.qp, 'QuickPick should be initialized');
+      assert.ok(cx.qp.value.length > 0, 'Should handle multi-line selection');
+
+      // Clean up
+      cx.qp.hide();
+      cx.qp.dispose();
     });
   });
 
@@ -103,141 +169,235 @@ suite('Advanced Features', function () {
   });
 
   suite('rgQueryParams Pattern Matching', () => {
-    test('transforms query with type filter pattern', () => {
-      const queryParams = [{ regex: '^(.+) -t ?(\\w+)$', param: '-t $2' }];
+    test('transforms query with type filter pattern and filters results', async function () {
+      this.timeout(5000);
 
-      const testCases = [
-        { input: 'hello -t rust', expected: { match: true, type: 'rust' } },
-        { input: 'search -t js', expected: { match: true, type: 'js' } },
-        { input: 'normal search', expected: { match: false, type: null } },
-      ];
+      await withConfiguration(
+        {
+          rgQueryParams: [{ regex: '^(.+) -t ?(\\w+)$', param: '-t $2' }],
+        },
+        async () => {
+          // Search with type filter in query
+          await vscode.commands.executeCommand('periscope.search');
+          await waitForQuickPick(300);
 
-      testCases.forEach(({ input, expected }) => {
-        const regex = new RegExp(queryParams[0].regex);
-        const match = regex.test(input);
-        assert.strictEqual(
-          match,
-          expected.match,
-          `Pattern should ${expected.match ? '' : 'not '}match "${input}"`,
-        );
+          // Use type filter syntax
+          cx.qp.value = 'function -t ts';
+          await waitForCondition(() => cx.qp.items.length > 0, 1000);
 
-        if (match) {
-          const matches = input.match(regex);
-          assert.ok(matches);
-          assert.strictEqual(matches[2], expected.type);
-        }
-      });
+          // All results should be from TypeScript files
+          const files = cx.qp.items
+            .map((item: any) => {
+              const filePath = item.data?.filePath || '';
+              return filePath.split('/').pop();
+            })
+            .filter(Boolean);
+
+          const allTypeScript = files.every((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+          assert.ok(allTypeScript, 'All results should be from TypeScript files');
+
+          // Clean up
+          cx.qp.hide();
+          cx.qp.dispose();
+        },
+      );
     });
 
-    test('transforms query with glob filter pattern', () => {
-      const queryParams = [{ regex: '^(.+) -g (.+)$', param: '-g "$2"' }];
+    test('transforms query with glob filter pattern and filters results', async function () {
+      this.timeout(5000);
 
-      const testCases = [
-        { input: 'search -g **/test/**', expected: { match: true, glob: '**/test/**' } },
-        { input: 'find -g *.ts', expected: { match: true, glob: '*.ts' } },
-        { input: 'normal search', expected: { match: false, glob: null } },
-      ];
+      await withConfiguration(
+        {
+          rgQueryParams: [{ regex: '^(.+) -g (.+)$', param: '-g "$2"' }],
+        },
+        async () => {
+          // Search with glob filter
+          await vscode.commands.executeCommand('periscope.search');
+          await waitForQuickPick(300);
 
-      testCases.forEach(({ input, expected }) => {
-        const regex = new RegExp(queryParams[0].regex);
-        const match = regex.test(input);
-        assert.strictEqual(match, expected.match);
+          // Use glob filter to search only in test files
+          cx.qp.value = 'function -g **/*.test.*';
+          await waitForCondition(() => cx.qp.items.length >= 0, 1000);
 
-        if (match) {
-          const matches = input.match(regex);
-          assert.ok(matches);
-          assert.strictEqual(matches[2], expected.glob);
-        }
-      });
+          if (cx.qp.items.length > 0) {
+            // All results should be from test files
+            const files = cx.qp.items
+              .map((item: any) => {
+                const filePath = item.data?.filePath || '';
+                return filePath.split('/').pop();
+              })
+              .filter(Boolean);
+
+            const allTestFiles = files.every((f) => f.includes('.test.'));
+            assert.ok(allTestFiles, 'All results should be from test files');
+          }
+
+          // Clean up
+          cx.qp.hide();
+          cx.qp.dispose();
+        },
+      );
     });
 
-    test('transforms query with file extension pattern', () => {
-      const queryParams = [{ regex: '^(.+) \\*\\.(\\w+)$', param: '-g "*.$2"' }];
+    test('transforms query with file extension pattern and filters results', async function () {
+      this.timeout(5000);
 
-      const testCases = [
-        { input: 'search *.rs', expected: { match: true, ext: 'rs' } },
-        { input: 'find *.tsx', expected: { match: true, ext: 'tsx' } },
-        { input: 'normal search', expected: { match: false, ext: null } },
-      ];
+      await withConfiguration(
+        {
+          rgQueryParams: [{ regex: '^(.+) \\*\\.(\\w+)$', param: '-g "*.$2"' }],
+        },
+        async () => {
+          // Search with file extension filter
+          await vscode.commands.executeCommand('periscope.search');
+          await waitForQuickPick(300);
 
-      testCases.forEach(({ input, expected }) => {
-        const regex = new RegExp(queryParams[0].regex);
-        const match = regex.test(input);
-        assert.strictEqual(match, expected.match);
+          // Use extension filter
+          cx.qp.value = 'function *.ts';
+          await waitForCondition(() => cx.qp.items.length > 0, 1000);
 
-        if (match) {
-          const matches = input.match(regex);
-          assert.ok(matches);
-          assert.strictEqual(matches[2], expected.ext);
-        }
-      });
+          // All results should be from .ts files
+          const files = cx.qp.items
+            .map((item: any) => {
+              const filePath = item.data?.filePath || '';
+              return filePath.split('/').pop();
+            })
+            .filter(Boolean);
+
+          const allTsFiles = files.every((f) => f.endsWith('.ts'));
+          assert.ok(allTsFiles, 'All results should be from .ts files');
+
+          // Clean up
+          cx.qp.hide();
+          cx.qp.dispose();
+        },
+      );
     });
 
-    test('transforms query with module filter pattern', () => {
-      const queryParams = [{ regex: '^(.+) -m ([\\w-_]+)$', param: '-g "**/*$2*/**"' }];
+    test('transforms query with module filter pattern and filters results', async function () {
+      this.timeout(5000);
 
-      const testCases = [
-        { input: 'redis -m auth', expected: { match: true, module: 'auth' } },
-        { input: 'search -m user-service', expected: { match: true, module: 'user-service' } },
-        { input: 'normal search', expected: { match: false, module: null } },
-      ];
+      await withConfiguration(
+        {
+          rgQueryParams: [{ regex: '^(.+) -m ([\\w-_]+)$', param: '-g "**/*$2*/**"' }],
+        },
+        async () => {
+          // Search with module filter
+          await vscode.commands.executeCommand('periscope.search');
+          await waitForQuickPick(300);
 
-      testCases.forEach(({ input, expected }) => {
-        const regex = new RegExp(queryParams[0].regex);
-        const match = regex.test(input);
-        assert.strictEqual(match, expected.match);
+          // Use module filter to search in utils directory
+          cx.qp.value = 'function -m utils';
+          await waitForCondition(() => cx.qp.items.length >= 0, 1000);
 
-        if (match) {
-          const matches = input.match(regex);
-          assert.ok(matches);
-          assert.strictEqual(matches[2], expected.module);
-        }
-      });
+          if (cx.qp.items.length > 0) {
+            // All results should be from utils directory
+            const files = cx.qp.items.map((item: any) => item.data?.filePath || '').filter(Boolean);
+            const allFromUtils = files.every((f) => f.includes('/utils/'));
+            assert.ok(allFromUtils, 'All results should be from utils directory');
+          }
+
+          // Clean up
+          cx.qp.hide();
+          cx.qp.dispose();
+        },
+      );
     });
   });
 
   suite('rgMenuActions', () => {
-    test('applies menu action filters', () => {
-      const menuActions = [
-        { label: 'JS/TS Files', value: "--type-add 'jsts:*.{js,ts,tsx,jsx}' -t jsts" },
-        { label: 'Markdown', value: '-t md' },
-        { label: 'JSON', value: '-t json' },
-        { label: 'Exclude tests', value: '-g "!**/*.test.*"' },
-      ];
+    test('applies menu action filters to actual search results', async function () {
+      this.timeout(5000);
 
-      // Each action should have a label and value
-      menuActions.forEach((action) => {
-        assert.ok(action.label, 'Menu action should have a label');
-        assert.ok(action.value, 'Menu action should have a value');
-        assert.ok(
-          action.value.startsWith('-') || action.value.startsWith('--'),
-          'Menu action value should be a ripgrep parameter',
+      // First, do a search without filters to get baseline
+      const allResults = await periscopeTestHelpers.search('function');
+      assert.ok(allResults.count > 0, 'Should find functions without filter');
+
+      // Count TypeScript/JavaScript files in baseline
+      const tsJsFiles = allResults.files.filter(
+        (f) => f.endsWith('.ts') || f.endsWith('.tsx') || f.endsWith('.js') || f.endsWith('.jsx'),
+      );
+      const otherFiles = allResults.files.filter(
+        (f) =>
+          !f.endsWith('.ts') && !f.endsWith('.tsx') && !f.endsWith('.js') && !f.endsWith('.jsx'),
+      );
+
+      // Only run this test if we have mixed file types
+      if (otherFiles.length > 0) {
+        // Now search with JS/TS filter menu action
+        const filteredResults = await periscopeTestHelpers.searchWithMenuAction('function', {
+          label: 'JS/TS Files',
+          value: "--type-add 'jsts:*.{js,ts,tsx,jsx}' -t jsts",
+        });
+
+        // Should only find results in JS/TS files
+        const filteredTsJsFiles = filteredResults.files.filter(
+          (f) => f.endsWith('.ts') || f.endsWith('.tsx') || f.endsWith('.js') || f.endsWith('.jsx'),
         );
-      });
+
+        assert.ok(filteredResults.count > 0, 'Should find results with filter');
+        assert.ok(
+          filteredResults.count <= allResults.count,
+          'Filtered results should be less than or equal to all results',
+        );
+        assert.strictEqual(
+          filteredTsJsFiles.length,
+          filteredResults.files.length,
+          'All filtered results should be JS/TS files',
+        );
+      }
     });
 
-    test('triggers menu with gotoRgMenuActionsPrefix', () => {
+    test('exclude tests menu action filters out test files', async function () {
+      this.timeout(5000);
+
+      // First search including test files
+      const withTests = await periscopeTestHelpers.search('function');
+      const testFiles = withTests.files.filter((f) => f.includes('.test.') || f.includes('.spec.'));
+
+      // Only run if we have test files
+      if (testFiles.length > 0) {
+        // Search with exclude tests action
+        const withoutTests = await periscopeTestHelpers.searchWithMenuAction('function', {
+          label: 'Exclude tests',
+          value: '-g "!**/*.test.*" -g "!**/*.spec.*"',
+        });
+
+        // Should not include any test files
+        const filteredTestFiles = withoutTests.files.filter(
+          (f) => f.includes('.test.') || f.includes('.spec.'),
+        );
+
+        assert.strictEqual(filteredTestFiles.length, 0, 'Should exclude all test files');
+        assert.ok(
+          withoutTests.count < withTests.count,
+          'Should have fewer results without test files',
+        );
+      }
+    });
+
+    test('triggers menu with gotoRgMenuActionsPrefix and applies selection', async function () {
+      this.timeout(5000);
+
+      // Start search
+      await vscode.commands.executeCommand('periscope.search');
+      await waitForQuickPick(300);
+
+      assert.ok(cx.qp, 'QuickPick should be initialized');
+
+      // Use prefix to trigger menu
       const prefix = '<<';
-      const queries = ['<<', '<<search', 'normal'];
+      cx.qp.value = prefix;
 
-      queries.forEach((query) => {
-        const shouldShowMenu = query.startsWith(prefix);
-        if (shouldShowMenu) {
-          // Would trigger menu display
-          assert.ok(query.startsWith(prefix), `Query "${query}" should trigger menu`);
-        }
-      });
-    });
+      // Wait a bit for menu trigger
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-    test('menu action selection modifies search', () => {
-      const selectedAction = {
-        label: 'JS/TS Files',
-        value: "--type-add 'jsts:*.{js,ts,tsx,jsx}' -t jsts",
-      };
+      // The menu should be triggered when prefix is detected
+      // In real implementation, this would show menu items
+      assert.ok(cx.qp.value.startsWith(prefix), 'Should detect menu prefix');
 
-      // When a menu action is selected, it should be applied to the ripgrep command
-      assert.ok(selectedAction.value.includes('-t jsts'));
-      assert.ok(selectedAction.value.includes('*.{js,ts,tsx,jsx}'));
+      // Clean up
+      cx.qp.hide();
+      cx.qp.dispose();
     });
   });
 

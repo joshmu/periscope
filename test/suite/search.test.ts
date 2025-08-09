@@ -3,7 +3,11 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { context as cx } from '../../src/lib/context';
-import { periscopeTestHelpers } from '../utils/periscopeTestHelper';
+import {
+  periscopeTestHelpers,
+  waitForCondition,
+  waitForPreviewUpdate,
+} from '../utils/periscopeTestHelper';
 
 suite('Search Functionality with Fixtures', function () {
   // Increase timeout for all tests in this suite
@@ -151,6 +155,127 @@ suite('Search Functionality with Fixtures', function () {
       // File search mode
       vscode.commands.executeCommand('periscope.searchFiles');
       // Would need to wait for command to complete, but we can test the mode is set
+    });
+  });
+
+  suite('Preview and Decorations', () => {
+    test('shows file preview when navigating search results', async function () {
+      this.timeout(5000);
+
+      // Get current editor state
+      const editorBefore = vscode.window.activeTextEditor;
+
+      // Perform search
+      const results = await periscopeTestHelpers.search('TODO');
+
+      assert.ok(results.count > 0, 'Should find TODO comments');
+      assert.ok(cx.qp, 'QuickPick should be initialized');
+
+      // Navigate to first result
+      const firstItem = cx.qp.items[0] as any;
+      cx.qp.activeItems = [firstItem];
+
+      // Wait for preview to open
+      const previewEditor = await waitForPreviewUpdate(editorBefore);
+      assert.ok(previewEditor, 'Should open preview editor');
+
+      // Verify preview is at correct location
+      if (firstItem.data?.linePos) {
+        const expectedLine = firstItem.data.linePos - 1; // Convert to 0-based
+        const cursorLine = previewEditor.selection.active.line;
+        assert.strictEqual(cursorLine, expectedLine, 'Preview should position at match line');
+      }
+    });
+
+    test('updates preview when changing active item', async function () {
+      this.timeout(5000);
+
+      // Perform search with multiple results
+      const results = await periscopeTestHelpers.search('function');
+
+      assert.ok(results.count > 1, 'Should have multiple results');
+      assert.ok(cx.qp, 'QuickPick should be initialized');
+
+      // Navigate to first item
+      const firstItem = cx.qp.items[0] as any;
+      cx.qp.activeItems = [firstItem];
+
+      // Wait for first preview
+      const firstEditor = await waitForPreviewUpdate(undefined);
+      const firstFile = firstEditor?.document.uri.fsPath;
+      const firstLine = firstEditor?.selection.active.line;
+
+      // Navigate to second item
+      const secondItem = cx.qp.items[1] as any;
+      cx.qp.activeItems = [secondItem];
+
+      // Wait for preview to update
+      const secondEditor = await waitForPreviewUpdate(firstEditor);
+
+      // Verify preview changed
+      const differentFile = firstFile !== secondEditor?.document.uri.fsPath;
+      const differentLine = firstLine !== secondEditor?.selection.active.line;
+      assert.ok(differentFile || differentLine, 'Preview should update when changing active item');
+    });
+
+    test('applies peek decorations at match location', async function () {
+      this.timeout(5000);
+
+      // Perform search
+      const results = await periscopeTestHelpers.search('TODO');
+
+      assert.ok(results.count > 0, 'Should find matches');
+      assert.ok(cx.qp, 'QuickPick should be initialized');
+
+      // Navigate to a result
+      const item = cx.qp.items[0] as any;
+      cx.qp.activeItems = [item];
+
+      // Wait for preview
+      await waitForCondition(() => !!vscode.window.activeTextEditor, 500);
+
+      const editor = vscode.window.activeTextEditor;
+      assert.ok(editor, 'Should have active editor');
+
+      // Check that cursor/selection is at the match
+      if (item.data?.linePos && item.data?.colPos) {
+        const expectedLine = item.data.linePos - 1;
+        const expectedCol = item.data.colPos - 1;
+
+        const selection = editor.selection;
+        assert.strictEqual(selection.active.line, expectedLine, 'Cursor should be at match line');
+
+        // The match text should be near the cursor position
+        const lineText = editor.document.lineAt(expectedLine).text;
+        const matchText = item.data.textResult || '';
+        assert.ok(lineText.includes(matchText.trim()), 'Line should contain match text');
+      }
+    });
+
+    test('preserves preview mode for navigation', async function () {
+      this.timeout(5000);
+
+      // Perform search
+      const results = await periscopeTestHelpers.search('function');
+
+      assert.ok(results.count > 1, 'Should have multiple results');
+      assert.ok(cx.qp, 'QuickPick should be initialized');
+
+      // Navigate through multiple items
+      for (let i = 0; i < Math.min(3, cx.qp.items.length); i++) {
+        cx.qp.activeItems = [cx.qp.items[i]];
+
+        // Wait for preview
+        await waitForCondition(() => !!vscode.window.activeTextEditor, 300);
+
+        const editor = vscode.window.activeTextEditor;
+        assert.ok(editor, `Should have editor for item ${i}`);
+
+        // Check if document is in preview mode
+        // Preview mode documents are typically not dirty and not in the working files
+        const isPreview = !editor.document.isDirty;
+        assert.ok(isPreview, 'Document should be in preview mode during navigation');
+      }
     });
   });
 
