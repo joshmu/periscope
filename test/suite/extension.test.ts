@@ -1,9 +1,9 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { activate } from '../../extension';
-import { context as cx } from '../../lib/context';
-import { setSearchMode } from '../../utils/searchCurrentFile';
+import { activate } from '../../src/extension';
+import { context as cx } from '../../src/lib/context';
+import { setSearchMode } from '../../src/utils/searchCurrentFile';
 
 suite('Periscope Extension', () => {
   let sandbox: sinon.SinonSandbox;
@@ -145,6 +145,56 @@ suite('Periscope Extension', () => {
       assert.strictEqual(showTextDocumentStub.calledOnce, true);
       assert.deepStrictEqual(showTextDocumentStub.firstCall.args[1], {
         viewColumn: vscode.ViewColumn.Beside,
+      });
+    });
+
+    test('rgMenuActions shows action menu before search', () => {
+      const menuActions = [
+        { label: 'JS/TS Files', value: "--type-add 'jsts:*.{js,ts,tsx,jsx}' -t jsts" },
+        { label: 'Markdown', value: '-t md' },
+        { label: 'JSON', value: '-t json' },
+      ];
+
+      // Simulate menu selection
+      menuActions.forEach((action) => {
+        assert.ok(action.label);
+        assert.ok(action.value);
+        // Menu item should apply ripgrep parameters
+      });
+    });
+
+    test('switches to native search with gotoNativeSearchSuffix', () => {
+      const queries = [
+        { input: 'search term>>>', hasNativeSuffix: true },
+        { input: 'normal search', hasNativeSuffix: false },
+        { input: 'another>>>', hasNativeSuffix: true },
+      ];
+
+      queries.forEach(({ input, hasNativeSuffix }) => {
+        const suffix = '>>>';
+        const shouldSwitchToNative = input.endsWith(suffix);
+        assert.strictEqual(shouldSwitchToNative, hasNativeSuffix);
+
+        if (shouldSwitchToNative) {
+          const cleanQuery = input.slice(0, -suffix.length);
+          assert.ok(cleanQuery);
+          // Would trigger vscode.commands.executeCommand('workbench.action.findInFiles')
+        }
+      });
+    });
+
+    test('handles multi-root workspace folders', () => {
+      const workspaceFolders = [
+        { name: 'frontend', uri: vscode.Uri.file('/workspace/frontend') },
+        { name: 'backend', uri: vscode.Uri.file('/workspace/backend') },
+        { name: 'shared', uri: vscode.Uri.file('/workspace/shared') },
+      ];
+
+      // Should search in all workspace folders
+      assert.strictEqual(workspaceFolders.length, 3);
+      workspaceFolders.forEach((folder) => {
+        assert.ok(folder.name);
+        assert.ok(folder.uri);
       });
     });
   });

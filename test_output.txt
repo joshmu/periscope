@@ -1,0 +1,254 @@
+
+> periscope@1.13.1 pretest
+> npm run compile
+
+
+> periscope@1.13.1 compile
+> tsc -p ./
+
+
+> periscope@1.13.1 test
+> npm run lint && node ./out/test/runTest.js
+
+
+> periscope@1.13.1 lint
+> eslint src --ext ts && prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+[90m[main 2025-08-09T06:45:24.983Z][0m update#setState disabled
+[90m[main 2025-08-09T06:45:24.983Z][0m update#ctor - updates are disabled by the environment
+ChatSessionStore: Migrating 0 chat sessions from storage service to file system
+Loading development extension at /Users/joshmu/Desktop/code/projects/vscode-extensions/periscope
+Settings Sync: Account status changed from uninitialized to unavailable
+Started local extension host with pid 93781.
+[0m[0m
+[0m  Configuration Tests[0m
+  [32m  ✔[0m[90m should validate default settings[0m
+[0m  createPeekDecorationManager[0m
+  [32m  ✔[0m[90m creates decoration manager with theme colors when no custom colors set[0m[33m (47ms)[0m
+  [32m  ✔[0m[90m uses custom colors when provided[0m[33m (46ms)[0m
+  [32m  ✔[0m[90m properly disposes decorations on remove[0m
+  [32m  ✔[0m[90m applies decorations at correct positions[0m
+[0m  Editor Actions[0m
+[0m    formatNativeVscodeQuery[0m
+    [32m  ✔[0m[90m should remove suffix and trim whitespace[0m
+    [32m  ✔[0m[90m should handle query without suffix[0m
+    [32m  ✔[0m[90m should handle query with multiple suffixes[0m
+    [32m  ✔[0m[90m should handle empty query[0m
+[0m    openNativeVscodeSearch[0m
+    [32m  ✔[0m[90m should execute native search command with correct parameters[0m
+    [32m  ✔[0m[90m should handle empty query[0m
+[0m  Periscope Extension[0m
+[0m    Command Registration[0m
+    [32m  ✔[0m[90m registers all required commands on activation[0m
+    [32m  ✔[0m[90m adds all disposables to context subscriptions[0m
+[0m    Search Modes[0m
+    [32m  ✔[0m[90m periscope.search uses "all" mode[0m
+    [32m  ✔[0m[90m periscope.searchCurrentFile uses "currentFile" mode[0m
+    [32m  ✔[0m[90m periscope.searchFiles uses "files" mode[0m
+    [32m  ✔[0m[90m --files flag switches to file search mode[0m
+[0m    User Workflows[0m
+    [32m  ✔[0m[90m search shows quickpick interface[0m
+    [32m  ✔[0m[90m resume search restores last query[0m
+    [32m  ✔[0m[90m horizontal split opens document in new column[0m
+    [32m  ✔[0m[90m rgMenuActions shows action menu before search[0m
+    [32m  ✔[0m[90m switches to native search with gotoNativeSearchSuffix[0m
+    [32m  ✔[0m[90m handles multi-root workspace folders[0m
+[0m  File Search Integration Tests[0m
+[0m    Search Mode Management[0m
+    [32m  ✔[0m[90m should default to "all" search mode[0m
+    [32m  ✔[0m[90m should switch to files mode when setSearchMode is called[0m
+    [32m  ✔[0m[90m should switch to currentFile mode when setSearchMode is called[0m
+    [32m  ✔[0m[90m should reset to "all" mode on context reset[0m
+[0m    File Search Command Execution[0m
+    [32m  ✔[0m[90m should set correct search mode for periscope.searchFiles command[0m
+    [32m  ✔[0m[90m should detect --files flag in query and switch to file mode[0m
+    [32m  ✔[0m[90m should clean --files flag from query before search[0m
+[0m    File Search Patterns[0m
+    [32m  ✔[0m[90m should handle empty query for listing all files[0m
+    [32m  ✔[0m[90m should create correct glob pattern for file search[0m
+    [32m  ✔[0m[90m should handle query with file extension[0m
+    [32m  ✔[0m[90m should handle query with path segments[0m
+[0m    Search Mode Behavior[0m
+    [32m  ✔[0m[90m file search should use performFileSearch[0m
+    [32m  ✔[0m[90m content search should use performContentSearch[0m
+    [32m  ✔[0m[90m current file search should limit paths correctly[0m
+[0m    Edge Cases[0m
+    [32m  ✔[0m[90m should handle switching between modes[0m
+    [32m  ✔[0m[90m should handle query with special characters[0m
+    [32m  ✔[0m[90m should maintain search mode across multiple searches[0m
+    [32m  ✔[0m[90m should handle undefined previous active editor in current file mode[0m
+[0m    QuickPick Title Management[0m
+    [32m  ✔[0m[90m should set correct title for file search[0m
+    [32m  ✔[0m[90m should set correct title for current file search[0m
+    [32m  ✔[0m[90m should clear title for all files search[0m
+    [32m  ✔[0m[90m should update title when --files flag is detected[0m
+[0m  File Search[0m
+[0m    QuickPick Item Creation[0m
+    [32m  ✔[0m[90m createFileItem creates correct structure[0m
+    [32m  ✔[0m[90m createFileItem formats label correctly[0m
+[0m    Search Mode Management[0m
+    [32m  ✔[0m[90m defaults to "all" search mode[0m
+    [32m  ✔[0m[90m switches to file search mode correctly[0m
+    [32m  ✔[0m[90m switches to current file mode correctly[0m
+    [32m  ✔[0m[90m handles mode switching properly[0m
+    [32m  ✔[0m[90m resets to "all" mode on context reset[0m
+[0m    File Search Behavior[0m
+    [32m  ✔[0m[90m detects --files flag in query[0m
+    [32m  ✔[0m[90m creates correct glob patterns[0m
+    [32m  ✔[0m[90m determines correct search type based on mode[0m
+[0m    Type Structure[0m
+    [32m  ✔[0m[90m QPItemFile has correct structure[0m
+    [32m  ✔[0m[90m SearchMode type covers all modes[0m
+[0m  formatPathLabel Tests[0m
+[0m    Workspace Folder Handling[0m
+    [32m  ✔[0m[90m handles single workspace folder[0m
+    [32m  ✔[0m[90m handles no workspace folder[0m
+    [32m  ✔[0m[90m handles workspace folder name toggle[0m
+    [32m  ✔[0m[90m handles file outside workspace folder[0m
+    [32m  ✔[0m[90m handles multiple workspace folders[0m
+    [32m  ✔[0m[90m handles cross-platform path separators[0m
+[0m    Path Abbreviation[0m
+    [32m  ✔[0m[90m abbreviates long paths according to config depths[0m
+    [32m  ✔[0m[90m does not abbreviate paths within depth limits[0m
+    [32m  ✔[0m[90m handles custom start folder display depth[0m
+    [32m  ✔[0m[90m handles custom end folder display depth[0m
+    [32m  ✔[0m[90m handles custom start folder display index[0m
+[0m    Edge Cases[0m
+    [32m  ✔[0m[90m handles root path[0m
+    [32m  ✔[0m[90m handles path with no file name[0m
+    [32m  ✔[0m[90m handles path with special characters[0m
+[0m    Config Edge Cases[0m
+    [32m  ✔[0m[90m handles zero display depths[0m
+    [32m  ✔[0m[90m handles display depths larger than path length[0m
+    [32m  ✔[0m[90m handles negative display depths[0m
+    [32m  ✔[0m[90m handles negative display index[0m
+[0m    Path Separator Edge Cases[0m
+    [32m  ✔[0m[90m handles cross-platform path separators[0m
+    [32m  ✔[0m[90m handles consecutive path separators[0m
+[0m    Complex Path Cases[0m
+    [32m  ✔[0m[90m handles deeply nested paths with parent traversal[0m
+    [32m  ✔[0m[90m handles paths with unicode characters[0m
+[0m  Periscope Core[0m
+  [32m  ✔[0m[90m should register commands on activation[0m
+  [32m  ✔[0m[90m should perform search operation[0m
+  [32m  ✔[0m[90m should handle horizontal split operation[0m
+[0m  QuickPick Interface[0m
+  [32m  ✔[0m[90m shows search results in quickpick[0m
+  [32m  ✔[0m[90m allows item selection[0m
+  [32m  ✔[0m[90m supports preview on hover[0m
+  [32m  ✔[0m[90m handles keyboard navigation[0m
+  [32m  ✔[0m[90m supports horizontal split button[0m
+  [32m  ✔[0m[90m clears on escape[0m
+  [32m  ✔[0m[90m shows busy state during search[0m
+  [32m  ✔[0m[90m updates value on user input[0m
+  [32m  ✔[0m[90m shows previous results when no matches found[0m
+  [32m  ✔[0m[90m displays peek decorations on active item[0m
+  [32m  ✔[0m[90m formats file paths based on configuration[0m
+  [32m  ✔[0m[90m supports gotoRgMenuActionsPrefix to trigger menu[0m
+[0m  QuickPick Actions[0m
+[0m    getRgQueryParamsTitle[0m
+    [32m  ✔[0m[90m should return undefined when no extra flags are provided[0m
+    [32m  ✔[0m[90m should format title with single flag[0m
+    [32m  ✔[0m[90m should format title with multiple flags[0m
+    [32m  ✔[0m[90m should handle empty query with flags[0m
+    [32m  ✔[0m[90m should handle query with special characters[0m
+[0m  Ripgrep File Search Tests[0m
+[0m    File Search Command Construction[0m
+    [32m  ✔[0m[90m should construct correct command for file search without query[0m
+    [32m  ✔[0m[90m should construct correct command for file search with query[0m
+    [32m  ✔[0m[90m should exclude JSON flag for file search[0m
+    [36m  - should apply glob excludes[0m
+[0m    File Search Result Processing[0m
+    [32m  ✔[0m[90m should process file paths correctly[0m[33m (55ms)[0m
+    [32m  ✔[0m[90m should handle empty results[0m[33m (54ms)[0m
+    [32m  ✔[0m[90m should trim whitespace from file paths[0m[33m (55ms)[0m
+    [32m  ✔[0m[90m should filter empty lines[0m[33m (54ms)[0m
+[0m    Error Handling[0m
+    [32m  ✔[0m[90m should handle ripgrep not found error[0m[33m (55ms)[0m
+    [32m  ✔[0m[90m should handle search error[0m[33m (54ms)[0m
+    [32m  ✔[0m[90m should handle process termination[0m
+[0m    Search Mode Integration[0m
+    [32m  ✔[0m[90m should use file search for files mode[0m
+    [32m  ✔[0m[90m should use content search for all mode[0m
+    [32m  ✔[0m[90m should use content search for currentFile mode[0m
+[0m    File Pattern Matching[0m
+    [32m  ✔[0m[90m should match files with extension pattern[0m
+    [32m  ✔[0m[90m should match files with directory pattern[0m
+    [32m  ✔[0m[90m should match files with partial name[0m
+    [32m  ✔[0m[90m should handle complex patterns[0m
+[0m    QuickPick Item Creation[0m
+    [32m  ✔[0m[90m file items should have correct structure[0m[33m (53ms)[0m
+    [32m  ✔[0m[90m file items should have formatted labels[0m[33m (51ms)[0m
+[0m  checkAndExtractRgFlagsFromQuery[0m
+  [32m  ✔[0m[90m should handle simple type flag[0m
+  [32m  ✔[0m[90m should handle long form type flag[0m
+  [32m  ✔[0m[90m should handle glob pattern with quotes[0m
+  [32m  ✔[0m[90m should return original query when no flags match[0m
+  [32m  ✔[0m[90m should handle query with spaces[0m
+[0m  checkKillProcess[0m
+  [32m  ✔[0m[90m should do nothing if spawnRegistry is empty[0m
+  [32m  ✔[0m[90m should kill a single active process and clear registry[0m
+  [32m  ✔[0m[90m should kill multiple active processes and clear registry[0m
+  [32m  ✔[0m[90m should not attempt to kill an already killed process and clear registry[0m
+  [32m  ✔[0m[90m should handle a mix of active and killed processes and clear registry[0m
+[0m  RipgrepPath Resolution[0m
+  [32m  ✔[0m[90m uses user-specified path when valid[0m
+  [32m  ✔[0m[90m falls back to system PATH when user-specified path is invalid[0m
+  [32m  ✔[0m[90m uses @vscode/ripgrep when no other options available[0m
+  [32m  ✔[0m[90m handles Windows platform correctly[0m
+  [32m  ✔[0m[90m handles empty or whitespace user path[0m
+  [32m  ✔[0m[90m notifies error when ripgrep is not found anywhere[0m
+[0m  Search Functionality with Fixtures[0m
+[0m    Text Search in Fixture Workspace[0m
+Starting TODO search test
+Workspace root: /Users/joshmu/Desktop/code/projects/vscode-extensions/periscope/out/test/fixtures/workspace
+Workspace folders: [
+  '/Users/joshmu/Desktop/code/projects/vscode-extensions/periscope/out/test/fixtures/workspace'
+]
+QuickPick active: true
+Set query to: TODO
+    [31m  1) finds TODO comments using periscope.search[0m
+    [36m  - finds getUserById function[0m
+    [36m  - searches with regex patterns[0m
+[0m    File Search in Fixture Workspace[0m
+    [36m  - lists files matching pattern using --files flag[0m
+    [36m  - finds test files using periscope.searchFiles[0m
+[0m    Search Modes[0m
+    [36m  - searches only current file in currentFile mode[0m
+    [32m  ✔[0m[90m correctly sets search mode for each command[0m
+[0m    Search Results Verification[0m
+Found items count: 4
+First few items: [
+  {
+    type: 'QuickPickItemQuery',
+    label: "const user = (0, helpers_1.getUserById)('123');",
+    filePath: '/Users/joshmu/Desktop/code/projects/vscode-extensions/periscope/out/test/fixtures/workspace/tests/unit.test.js'
+  },
+  {
+    type: 'QuickPickItemQuery',
+    label: 'exports.getUserById = getUserById;',
+    filePath: '/Users/joshmu/Desktop/code/projects/vscode-extensions/periscope/out/test/fixtures/workspace/src/utils/helpers.js'
+  },
+  {
+    type: 'QuickPickItemQuery',
+    label: 'function getUserById(id) {',
+    filePath: '/Users/joshmu/Desktop/code/projects/vscode-extensions/periscope/out/test/fixtures/workspace/src/utils/helpers.js'
+  }
+]
+Found in files: [ 'unit.test.js', 'helpers.js', 'helpers.js', 'index.js' ]
+    [32m  ✔[0m[90m excludes node_modules from results[0m[31m (604ms)[0m
+    [32m  ✔[0m[90m creates correct QuickPick item types[0m[31m (1215ms)[0m
+[92m [0m[32m 137 passing[0m[90m (4s)[0m
+[36m [0m[36m 6 pending[0m
+[31m  1 failing[0m
+[0m  1) Search Functionality with Fixtures
+       Text Search in Fixture Workspace
+         finds TODO comments using periscope.search:
+[0m[31m     Error: Timeout of 2000ms exceeded. For async tests and hooks, ensure "done()" is called; if returning a Promise, ensure it resolves. (/Users/joshmu/Desktop/code/projects/vscode-extensions/periscope/out/test/suite/search.test.js)[0m[90m
+  	at listOnTimeout (node:internal/timers:588:17)
+  	at process.processTimers (node:internal/timers:523:7)
+[0m
+[90m[main 2025-08-09T06:45:35.705Z][0m Extension host with pid 93781 exited with code: 0, signal: unknown.
+Exit code:   1

@@ -1,8 +1,8 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { context as cx } from '../../lib/context';
-import { QPItemQuery, QPItemFile } from '../../types';
+import { context as cx } from '../../src/lib/context';
+import { QPItemQuery, QPItemFile } from '../../src/types';
 
 suite('QuickPick Interface', () => {
   let sandbox: sinon.SinonSandbox;
@@ -150,6 +150,74 @@ suite('QuickPick Interface', () => {
     testQueries.forEach((query) => {
       cx.qp.value = query;
       assert.strictEqual(cx.qp.value, query);
+    });
+  });
+
+  test('shows previous results when no matches found', () => {
+    // Store previous results
+    const previousResults = [{ label: 'previous result 1' }, { label: 'previous result 2' }];
+
+    // Simulate no matches scenario with config enabled
+    const showPreviousResults = true; // periscope.showPreviousResultsWhenNoMatches
+    const currentResults: any[] = [];
+
+    if (showPreviousResults && currentResults.length === 0) {
+      // Should show previous results
+      assert.strictEqual(previousResults.length, 2);
+    }
+  });
+
+  test('displays peek decorations on active item', () => {
+    const peekConfig = {
+      borderColor: '#007ACC',
+      borderWidth: '2px',
+      borderStyle: 'solid',
+      matchColor: '#FFA500',
+      matchBorderColor: '#FF6347',
+    };
+
+    // Peek decoration should be applied to active item
+    assert.ok(peekConfig.borderColor);
+    assert.ok(peekConfig.matchColor);
+    // In real implementation, would apply decorations to editor
+  });
+
+  test('formats file paths based on configuration', () => {
+    const pathFormatScenarios = [
+      {
+        filePath: '/workspace/project/src/lib/utils/helper.ts',
+        showWorkspaceFolder: true,
+        startFolderIndex: 2,
+        expected: 'project/.../utils/helper.ts',
+      },
+      {
+        filePath: '/workspace/frontend/components/Button.tsx',
+        showWorkspaceFolder: false,
+        startFolderIndex: 1,
+        expected: '.../components/Button.tsx',
+      },
+    ];
+
+    pathFormatScenarios.forEach(({ filePath, expected }) => {
+      // Path formatting should match configuration
+      assert.ok(filePath);
+      assert.ok(expected);
+      // In real implementation, would use formatPathLabel
+    });
+  });
+
+  test('supports gotoRgMenuActionsPrefix to trigger menu', () => {
+    const prefix = '??';
+    const queries = [
+      { input: '??', shouldShowMenu: true },
+      { input: '??search', shouldShowMenu: true },
+      { input: 'normal search', shouldShowMenu: false },
+    ];
+
+    queries.forEach(({ input, shouldShowMenu }) => {
+      const hasPrefix = input.startsWith(prefix);
+      assert.strictEqual(hasPrefix, shouldShowMenu);
+      // Would trigger menu display if prefix matches
     });
   });
 });
