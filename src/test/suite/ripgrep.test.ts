@@ -1,7 +1,8 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
+import * as vscode from 'vscode';
 import { context as cx } from '../../lib/context';
-import { checkAndExtractRgFlagsFromQuery, checkKillProcess } from '../../lib/ripgrep';
+import { checkAndExtractRgFlagsFromQuery, checkKillProcess, rgSearch } from '../../lib/ripgrep';
 
 // Add dedicated test suite for checkAndExtractRgFlagsFromQuery
 suite('checkAndExtractRgFlagsFromQuery', () => {
@@ -159,5 +160,65 @@ suite('checkKillProcess', () => {
     sinon.assert.notCalled(killedProc.stderr.destroy);
 
     assert.deepStrictEqual(cx.spawnRegistry, []);
+  });
+});
+
+suite('rgSearch - Path with Spaces Bug', () => {
+  let sandbox: sinon.SinonSandbox;
+  let spawnStub: sinon.SinonStub;
+
+  setup(() => {
+    sandbox = sinon.createSandbox();
+
+    // Minimal mock spawn that just captures the command
+    spawnStub = sandbox.stub(require('child_process'), 'spawn').returns({
+      stdout: { on: sandbox.stub() },
+      stderr: { on: sandbox.stub() },
+      on: sandbox.stub(),
+      killed: false,
+    } as any);
+
+    // Minimal required context
+    cx.spawnRegistry = [];
+    cx.qp = { busy: false } as any;
+
+    // Minimal config mock
+    sandbox.stub(require('../../utils/getConfig'), 'getConfig').returns({
+      rgPath: 'rg',
+      rgOptions: [],
+      rgGlobExcludes: [],
+      addSrcPaths: [],
+    });
+  });
+
+  teardown(() => {
+    sandbox.restore();
+  });
+
+  test('workspace path with spaces should be properly quoted', () => {
+    const pathWithSpaces = '/Users/test/My Projects/workspace';
+    sandbox.stub(vscode.workspace, 'workspaceFolders').value([{ uri: { fsPath: pathWithSpaces } }]);
+
+    rgSearch('test');
+
+    const command = spawnStub.firstCall.args[0];
+    assert(command.includes(`"${pathWithSpaces}"`), `Path not quoted in: ${command}`);
+  });
+
+  test('current file path with spaces should be properly quoted', () => {
+    const filePathWithSpaces = '/Users/test/My Documents/current file.ts';
+
+    // Mock getCurrentFilePath to return a path with spaces
+    sandbox
+      .stub(require('../../utils/searchCurrentFile'), 'getCurrentFilePath')
+      .returns(filePathWithSpaces);
+
+    // Set to search current file only
+    cx.currentFileOnly = true;
+
+    rgSearch('test');
+
+    const command = spawnStub.firstCall.args[0];
+    assert(command.includes(`"${filePathWithSpaces}"`), `File path not quoted in: ${command}`);
   });
 });

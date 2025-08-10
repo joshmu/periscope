@@ -34,7 +34,7 @@ function getRgCommand(value: string, extraFlags?: string[]) {
     ...rgRequiredFlags,
     ...config.rgOptions,
     ...cx.rgMenuActionsSelected,
-    ...paths,
+    ...paths.filter((path) => typeof path === 'string').map(ensureQuotedPath),
     ...config.addSrcPaths.map(ensureQuotedPath),
     ...(extraFlags || []),
     ...excludes,
