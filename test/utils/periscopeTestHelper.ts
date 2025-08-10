@@ -106,7 +106,7 @@ export async function openFileAtPosition(
  * Wait for preview editor to update
  */
 export async function waitForPreviewUpdate(
-  previousEditor: vscode.TextEditor | undefined,
+  previousEditor?: vscode.TextEditor | undefined,
   maxWait = 1000,
 ): Promise<vscode.TextEditor | undefined> {
   await waitForCondition(() => {
@@ -121,6 +121,9 @@ export async function waitForPreviewUpdate(
       currentEditor.selection.active.line !== previousEditor.selection.active.line
     );
   }, maxWait);
+
+  // Add small delay for cursor positioning to complete
+  await new Promise((resolve) => setTimeout(resolve, 200));
 
   return vscode.window.activeTextEditor;
 }
@@ -306,7 +309,8 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
     if (debug) {
       console.log(`[PeriscopeTest] Applying menu action: ${menuAction.label}`);
     }
-    // In real implementation, this would modify the ripgrep command
+    // Apply the menu action to the context
+    cx.rgMenuActionsSelected = [menuAction.value];
   }
 
   // Set the search query if provided
