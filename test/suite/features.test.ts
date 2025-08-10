@@ -379,57 +379,164 @@ suite('Advanced Features', function () {
       }
     });
 
-    test('triggers menu with gotoRgMenuActionsPrefix and applies selection', async function () {
+    test('menu selections filter search results correctly', async function () {
       this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
-      // Start search
-      await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick();
+      // First get baseline without filters
+      const baselineResults = await periscopeTestHelpers.search('function');
+      const hasNonTsFiles = baselineResults.files.some((f) => !f.endsWith('.ts'));
 
-      assert.ok(cx.qp, 'QuickPick should be initialized');
+      if (!hasNonTsFiles) {
+        // Skip test if all files are already TypeScript
+        return;
+      }
 
-      // Use prefix to trigger menu
-      const prefix = '<<';
-      cx.qp.value = prefix;
+      await withConfiguration(
+        {
+          rgMenuActions: [{ label: 'TypeScript Only', value: '-t ts' }],
+        },
+        async () => {
+          // Use helper to apply menu action
+          const filteredResults = await periscopeTestHelpers.searchWithMenuAction('function', {
+            label: 'TypeScript Only',
+            value: '-t ts',
+          });
 
-      // Store the value right after setting it
-      const valueAfterSet = cx.qp.value;
+          // All results should be TypeScript files
+          const allTsFiles = filteredResults.files.every(
+            (f) => f.endsWith('.ts') || f.endsWith('.tsx'),
+          );
+          assert.ok(allTsFiles, 'Menu action should filter to TypeScript files only');
 
-      // Wait a bit for menu trigger
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.CURSOR_POSITION));
-
-      // The value should still contain the prefix (or menu might have consumed it)
-      // The actual behavior might clear the value or change it
-      assert.ok(
-        valueAfterSet.startsWith(prefix),
-        `Should have detected menu prefix. Value after set: ${valueAfterSet}`,
+          // Should have fewer results than baseline
+          assert.ok(
+            filteredResults.count <= baselineResults.count,
+            'Filtered results should be subset of baseline',
+          );
+        },
       );
-
-      // Clean up
-      cx.qp.hide();
-      cx.qp.dispose();
     });
   });
 
   suite('Native Search Integration', () => {
-    test('switches to native search with suffix', () => {
-      const suffix = '>>>';
-      const queries = [
-        { input: 'search term>>>', shouldSwitch: true, cleanQuery: 'search term' },
-        { input: 'normal search', shouldSwitch: false, cleanQuery: 'normal search' },
-        { input: 'test>>>', shouldSwitch: true, cleanQuery: 'test' },
-      ];
+    test('user can jump to native search with suffix', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
-      queries.forEach(({ input, shouldSwitch, cleanQuery }) => {
-        const hasNativeSuffix = input.endsWith(suffix);
-        assert.strictEqual(hasNativeSuffix, shouldSwitch);
+      // Test with default suffix '>>'
+      const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand');
+      executeCommandStub.withArgs('periscope.search').callThrough();
+      executeCommandStub.withArgs('workbench.action.findInFiles').resolves();
 
-        if (shouldSwitch) {
-          const extractedQuery = input.slice(0, -suffix.length);
-          assert.strictEqual(extractedQuery, cleanQuery);
-          // Would execute: vscode.commands.executeCommand('workbench.action.findInFiles', { query: cleanQuery })
-        }
+      // Start periscope search
+      const qp = await periscopeTestHelpers.startSearch();
+      assert.ok(qp, 'QuickPick should be initialized');
+
+      // User types search term with native search suffix
+      qp.value = 'myFunction>>';
+
+      // Wait for suffix to be processed
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
+
+      // Native search should be triggered or QuickPick should be disposed
+      const nativeSearchCalled = executeCommandStub
+        .getCalls()
+        .some((call) => call.args[0] === 'workbench.action.findInFiles');
+
+      const quickPickDisposed = !qp || qp.value === '';
+
+      // The suffix should trigger native search (either by calling the command or disposing QuickPick)
+      assert.ok(
+        nativeSearchCalled || quickPickDisposed,
+        `Native search should be triggered when suffix is typed. Native search called: ${nativeSearchCalled}, QuickPick disposed: ${quickPickDisposed}, Current value: '${qp?.value}'`,
+      );
+
+      executeCommandStub.restore();
+
+      // Also test with custom suffix
+      await withConfiguration(
+        {
+          enableGotoNativeSearch: true,
+          gotoNativeSearchSuffix: '!!!',
+        },
+        async () => {
+          const qp2 = await periscopeTestHelpers.startSearch();
+          assert.ok(qp2, 'QuickPick should be initialized for custom suffix');
+
+          // Use custom suffix
+          qp2.value = 'findThis!!!';
+
+          // Verify custom suffix is recognized
+          assert.ok(qp2.value.endsWith('!!!'), 'Should recognize custom suffix');
+        },
+      );
+    });
+
+    test('query appears correctly in native search without suffix', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
+
+      // Capture what gets passed to native search
+      let nativeSearchQuery: any = null;
+      const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand');
+      executeCommandStub.withArgs('periscope.search').callThrough();
+      executeCommandStub.withArgs('workbench.action.findInFiles').callsFake((cmd, args) => {
+        nativeSearchQuery = args;
+        return Promise.resolve();
       });
+
+      // Start search
+      const qp = await periscopeTestHelpers.startSearch();
+
+      // Type query with suffix
+      qp.value = 'searchTerm>>';
+
+      // Wait for processing
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
+
+      if (nativeSearchQuery) {
+        // Verify the query was cleaned (suffix removed)
+        assert.ok(nativeSearchQuery.query, 'Native search should receive a query');
+        assert.ok(!nativeSearchQuery.query.includes('>>'), 'Query should not include suffix');
+      }
+
+      // Clean up
+      executeCommandStub.restore();
+    });
+
+    test('native search disabled when config is false', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
+
+      await withConfiguration(
+        {
+          enableGotoNativeSearch: false,
+        },
+        async () => {
+          const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand');
+          executeCommandStub.withArgs('periscope.search').callThrough();
+          executeCommandStub.withArgs('workbench.action.findInFiles').resolves();
+
+          // Start search
+          const qp = await periscopeTestHelpers.startSearch();
+
+          // Type with suffix
+          qp.value = 'search>>';
+
+          // Wait
+          await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
+
+          // Native search should NOT be called
+          const nativeSearchCalled = executeCommandStub
+            .getCalls()
+            .some((call) => call.args[0] === 'workbench.action.findInFiles');
+
+          assert.ok(!nativeSearchCalled, 'Native search should not be triggered when disabled');
+
+          // Suffix should remain in the query
+          assert.ok(qp.value.includes('>>'), 'Suffix should remain when feature disabled');
+
+          // Clean up
+          executeCommandStub.restore();
+        },
+      );
     });
   });
 

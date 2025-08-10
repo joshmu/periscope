@@ -483,18 +483,26 @@ suite('QuickPick Interface', () => {
     assert.strictEqual(cx.qp.selectedItems[0], selectedItem, 'Should select the correct item');
   });
 
-  test('supports gotoRgMenuActionsPrefix to trigger menu', () => {
-    const prefix = '??';
-    const queries = [
-      { input: '??', shouldShowMenu: true },
-      { input: '??search', shouldShowMenu: true },
-      { input: 'normal search', shouldShowMenu: false },
-    ];
+  test('triggers RG menu when user types prefix', async function () {
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
-    queries.forEach(({ input, shouldShowMenu }) => {
-      const hasPrefix = input.startsWith(prefix);
-      assert.strictEqual(hasPrefix, shouldShowMenu);
-      // Would trigger menu display if prefix matches
-    });
+    // Use helper to trigger menu with prefix
+    const qp = await periscopeTestHelpers.triggerRgMenu('<<');
+
+    assert.ok(qp, 'QuickPick should be initialized');
+
+    // Menu should be triggered - verify by checking multiple indicators
+    const menuTriggered = qp.canSelectMany === true; // Menu enables multi-select
+    const prefixConsumed = qp.value === '' || qp.value !== '<<';
+
+    // Either menu should be shown OR prefix should be consumed
+    assert.ok(
+      menuTriggered || prefixConsumed,
+      `RG menu should trigger when prefix is typed. Menu triggered: ${menuTriggered}, Prefix consumed: ${prefixConsumed}, Current value: '${qp.value}'`,
+    );
+
+    // Clean up
+    qp.hide();
+    qp.dispose();
   });
 });

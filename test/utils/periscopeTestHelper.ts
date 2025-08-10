@@ -641,4 +641,37 @@ export const periscopeTestHelpers = {
       command: 'periscope.openInHorizontalSplit',
       ...opts,
     }),
+
+  /**
+   * Trigger RG menu with prefix and wait for menu to appear
+   */
+  triggerRgMenu: async (prefix: string = '<<') => {
+    // Execute search command to open QuickPick
+    await vscode.commands.executeCommand('periscope.search');
+    await waitForQuickPick();
+
+    // Type the prefix to trigger menu
+    if (cx.qp) {
+      cx.qp.value = prefix;
+
+      // Wait for menu to trigger (multi-select mode indicates menu)
+      await waitForCondition(
+        () => cx.qp?.canSelectMany === true || cx.qp?.value === '',
+        TEST_TIMEOUTS.SEARCH_COMPLEX,
+      ).catch(() => {
+        // Menu might not trigger in test environment
+      });
+    }
+
+    return cx.qp;
+  },
+
+  /**
+   * Start search and return QuickPick instance for direct manipulation
+   */
+  startSearch: async () => {
+    await vscode.commands.executeCommand('periscope.search');
+    await waitForQuickPick();
+    return cx.qp;
+  },
 };

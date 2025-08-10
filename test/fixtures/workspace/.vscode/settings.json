@@ -4,5 +4,9 @@
     "periscope.showPreviousResultsWhenNoMatches": false,
     "periscope.peekBorderColor": "#0000FF",
     "periscope.peekMatchColor": "#FFFF00",
-    "periscope.rgQueryParams": []
+    "periscope.rgQueryParams": [],
+    "periscope.rgMenuActions": [],
+    "periscope.alwaysShowRgMenuActions": false,
+    "periscope.enableGotoNativeSearch": true,
+    "periscope.gotoNativeSearchSuffix": ">>"
 }
