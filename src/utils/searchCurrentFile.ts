@@ -1,19 +1,40 @@
 import { context as cx } from '../lib/context';
 import { SearchMode } from '../types';
 
+/**
+ * Centralized function to set search mode and update UI accordingly
+ */
 export function setSearchMode(mode: SearchMode) {
   cx.searchMode = mode;
+  updateSearchModeUI(mode);
+}
 
+/**
+ * Update UI elements based on search mode
+ */
+function updateSearchModeUI(mode: SearchMode) {
   switch (mode) {
     case 'currentFile':
       cx.qp.title = 'Search current file only';
+      cx.qp.placeholder = '🫧 Search in current file...';
       break;
     case 'files':
       cx.qp.title = 'File Search';
+      cx.qp.placeholder = '🫧 Search for files...';
       break;
+    case 'all':
     default:
       cx.qp.title = undefined;
+      cx.qp.placeholder = '🫧';
+      break;
   }
+}
+
+/**
+ * Reset search mode to default
+ */
+export function resetSearchMode() {
+  setSearchMode('all');
 }
 
 export function getCurrentFilePath() {

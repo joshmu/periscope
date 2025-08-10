@@ -10,39 +10,56 @@ import { createResultItem, createFileItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
 import { getCurrentFilePath } from '../utils/searchCurrentFile';
 
-function getRgCommand(value: string, extraFlags?: string[]) {
+function getRgCommand(value: string, extraFlags?: string[], isFileSearch = false) {
   const config = getConfig();
   const { workspaceFolders } = vscode.workspace;
-
   const { rgPath } = config;
-
-  const rgRequiredFlags = [
-    '--line-number',
-    '--column',
-    '--no-heading',
-    '--with-filename',
-    '--color=never',
-    '--json',
-  ];
 
   const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
   const paths = cx.searchMode === 'currentFile' ? [getCurrentFilePath()] : rootPaths;
-
   const excludes = config.rgGlobExcludes.map((exclude) => `--glob "!${exclude}"`);
 
-  const rgFlags = [
-    ...rgRequiredFlags,
-    ...config.rgOptions,
-    ...cx.rgMenuActionsSelected,
-    ...paths.filter((path) => typeof path === 'string').map(ensureQuotedPath),
-    ...config.addSrcPaths.map(ensureQuotedPath),
-    ...(extraFlags || []),
-    ...excludes,
-  ];
+  let rgFlags: string[];
+  let searchPattern = '';
 
-  const normalizedQuery = handleSearchTermWithAdditionalRgParams(value);
+  if (isFileSearch) {
+    // File search mode - use --files flag and glob pattern
+    const fileGlob = value ? `--glob "*${value}*"` : '';
 
-  return `"${rgPath}" ${normalizedQuery} ${rgFlags.join(' ')}`;
+    rgFlags = [
+      '--files',
+      fileGlob,
+      ...config.rgOptions.filter((opt) => !opt.includes('--json')), // remove json flag if present
+      ...cx.rgMenuActionsSelected,
+      ...paths.filter((path): path is string => typeof path === 'string').map(ensureQuotedPath),
+      ...config.addSrcPaths.map(ensureQuotedPath),
+      ...excludes,
+    ].filter(Boolean); // Remove empty strings
+  } else {
+    // Content search mode - use standard flags with search pattern
+    const rgRequiredFlags = [
+      '--line-number',
+      '--column',
+      '--no-heading',
+      '--with-filename',
+      '--color=never',
+      '--json',
+    ];
+
+    rgFlags = [
+      ...rgRequiredFlags,
+      ...config.rgOptions,
+      ...cx.rgMenuActionsSelected,
+      ...paths.filter((path): path is string => typeof path === 'string').map(ensureQuotedPath),
+      ...config.addSrcPaths.map(ensureQuotedPath),
+      ...(extraFlags || []),
+      ...excludes,
+    ];
+
+    searchPattern = handleSearchTermWithAdditionalRgParams(value);
+  }
+
+  return `"${rgPath}" ${searchPattern} ${rgFlags.join(' ')}`.trim();
 }
 
 /**
@@ -58,93 +75,22 @@ function handleSearchTermWithAdditionalRgParams(query: string): string {
 }
 
 export function rgSearch(value: string, rgExtraFlags?: string[]) {
+  performSearch(value, rgExtraFlags);
+}
+
+function performSearch(value: string, rgExtraFlags?: string[]) {
+  updateAppState('SEARCHING');
+  cx.qp.busy = true;
+
   const isFileSearch = cx.searchMode === 'files';
+  const rgCmd = getRgCommand(value, rgExtraFlags, isFileSearch);
 
-  if (isFileSearch) {
-    performFileSearch(value);
-  } else {
-    performContentSearch(value, rgExtraFlags);
-  }
-}
-
-function performContentSearch(value: string, rgExtraFlags?: string[]) {
-  updateAppState('SEARCHING');
-  cx.qp.busy = true;
-  const rgCmd = getRgCommand(value, rgExtraFlags);
-  log('rgCmd:', rgCmd);
+  log(isFileSearch ? 'rgCmd (files):' : 'rgCmd:', rgCmd);
   cx.lastRgCommand = rgCmd;
   checkKillProcess();
+
+  // Storage for results based on search type
   const searchResults: RgMatchResult[] = [];
-
-  const spawnProcess = spawn(rgCmd, [], { shell: true });
-  cx.spawnRegistry.push(spawnProcess);
-
-  spawnProcess.stdout.on('data', (data: Buffer) => {
-    const lines = data.toString().split('\n').filter(Boolean);
-
-    lines.forEach((line) => {
-      const parsedLine = tryJsonParse<RgMatchResult['rawResult']>(line);
-
-      if (parsedLine?.type === 'match') {
-        searchResults.push(normaliseRgResult(parsedLine));
-      }
-    });
-  });
-
-  spawnProcess.stderr.on('data', (data: Buffer) => {
-    handleRipgrepError(data);
-  });
-
-  spawnProcess.on('exit', (code: number) => {
-    handleRipgrepExit(code, () => {
-      if (searchResults.length) {
-        cx.qp.items = searchResults
-          .map((searchResult) => {
-            const { filePath, linePos, colPos, textResult } = searchResult;
-
-            // if all data is not available then remove the item
-            if (!filePath || !linePos || !colPos || !textResult) {
-              return false;
-            }
-
-            return createResultItem(searchResult);
-          })
-          .filter(Boolean) as QPItemQuery[];
-      }
-    });
-  });
-}
-
-function performFileSearch(query: string) {
-  updateAppState('SEARCHING');
-  cx.qp.busy = true;
-
-  const config = getConfig();
-  const { workspaceFolders } = vscode.workspace;
-  const { rgPath } = config;
-
-  const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
-  const paths = cx.searchMode === 'currentFile' ? [getCurrentFilePath()] : rootPaths;
-  const excludes = config.rgGlobExcludes.map((exclude) => `--glob "!${exclude}"`);
-
-  // Build glob pattern for file filtering if query is provided
-  const fileGlob = query ? `--glob "*${query}*"` : '';
-
-  const rgFlags = [
-    '--files',
-    fileGlob,
-    ...config.rgOptions.filter((opt) => !opt.includes('--json')), // remove json flag if present
-    ...cx.rgMenuActionsSelected,
-    ...paths.filter((path) => typeof path === 'string').map(ensureQuotedPath),
-    ...config.addSrcPaths.map(ensureQuotedPath),
-    ...excludes,
-  ].filter(Boolean); // Remove empty strings
-
-  const rgCmd = `"${rgPath}" ${rgFlags.join(' ')}`;
-
-  log('rgCmd (files):', rgCmd);
-  cx.lastRgCommand = rgCmd;
-  checkKillProcess();
   const fileResults: string[] = [];
 
   const spawnProcess = spawn(rgCmd, [], { shell: true });
@@ -152,7 +98,19 @@ function performFileSearch(query: string) {
 
   spawnProcess.stdout.on('data', (data: Buffer) => {
     const lines = data.toString().split('\n').filter(Boolean);
-    fileResults.push(...lines);
+
+    if (isFileSearch) {
+      // File search - just collect file paths
+      fileResults.push(...lines);
+    } else {
+      // Content search - parse JSON results
+      lines.forEach((line) => {
+        const parsedLine = tryJsonParse<RgMatchResult['rawResult']>(line);
+        if (parsedLine?.type === 'match') {
+          searchResults.push(normaliseRgResult(parsedLine));
+        }
+      });
+    }
   });
 
   spawnProcess.stderr.on('data', (data: Buffer) => {
@@ -161,10 +119,10 @@ function performFileSearch(query: string) {
 
   spawnProcess.on('exit', (code: number) => {
     handleRipgrepExit(code, () => {
-      if (fileResults.length) {
-        cx.qp.items = fileResults.map((filePath) =>
-          createFileItem(filePath.trim()),
-        ) as QPItemFile[];
+      if (isFileSearch) {
+        processFileResults(fileResults);
+      } else {
+        processContentResults(searchResults);
       }
     });
   });
@@ -180,6 +138,31 @@ function handleRipgrepError(data: Buffer) {
 
   log.error(errorMsg);
   handleNoResultsFound();
+}
+
+// Process file search results and update QuickPick items
+function processFileResults(fileResults: string[]) {
+  if (fileResults.length) {
+    cx.qp.items = fileResults.map((filePath) => createFileItem(filePath.trim())) as QPItemFile[];
+  }
+}
+
+// Process content search results and update QuickPick items
+function processContentResults(searchResults: RgMatchResult[]) {
+  if (searchResults.length) {
+    cx.qp.items = searchResults
+      .map((searchResult) => {
+        const { filePath, linePos, colPos, textResult } = searchResult;
+
+        // if all data is not available then remove the item
+        if (!filePath || !linePos || !colPos || !textResult) {
+          return false;
+        }
+
+        return createResultItem(searchResult);
+      })
+      .filter(Boolean) as QPItemQuery[];
+  }
 }
 
 // Common exit handler for ripgrep processes

@@ -7,10 +7,11 @@ import { getSelectedText } from '../utils/getSelectedText';
 import { log } from '../utils/log';
 import { confirm, finished } from './globalActions';
 import { saveQuery } from './storage';
+import { setSearchMode, resetSearchMode } from '../utils/searchCurrentFile';
 
 // update quickpick event listeners for the query
 export function setupQuickPickForQuery(initialQuery: string = '') {
-  cx.qp.placeholder = '🫧';
+  // Placeholder is already set by setSearchMode, don't override it
   cx.qp.items = [];
   cx.qp.canSelectMany = false;
   cx.qp.value = initialQuery || getSelectedText();
@@ -30,6 +31,7 @@ export function reset() {
   cx.qp.value = '';
   cx.query = '';
   cx.rgMenuActionsSelected = [];
+  resetSearchMode();
 }
 
 // when input query 'CHANGES'
@@ -46,8 +48,7 @@ function onDidChangeValue(value: string) {
 
   // If --files flag is present and we're not already in file search mode, switch to it
   if (hasFilesFlag && cx.searchMode !== 'files') {
-    cx.searchMode = 'files';
-    cx.qp.title = 'File Search';
+    setSearchMode('files');
   }
 
   const cleanedQuery = hasFilesFlag ? value.replace('--files', '').trim() : value;
