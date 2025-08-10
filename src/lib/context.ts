@@ -41,6 +41,10 @@ export const context = {
    * Extension context for storage operations
    */
   extensionContext: undefined as vscode.ExtensionContext | undefined,
+  /**
+   * Last executed ripgrep command (for debugging)
+   */
+  lastRgCommand: undefined as string | undefined,
 };
 
 // reset the context

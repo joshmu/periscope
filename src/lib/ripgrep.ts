@@ -72,6 +72,7 @@ function performContentSearch(value: string, rgExtraFlags?: string[]) {
   cx.qp.busy = true;
   const rgCmd = getRgCommand(value, rgExtraFlags);
   log('rgCmd:', rgCmd);
+  cx.lastRgCommand = rgCmd;
   checkKillProcess();
   const searchResults: RgMatchResult[] = [];
 
@@ -142,6 +143,7 @@ function performFileSearch(query: string) {
   const rgCmd = `"${rgPath}" ${rgFlags.join(' ')}`;
 
   log('rgCmd (files):', rgCmd);
+  cx.lastRgCommand = rgCmd;
   checkKillProcess();
   const fileResults: string[] = [];
 

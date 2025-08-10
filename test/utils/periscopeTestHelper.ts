@@ -182,6 +182,7 @@ export interface TestOptions {
   menuAction?: { label: string; value: string };
   configuration?: { [key: string]: any };
   workspaceFolders?: vscode.WorkspaceFolder[];
+  keepOpen?: boolean;
 }
 
 export interface TestResults {
@@ -212,6 +213,7 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
     menuAction,
     configuration,
     workspaceFolders,
+    keepOpen = true,
   } = options;
 
   if (debug) {
@@ -315,6 +317,13 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
 
   // Set the search query if provided
   if (query) {
+    // Clear the value first to ensure onDidChangeValue fires
+    // This is important when running multiple searches with the same query
+    cx.qp.value = '';
+    // Small delay to ensure the clear is processed
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Now set the actual query
     cx.qp.value = query;
     if (debug) {
       console.log(`[PeriscopeTest] Set query to: ${query}`);
@@ -360,6 +369,16 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
       files: results.files.slice(0, 5),
       types: [...new Set(results.raw.types)],
     });
+  }
+
+  // Conditionally hide the QuickPick based on keepOpen parameter
+  // By default, keep it open for tests that need to interact with it
+  // Set keepOpen: false for tests that need clean state between searches
+  if (!keepOpen) {
+    cx.qp.hide();
+    if (debug) {
+      console.log('[PeriscopeTest] QuickPick hidden for clean state');
+    }
   }
 
   return results;
