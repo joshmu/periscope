@@ -127,6 +127,60 @@ suite('Ripgrep Integration', function () {
     });
   });
 
+  suite('Paths with Spaces', () => {
+    test('finds content in folders with spaces', async () => {
+      // Search for unique content in our space-path fixtures
+      const results = await periscopeTestHelpers.search('SPACES_IN_PATH_TEST');
+
+      assert.ok(results.count > 0, 'Should find content in folder with spaces');
+
+      // Verify we found the file (the path format might vary in tests)
+      const foundFile = results.files.some(
+        (file) => file.includes('another file.js') || file.includes('folder with spaces'),
+      );
+      assert.ok(foundFile, 'Should find "another file.js" in results');
+    });
+
+    test('finds content in files with spaces in name', async () => {
+      // Search for unique content in file with spaces
+      const results = await periscopeTestHelpers.search('testSpacesInPath');
+
+      assert.ok(results.count > 0, 'Should find content in file with spaces');
+
+      // Verify the file name contains spaces
+      const foundInFileWithSpaces = results.files.some((file) =>
+        file.includes('file with spaces.ts'),
+      );
+      assert.ok(foundInFileWithSpaces, 'Should find "file with spaces.ts"');
+    });
+
+    test('handles multiple files in space path folder', async () => {
+      // Search for content that appears in the space folder
+      const results = await periscopeTestHelpers.search('handleSpacePath');
+
+      assert.ok(results.count > 0, 'Should find function in space path');
+
+      // Check that we find the file (path format might vary in tests)
+      const foundFile = results.files.some((file) => file.includes('another file.js'));
+      assert.ok(foundFile, 'Should find "another file.js" in results');
+    });
+
+    test('searches current file with spaces in path', async () => {
+      // Search in current file with spaces in its path
+      const results = await periscopeTestHelpers.searchCurrentFile(
+        'SpacePathTest',
+        'folder with spaces/file with spaces.ts',
+      );
+
+      assert.ok(results.count > 0, 'Should find content when searching current file with spaces');
+      assert.strictEqual(results.files.length, 1, 'Should only search current file');
+      assert.ok(
+        results.files[0].includes('file with spaces.ts'),
+        'Should be searching the correct file',
+      );
+    });
+  });
+
   suite('Ripgrep Options', () => {
     test('applies max-count option', () => {
       const options = ['--max-count=1', '--max-count=5'];
