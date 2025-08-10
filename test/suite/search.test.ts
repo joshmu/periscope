@@ -1,6 +1,5 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import * as path from 'path';
 import * as sinon from 'sinon';
 import { context as cx } from '../../src/lib/context';
 import {

@@ -429,13 +429,13 @@ suite('QuickPick Interface', () => {
   test('cancels search on Escape key', async function () {
     this.timeout(5000);
 
-    // Start a search
-    const results = await periscopeTestHelpers.search('function');
+    // Start a search with a known starting file
+    const results = await periscopeTestHelpers.search('function', {
+      startFile: 'build/compiled.js',
+    });
 
     assert.ok(results.count > 0, 'Should have search results');
     assert.ok(cx.qp, 'QuickPick should be initialized');
-
-    const editorBefore = vscode.window.activeTextEditor;
 
     // Simulate Escape key by hiding the QuickPick
     cx.qp.hide();
@@ -443,21 +443,14 @@ suite('QuickPick Interface', () => {
     // QuickPick should be hidden
     await waitForCondition(() => !cx.qp, 300);
 
-    // Editor focus should return to previous state or at least be stable
+    // Editor focus should return to the starting file
     const editorAfter = vscode.window.activeTextEditor;
 
-    // In test environment, the editor might not return to exact same instance
-    // but should be viewing the same document if there was one before
-    if (editorBefore) {
-      assert.strictEqual(
-        editorAfter?.document.uri.toString(),
-        editorBefore.document.uri.toString(),
-        'Should return to viewing the same document',
-      );
-    } else {
-      // If there was no editor before, we just check that QuickPick is closed
-      assert.ok(!cx.qp, 'QuickPick should be closed');
-    }
+    assert.ok(editorAfter, 'Should have an active editor after canceling');
+    assert.ok(
+      editorAfter.document.uri.fsPath.includes('build/compiled.js'),
+      'Should return to the starting document after canceling',
+    );
   });
 
   test('accepts selection on Enter key', async function () {
