@@ -45,6 +45,10 @@ export const context = {
    * Last executed ripgrep command (for debugging)
    */
   lastRgCommand: undefined as string | undefined,
+  /**
+   * Injected ripgrep flags from command arguments
+   */
+  injectedRgFlags: [] as string[],
 };
 
 // reset the context
@@ -63,6 +67,7 @@ function resetContext() {
     query: [],
   };
   context.searchMode = 'all';
+  context.injectedRgFlags = [];
   // Keep 'extensionContext' across resets to preserve search history
 }
 

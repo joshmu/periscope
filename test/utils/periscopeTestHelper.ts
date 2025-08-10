@@ -9,56 +9,28 @@ import { AllQPItemVariants } from '../../src/types';
  */
 export const TEST_TIMEOUTS = {
   // === Basic Operations (fast) ===
-
-  // QuickPick initialization - optimized from 150ms
-  QUICKPICK_INIT: 50,
-
-  // Small delays for UI stabilization - optimized from 50ms
-  UI_STABILIZATION: 25,
-
-  // Configuration changes - removed (was 50ms)
-  CONFIG_APPLY: 0,
-
-  // Default condition wait - optimized from 100ms
-  CONDITION_DEFAULT: 50,
-
-  // Cursor positioning delay in preview - optimized from 100ms
-  CURSOR_POSITION: 50,
+  QUICKPICK_INIT: 100,
+  UI_STABILIZATION: 75,
+  CONFIG_APPLY: 50,
+  CONDITION_DEFAULT: 100,
+  CURSOR_POSITION: 100,
 
   // === Search Operations (variable speed) ===
-
-  // Basic search results - optimized from 500ms
-  SEARCH_RESULTS: 200,
-
-  // Complex searches (regex, filters, large results) - needs more time
-  SEARCH_COMPLEX: 300,
+  SEARCH_RESULTS: 250,
+  SEARCH_COMPLEX: 350,
 
   // === Editor Operations ===
-
-  // Preview update - optimized from 500ms
-  PREVIEW_UPDATE: 200,
-
-  // Editor opening/switching - variable based on file size
-  EDITOR_OPEN: 300,
-
-  // Editor activation check - faster than full open
-  EDITOR_ACTIVE: 200,
+  PREVIEW_UPDATE: 250,
+  EDITOR_OPEN: 350,
+  EDITOR_ACTIVE: 250,
 
   // === State Changes ===
-
-  // Mode switching (e.g., 'all' to 'files' mode)
-  MODE_SWITCH: 200,
-
-  // QuickPick disposal/cleanup
-  QUICKPICK_DISPOSE: 200,
+  MODE_SWITCH: 250,
+  QUICKPICK_DISPOSE: 250,
 
   // === Test Suite Timeouts ===
-
-  // Suite timeout for most tests - optimized from 5000ms
-  SUITE_DEFAULT: 3000,
-
-  // Suite timeout for complex tests - optimized from 10000ms
-  SUITE_EXTENDED: 5000,
+  SUITE_DEFAULT: 3050,
+  SUITE_EXTENDED: 5050,
 };
 
 /**

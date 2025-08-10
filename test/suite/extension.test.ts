@@ -129,26 +129,24 @@ suite('Periscope Extension', () => {
       }
     });
 
-    test('--files flag switches to file search mode', async () => {
+    test('injected --files flag sets file search mode', async () => {
       cx.resetContext();
 
-      // Execute search command
-      await vscode.commands.executeCommand('periscope.search');
+      // Execute search command with --files flag injected
+      await vscode.commands.executeCommand('periscope.search', { rgFlags: ['--files'] });
 
       // Wait for QuickPick to be ready
       await waitForQuickPick();
 
-      // Simulate user typing --files
+      // Assert that the mode is set correctly from the injected flag
+      assert.strictEqual(cx.searchMode, 'files');
+      assert.strictEqual(cx.qp.title, 'File Search');
+
+      // Verify we can search for files
       if (cx.qp) {
-        cx.qp.value = '--files package.json';
-
-        // The extension should detect the --files flag and switch modes
-        // Wait for the mode to switch
-        await waitForCondition(() => cx.searchMode === 'files', TEST_TIMEOUTS.MODE_SWITCH);
-
-        // Assert that the mode switched and title changed
-        assert.strictEqual(cx.searchMode, 'files');
-        assert.strictEqual(cx.qp.title, 'File Search');
+        cx.qp.value = 'package.json';
+        // Wait a moment for search to process
+        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
       } else {
         assert.fail('QuickPick not initialized');
       }

@@ -697,23 +697,22 @@ suite('Advanced Features', function () {
   });
 
   suite('File Search Mode', () => {
-    test('--files flag switches to file search mode', () => {
-      const queries = [
-        { input: '--files Button', shouldSwitchMode: true },
-        { input: 'Button', shouldSwitchMode: false },
-        { input: '--files', shouldSwitchMode: true },
-      ];
+    test('searchFiles command sets file search mode', async () => {
+      // Test that the searchFiles command properly sets up file search mode
+      await vscode.commands.executeCommand('periscope.searchFiles');
 
-      queries.forEach(({ input, shouldSwitchMode }) => {
-        const hasFilesFlag = input.startsWith('--files');
-        assert.strictEqual(hasFilesFlag, shouldSwitchMode);
+      // Wait for QuickPick to be ready
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
-        if (shouldSwitchMode) {
-          // Would switch to files mode
-          const searchTerm = input.replace('--files', '').trim();
-          assert.ok(searchTerm !== undefined);
-        }
-      });
+      // Verify file search mode is active
+      assert.strictEqual(cx.searchMode, 'files', 'Should be in file search mode');
+      assert.strictEqual(cx.qp.title, 'File Search', 'Title should indicate file search');
+
+      // Clean up
+      if (cx.qp) {
+        cx.qp.hide();
+        cx.qp.dispose();
+      }
     });
   });
 });

@@ -10,9 +10,10 @@ export function setSearchMode(mode: SearchMode) {
 }
 
 /**
- * Update UI elements based on search mode
+ * Update UI elements based on search mode and injected flags
  */
 function updateSearchModeUI(mode: SearchMode) {
+  // Handle specific search modes first
   switch (mode) {
     case 'currentFile':
       cx.qp.title = 'Search current file only';
@@ -24,8 +25,14 @@ function updateSearchModeUI(mode: SearchMode) {
       break;
     case 'all':
     default:
-      cx.qp.title = undefined;
-      cx.qp.placeholder = '🫧';
+      // Show injected flags in title if any are present (and not already handled by mode)
+      if (cx.injectedRgFlags && cx.injectedRgFlags.length > 0 && mode === 'all') {
+        cx.qp.title = `Search [${cx.injectedRgFlags.join(' ')}]`;
+        cx.qp.placeholder = '🫧';
+      } else {
+        cx.qp.title = undefined;
+        cx.qp.placeholder = '🫧';
+      }
       break;
   }
 }

@@ -10,7 +10,7 @@ import { createResultItem, createFileItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
 import { getCurrentFilePath } from '../utils/searchCurrentFile';
 
-function getRgCommand(value: string, extraFlags?: string[], isFileSearch = false) {
+function getRgCommand(value: string, extraFlags?: string[]) {
   const config = getConfig();
   const { workspaceFolders } = vscode.workspace;
   const { rgPath } = config;
@@ -19,24 +19,36 @@ function getRgCommand(value: string, extraFlags?: string[], isFileSearch = false
   const paths = cx.searchMode === 'currentFile' ? [getCurrentFilePath()] : rootPaths;
   const excludes = config.rgGlobExcludes.map((exclude) => `--glob "!${exclude}"`);
 
-  let rgFlags: string[];
+  // Check if this is a file search (either from searchMode or injected flags)
+  const isFileSearch = cx.searchMode === 'files' || cx.injectedRgFlags.includes('--files');
+
+  // Common flags for both search modes
+  const commonFlags = [
+    ...cx.rgMenuActionsSelected,
+    ...paths.filter((path): path is string => typeof path === 'string').map(ensureQuotedPath),
+    ...config.addSrcPaths.map(ensureQuotedPath),
+    ...excludes,
+  ];
+
   let searchPattern = '';
+  let modeSpecificFlags: string[];
 
   if (isFileSearch) {
     // File search mode - use --files flag and glob pattern
     const fileGlob = value ? `--glob "*${value}*"` : '';
+    // Only add --files if it's not already in injectedRgFlags
+    const filesFlag = cx.injectedRgFlags.includes('--files') ? [] : ['--files'];
 
-    rgFlags = [
-      '--files',
+    modeSpecificFlags = [
+      ...filesFlag,
+      ...cx.injectedRgFlags,
       fileGlob,
       ...config.rgOptions.filter((opt) => !opt.includes('--json')), // remove json flag if present
-      ...cx.rgMenuActionsSelected,
-      ...paths.filter((path): path is string => typeof path === 'string').map(ensureQuotedPath),
-      ...config.addSrcPaths.map(ensureQuotedPath),
-      ...excludes,
-    ].filter(Boolean); // Remove empty strings
+    ];
   } else {
     // Content search mode - use standard flags with search pattern
+    searchPattern = handleSearchTermWithAdditionalRgParams(value);
+
     const rgRequiredFlags = [
       '--line-number',
       '--column',
@@ -46,19 +58,15 @@ function getRgCommand(value: string, extraFlags?: string[], isFileSearch = false
       '--json',
     ];
 
-    rgFlags = [
+    modeSpecificFlags = [
       ...rgRequiredFlags,
       ...config.rgOptions,
-      ...cx.rgMenuActionsSelected,
-      ...paths.filter((path): path is string => typeof path === 'string').map(ensureQuotedPath),
-      ...config.addSrcPaths.map(ensureQuotedPath),
+      ...cx.injectedRgFlags,
       ...(extraFlags || []),
-      ...excludes,
     ];
-
-    searchPattern = handleSearchTermWithAdditionalRgParams(value);
   }
 
+  const rgFlags = [...modeSpecificFlags, ...commonFlags].filter(Boolean);
   return `"${rgPath}" ${searchPattern} ${rgFlags.join(' ')}`.trim();
 }
 
@@ -82,8 +90,8 @@ function performSearch(value: string, rgExtraFlags?: string[]) {
   updateAppState('SEARCHING');
   cx.qp.busy = true;
 
-  const isFileSearch = cx.searchMode === 'files';
-  const rgCmd = getRgCommand(value, rgExtraFlags, isFileSearch);
+  const isFileSearch = cx.searchMode === 'files' || cx.injectedRgFlags.includes('--files');
+  const rgCmd = getRgCommand(value, rgExtraFlags);
 
   log(isFileSearch ? 'rgCmd (files):' : 'rgCmd:', rgCmd);
   cx.lastRgCommand = rgCmd;
