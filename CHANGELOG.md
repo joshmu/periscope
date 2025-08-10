@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.13.2](https://github.com/joshmu/periscope/compare/v1.13.1...v1.13.2) (2025-08-10)
+
+### Bug Fixes
+
+- **ripgrep:** handle paths with spaces by quoting paths ([7511939](https://github.com/joshmu/periscope/commit/75119390aa8f91b3e92433a08107137f8fad68c6))
+
 ## [1.13.1](https://github.com/joshmu/periscope/compare/v1.13.0...v1.13.1) (2025-08-08)
 
 ### Bug Fixes

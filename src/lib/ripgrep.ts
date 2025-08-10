@@ -34,7 +34,7 @@ function getRgCommand(value: string, extraFlags?: string[]) {
     ...rgRequiredFlags,
     ...config.rgOptions,
     ...cx.rgMenuActionsSelected,
-    ...paths,
+    ...paths.filter((path) => typeof path === 'string').map(ensureQuotedPath),
     ...config.addSrcPaths.map(ensureQuotedPath),
     ...(extraFlags || []),
     ...excludes,
@@ -135,7 +135,7 @@ function performFileSearch(query: string) {
     fileGlob,
     ...config.rgOptions.filter((opt) => !opt.includes('--json')), // remove json flag if present
     ...cx.rgMenuActionsSelected,
-    ...paths,
+    ...paths.filter((path) => typeof path === 'string').map(ensureQuotedPath),
     ...config.addSrcPaths.map(ensureQuotedPath),
     ...excludes,
   ].filter(Boolean); // Remove empty strings
