@@ -93,25 +93,24 @@ export function setCursorPosition(
   colPos: number,
   rgLine: RgMatchResult['rawResult'],
 ) {
-  const selection = new vscode.Selection(0, 0, 0, 0);
-  editor.selection = selection;
+  // Check if editor is still valid
+  if (!editor || editor.document.isClosed) {
+    return;
+  }
 
   const lineNumber = Math.max(linePos ? linePos - 1 : 0, 0);
   const charNumber = Math.max(colPos ? colPos - 1 : 0, 0);
 
-  editor
-    .edit((editBuilder) => {
-      editBuilder.insert(selection.active, '');
-    })
-    .then(() => {
-      const newPosition = new vscode.Position(lineNumber, charNumber);
-      const { range } = editor.document.lineAt(newPosition);
-      editor.selection = new vscode.Selection(newPosition, newPosition);
-      editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
-      // Extract submatches from rgLine
-      const matches = rgLine.data.submatches.map(({ start, end }) => ({ start, end }));
-      cx.matchDecoration.set(editor, matches);
-    });
+  const newPosition = new vscode.Position(lineNumber, charNumber);
+  const { range } = editor.document.lineAt(newPosition);
+
+  // Set cursor position and reveal range synchronously
+  editor.selection = new vscode.Selection(newPosition, newPosition);
+  editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+
+  // Extract submatches from rgLine and apply decorations
+  const matches = rgLine.data.submatches.map(({ start, end }) => ({ start, end }));
+  cx.matchDecoration.set(editor, matches);
 }
 
 export function handleNoResultsFound() {
