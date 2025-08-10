@@ -6,11 +6,12 @@ import {
   periscopeTestHelpers,
   waitForCondition,
   waitForPreviewUpdate,
+  TEST_TIMEOUTS,
 } from '../utils/periscopeTestHelper';
 
 suite('Search Functionality with Fixtures', function () {
   // Increase timeout for all tests in this suite
-  this.timeout(10000);
+  this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
 
   let sandbox: sinon.SinonSandbox;
 
@@ -34,12 +35,12 @@ suite('Search Functionality with Fixtures', function () {
     sandbox.restore();
     cx.resetContext();
     // Small delay to ensure cleanup
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
   });
 
   suite('Text Search in Fixture Workspace', () => {
     test('finds TODO comments using periscope.search', async function () {
-      this.timeout(10000);
+      this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
 
       const results = await periscopeTestHelpers.search('TODO', { debug: false });
 
@@ -159,11 +160,11 @@ suite('Search Functionality with Fixtures', function () {
 
   suite('Preview and Decorations', () => {
     test('shows file preview when navigating search results', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Close all editors to ensure clean starting state
       await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Perform search
       const results = await periscopeTestHelpers.search('TODO');
@@ -193,7 +194,7 @@ suite('Search Functionality with Fixtures', function () {
     });
 
     test('updates preview when changing active item', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Perform search with multiple results
       const results = await periscopeTestHelpers.search('function');
@@ -224,11 +225,11 @@ suite('Search Functionality with Fixtures', function () {
     });
 
     test('applies peek decorations at match location', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Close all editors to ensure clean starting state
       await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Perform search
       const results = await periscopeTestHelpers.search('TODO');
@@ -268,7 +269,7 @@ suite('Search Functionality with Fixtures', function () {
     });
 
     test('preserves preview mode for navigation', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Perform search
       const results = await periscopeTestHelpers.search('function');
@@ -281,7 +282,7 @@ suite('Search Functionality with Fixtures', function () {
         cx.qp.activeItems = [cx.qp.items[i]];
 
         // Wait for preview
-        await waitForCondition(() => !!vscode.window.activeTextEditor, 300);
+        await waitForCondition(() => !!vscode.window.activeTextEditor, TEST_TIMEOUTS.EDITOR_ACTIVE);
 
         const editor = vscode.window.activeTextEditor;
         assert.ok(editor, `Should have editor for item ${i}`);

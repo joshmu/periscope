@@ -7,10 +7,11 @@ import {
   waitForSearchResults,
   waitForCondition,
   withConfiguration,
+  TEST_TIMEOUTS,
 } from '../utils/periscopeTestHelper';
 
 suite('Configuration Options - Real Behavior', function () {
-  this.timeout(10000);
+  this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
 
   // Store original config values to restore after tests
   let originalConfig: Map<string, any> = new Map();
@@ -47,7 +48,7 @@ suite('Configuration Options - Real Behavior', function () {
     }
 
     cx.resetContext();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
   });
 
   suite('rgGlobExcludes - Exclusion Patterns', () => {
@@ -61,7 +62,7 @@ suite('Configuration Options - Real Behavior', function () {
       );
 
       // Wait a bit for config to apply
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Search for content we know exists in excluded files
       const results = await periscopeTestHelpers.search('excludedFunction');
@@ -97,7 +98,7 @@ suite('Configuration Options - Real Behavior', function () {
       await config.update('rgGlobExcludes', ['**/utils/**'], vscode.ConfigurationTarget.Workspace);
 
       // Wait for config to apply
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.CURSOR_POSITION));
 
       const excludedResults = await periscopeTestHelpers.search('getUserById', {
         startFile,
@@ -125,7 +126,7 @@ suite('Configuration Options - Real Behavior', function () {
       // Configure max-count to limit results
       const config = vscode.workspace.getConfiguration('periscope');
       await config.update('rgOptions', ['--max-count=2'], vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Search for "function" which appears many times in special-config-test.ts
       const results = await periscopeTestHelpers.search('function');
@@ -150,14 +151,14 @@ suite('Configuration Options - Real Behavior', function () {
 
       // First test without case sensitive
       await config.update('rgOptions', [], vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       const caseInsensitiveResults = await periscopeTestHelpers.search('todo');
       const insensitiveCount = caseInsensitiveResults.count;
 
       // Now with case sensitive
       await config.update('rgOptions', ['--case-sensitive'], vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       const caseSensitiveResults = await periscopeTestHelpers.search('todo');
       const sensitiveCount = caseSensitiveResults.count;
@@ -174,13 +175,13 @@ suite('Configuration Options - Real Behavior', function () {
 
       // Search without word boundary
       await config.update('rgOptions', [], vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       const partialResults = await periscopeTestHelpers.search('test');
 
       // Search with word boundary
       await config.update('rgOptions', ['--word-regexp'], vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       const wordResults = await periscopeTestHelpers.search('test');
 
@@ -202,20 +203,20 @@ suite('Configuration Options - Real Behavior', function () {
         true,
         vscode.ConfigurationTarget.Workspace,
       );
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // First search with results
       await vscode.commands.executeCommand('periscope.search');
       await waitForQuickPick();
 
       cx.qp!.value = 'function';
-      await waitForSearchResults(1, 1000);
+      await waitForSearchResults(1);
       const firstResultCount = cx.qp!.items.length;
       assert.ok(firstResultCount > 0, 'Should have initial results');
 
       // Search for something that doesn't exist
       cx.qp!.value = 'xyzNonExistentSearchTerm123';
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SEARCH_RESULTS));
 
       // Should still show previous results
       const afterNoMatchCount = cx.qp!.items.length;
@@ -233,7 +234,7 @@ suite('Configuration Options - Real Behavior', function () {
 
       // Exclude dist directory
       await config.update('rgGlobExcludes', ['**/dist/**'], vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Search for files
       const results = await periscopeTestHelpers.searchFiles('excluded');
@@ -274,33 +275,33 @@ suite('Configuration Options - Real Behavior', function () {
 
   suite('Live Configuration Updates', () => {
     test('applies configuration changes during active search', async function () {
-      this.timeout(10000);
+      this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
 
       const config = vscode.workspace.getConfiguration('periscope');
 
       // Start a search without max-count
       await config.update('rgOptions', [], vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Start search
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       cx.qp.value = 'function';
-      await waitForSearchResults(1, 1000);
+      await waitForSearchResults(1);
 
       const initialCount = cx.qp.items.length;
       assert.ok(initialCount > 0, 'Should have initial results');
 
       // Now update configuration while search is active
       await config.update('rgOptions', ['--max-count=1'], vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Trigger a new search with the same query
       cx.qp.value = '';
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
       cx.qp.value = 'function';
-      await waitForSearchResults(1, 1000);
+      await waitForSearchResults(1);
 
       // Count occurrences per file - should now be max 1
       const fileOccurrences = new Map<string, number>();
@@ -322,20 +323,20 @@ suite('Configuration Options - Real Behavior', function () {
     });
 
     test('updates exclusions during active search session', async function () {
-      this.timeout(10000);
+      this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
 
       const config = vscode.workspace.getConfiguration('periscope');
 
       // Start without exclusions
       await config.update('rgGlobExcludes', [], vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Start search
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       cx.qp.value = 'function';
-      await waitForSearchResults(1, 1000);
+      await waitForSearchResults(1);
 
       // Check if we have test files in results
       const hasTestFiles = cx.qp.items.some((item: any) => {
@@ -345,13 +346,13 @@ suite('Configuration Options - Real Behavior', function () {
 
       // Now add exclusion for test files
       await config.update('rgGlobExcludes', ['**/*.test.*'], vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Re-trigger search
       cx.qp.value = '';
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
       cx.qp.value = 'function';
-      await waitForSearchResults(1, 1000);
+      await waitForSearchResults(1);
 
       // Should no longer have test files
       const hasTestFilesAfter = cx.qp.items.some((item: any) => {
@@ -367,37 +368,37 @@ suite('Configuration Options - Real Behavior', function () {
     });
 
     test('updates peek decoration colors dynamically', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       const config = vscode.workspace.getConfiguration('periscope');
 
       // Set initial peek colors
       await config.update('peekBorderColor', '#FF0000', vscode.ConfigurationTarget.Workspace);
       await config.update('peekMatchColor', '#00FF00', vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Perform search
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       cx.qp.value = 'TODO';
-      await waitForSearchResults(1, 1000);
+      await waitForSearchResults(1);
 
       // Navigate to a result (would apply decorations)
       if (cx.qp.items.length > 0) {
         cx.qp.activeItems = [cx.qp.items[0]];
-        await waitForCondition(() => !!vscode.window.activeTextEditor, 500);
+        await waitForCondition(() => !!vscode.window.activeTextEditor, TEST_TIMEOUTS.EDITOR_OPEN);
       }
 
       // Update peek colors
       await config.update('peekBorderColor', '#0000FF', vscode.ConfigurationTarget.Workspace);
       await config.update('peekMatchColor', '#FFFF00', vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Navigate to another result (should use new colors)
       if (cx.qp.items.length > 1) {
         cx.qp.activeItems = [cx.qp.items[1]];
-        await waitForCondition(() => !!vscode.window.activeTextEditor, 500);
+        await waitForCondition(() => !!vscode.window.activeTextEditor, TEST_TIMEOUTS.EDITOR_OPEN);
       }
 
       // The new decorations should be applied
@@ -425,7 +426,7 @@ suite('Configuration Options - Real Behavior', function () {
         ['**/node_modules/**', '**/dist/**', '**/build/**'],
         vscode.ConfigurationTarget.Workspace,
       );
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Measure search time
       const startTime = Date.now();

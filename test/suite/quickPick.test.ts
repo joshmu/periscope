@@ -8,6 +8,7 @@ import {
   waitForQuickPick,
   waitForCondition,
   waitForPreviewUpdate,
+  TEST_TIMEOUTS,
 } from '../utils/periscopeTestHelper';
 
 suite('QuickPick Interface', () => {
@@ -31,11 +32,11 @@ suite('QuickPick Interface', () => {
     }
     sandbox.restore();
     cx.resetContext();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
   });
 
   test('shows search results in quickpick', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Perform a real search
     const results = await periscopeTestHelpers.search('function');
@@ -52,7 +53,7 @@ suite('QuickPick Interface', () => {
   });
 
   test('allows item selection', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Perform a real search with multiple results
     const results = await periscopeTestHelpers.search('function');
@@ -74,7 +75,7 @@ suite('QuickPick Interface', () => {
   });
 
   test('supports preview on hover', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Perform a real file search
     const results = await periscopeTestHelpers.searchFiles('Button');
@@ -97,7 +98,7 @@ suite('QuickPick Interface', () => {
   });
 
   test('handles keyboard navigation', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Perform a real search with multiple results
     const results = await periscopeTestHelpers.search('function');
@@ -116,7 +117,7 @@ suite('QuickPick Interface', () => {
   });
 
   test('supports horizontal split button', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Perform a real search to get items with buttons
     const results = await periscopeTestHelpers.search('function');
@@ -140,7 +141,7 @@ suite('QuickPick Interface', () => {
   });
 
   test('clears on escape', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Start a search with results
     const results = await periscopeTestHelpers.search('function');
@@ -154,12 +155,12 @@ suite('QuickPick Interface', () => {
     cx.qp.hide();
 
     // Wait a bit for cleanup
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
     // After hiding, the QuickPick should be disposed/cleared
     // The next search should start fresh
     await vscode.commands.executeCommand('periscope.search');
-    await waitForQuickPick(300);
+    await waitForQuickPick();
 
     // Verify it starts fresh
     assert.strictEqual(cx.qp.value, '', 'Should start with empty value after escape');
@@ -170,11 +171,11 @@ suite('QuickPick Interface', () => {
   });
 
   test('shows busy state during search', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Execute search command
     await vscode.commands.executeCommand('periscope.search');
-    await waitForQuickPick(300);
+    await waitForQuickPick();
 
     assert.ok(cx.qp, 'QuickPick should be initialized');
 
@@ -195,7 +196,7 @@ suite('QuickPick Interface', () => {
     cx.qp.value = 'function';
 
     // Wait for search to complete
-    await waitForCondition(() => cx.qp.items.length > 0, 1000);
+    await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SEARCH_COMPLEX);
 
     // Stop monitoring
     clearInterval(checkBusyState);
@@ -207,11 +208,11 @@ suite('QuickPick Interface', () => {
   });
 
   test('updates value on user input', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Start a search
     await vscode.commands.executeCommand('periscope.search');
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.QUICKPICK_INIT));
 
     assert.ok(cx.qp, 'QuickPick should be initialized');
 
@@ -225,7 +226,7 @@ suite('QuickPick Interface', () => {
       assert.strictEqual(cx.qp.value, query, `Should update to "${query}"`);
 
       // Give the extension time to process
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
     }
   });
 
@@ -259,11 +260,11 @@ suite('QuickPick Interface', () => {
   });
 
   test('previews file when navigating results', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Close all editors to start from a clean state
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
     // Perform a search with multiple results
     const results = await periscopeTestHelpers.search('function');
@@ -318,7 +319,7 @@ suite('QuickPick Interface', () => {
   });
 
   test('opens file at correct position on accept', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Perform a search
     const results = await periscopeTestHelpers.search('TODO');
@@ -355,7 +356,7 @@ suite('QuickPick Interface', () => {
       // Check if we're at the expected position
       const position = editor.selection.active;
       return position.line === expectedLine;
-    }, 1000);
+    }, TEST_TIMEOUTS.EDITOR_OPEN);
 
     const editor = vscode.window.activeTextEditor;
     assert.ok(editor, 'Should have opened the file');
@@ -395,7 +396,7 @@ suite('QuickPick Interface', () => {
   });
 
   test('handles arrow key navigation between results', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Perform a search with multiple results
     const results = await periscopeTestHelpers.search('function');
@@ -427,7 +428,7 @@ suite('QuickPick Interface', () => {
   });
 
   test('cancels search on Escape key', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Start a search with a known starting file
     const results = await periscopeTestHelpers.search('function', {
@@ -441,7 +442,7 @@ suite('QuickPick Interface', () => {
     cx.qp.hide();
 
     // QuickPick should be hidden
-    await waitForCondition(() => !cx.qp, 300);
+    await waitForCondition(() => !cx.qp, TEST_TIMEOUTS.QUICKPICK_DISPOSE);
 
     // Editor focus should return to the starting file
     const editorAfter = vscode.window.activeTextEditor;
@@ -454,7 +455,7 @@ suite('QuickPick Interface', () => {
   });
 
   test('accepts selection on Enter key', async function () {
-    this.timeout(5000);
+    this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
     // Perform a search
     const results = await periscopeTestHelpers.search('TODO');

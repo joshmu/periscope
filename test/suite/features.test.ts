@@ -10,10 +10,11 @@ import {
   selectText,
   selectTextRange,
   withConfiguration,
+  TEST_TIMEOUTS,
 } from '../utils/periscopeTestHelper';
 
 suite('Advanced Features', function () {
-  this.timeout(10000);
+  this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
 
   let sandbox: sinon.SinonSandbox;
 
@@ -36,12 +37,12 @@ suite('Advanced Features', function () {
 
     sandbox.restore();
     cx.resetContext();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
   });
 
   suite('Selected Text Search', () => {
     test('uses selected text as initial query', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Open a document with known content
       const editor = await openDocumentWithContent(
@@ -58,14 +59,17 @@ suite('Advanced Features', function () {
 
       // Now invoke search - it should use the selected text
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
+
+      // Small delay for value to be populated from selection
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // The query should be pre-populated with selected text
       assert.ok(cx.qp, 'QuickPick should be initialized');
       assert.strictEqual(cx.qp.value, 'getUserById', 'Should use selected text as initial query');
 
       // Should find results for the selected text
-      await waitForCondition(() => cx.qp.items.length > 0, 1000);
+      await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SEARCH_COMPLEX);
       assert.ok(cx.qp.items.length > 0, 'Should find results for selected text');
 
       // Clean up
@@ -74,7 +78,7 @@ suite('Advanced Features', function () {
     });
 
     test('ignores empty selection', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Open a document without selecting anything
       const editor = await openDocumentWithContent(
@@ -90,7 +94,7 @@ suite('Advanced Features', function () {
 
       // Invoke search
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       // Query should be empty (not pre-populated)
       assert.ok(cx.qp, 'QuickPick should be initialized');
@@ -102,7 +106,7 @@ suite('Advanced Features', function () {
     });
 
     test('handles multi-line selection', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Open a document with multi-line content
       const content = 'function calculate(\n  a: number,\n  b: number\n) {\n  return a + b;\n}';
@@ -123,7 +127,7 @@ suite('Advanced Features', function () {
 
       // Invoke search
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       // The extension should handle multi-line selection appropriately
       // (either use it as-is or extract meaningful part)
@@ -170,7 +174,7 @@ suite('Advanced Features', function () {
 
   suite('rgQueryParams Pattern Matching', () => {
     test('transforms query with type filter pattern and filters results', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       await withConfiguration(
         {
@@ -179,11 +183,11 @@ suite('Advanced Features', function () {
         async () => {
           // Search with type filter in query
           await vscode.commands.executeCommand('periscope.search');
-          await waitForQuickPick(300);
+          await waitForQuickPick();
 
           // Use type filter syntax
           cx.qp.value = 'function -t ts';
-          await waitForCondition(() => cx.qp.items.length > 0, 1000);
+          await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SEARCH_COMPLEX);
 
           // All results should be from TypeScript files
           const files = cx.qp.items
@@ -204,7 +208,7 @@ suite('Advanced Features', function () {
     });
 
     test('transforms query with glob filter pattern and filters results', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       await withConfiguration(
         {
@@ -213,11 +217,11 @@ suite('Advanced Features', function () {
         async () => {
           // Search with glob filter
           await vscode.commands.executeCommand('periscope.search');
-          await waitForQuickPick(300);
+          await waitForQuickPick();
 
           // Use glob filter to search only in test files
           cx.qp.value = 'function -g **/*.test.*';
-          await waitForCondition(() => cx.qp.items.length >= 0, 1000);
+          await waitForCondition(() => cx.qp.items.length >= 0, TEST_TIMEOUTS.SEARCH_COMPLEX);
 
           if (cx.qp.items.length > 0) {
             // All results should be from test files
@@ -240,7 +244,7 @@ suite('Advanced Features', function () {
     });
 
     test('transforms query with file extension pattern and filters results', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       await withConfiguration(
         {
@@ -249,11 +253,11 @@ suite('Advanced Features', function () {
         async () => {
           // Search with file extension filter
           await vscode.commands.executeCommand('periscope.search');
-          await waitForQuickPick(300);
+          await waitForQuickPick();
 
           // Use extension filter
           cx.qp.value = 'function *.ts';
-          await waitForCondition(() => cx.qp.items.length > 0, 1000);
+          await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SEARCH_COMPLEX);
 
           // All results should be from .ts files
           const files = cx.qp.items
@@ -274,7 +278,7 @@ suite('Advanced Features', function () {
     });
 
     test('transforms query with module filter pattern and filters results', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       await withConfiguration(
         {
@@ -283,11 +287,11 @@ suite('Advanced Features', function () {
         async () => {
           // Search with module filter
           await vscode.commands.executeCommand('periscope.search');
-          await waitForQuickPick(300);
+          await waitForQuickPick();
 
           // Use module filter to search in utils directory
           cx.qp.value = 'function -m utils';
-          await waitForCondition(() => cx.qp.items.length >= 0, 1000);
+          await waitForCondition(() => cx.qp.items.length >= 0, TEST_TIMEOUTS.SEARCH_COMPLEX);
 
           if (cx.qp.items.length > 0) {
             // All results should be from utils directory
@@ -306,7 +310,7 @@ suite('Advanced Features', function () {
 
   suite('rgMenuActions', () => {
     test('applies menu action filters to actual search results', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // First, do a search without filters to get baseline
       const allResults = await periscopeTestHelpers.search('function');
@@ -348,7 +352,7 @@ suite('Advanced Features', function () {
     });
 
     test('exclude tests menu action filters out test files', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // First search including test files
       const withTests = await periscopeTestHelpers.search('function');
@@ -376,11 +380,11 @@ suite('Advanced Features', function () {
     });
 
     test('triggers menu with gotoRgMenuActionsPrefix and applies selection', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Start search
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       assert.ok(cx.qp, 'QuickPick should be initialized');
 
@@ -392,7 +396,7 @@ suite('Advanced Features', function () {
       const valueAfterSet = cx.qp.value;
 
       // Wait a bit for menu trigger
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.CURSOR_POSITION));
 
       // The value should still contain the prefix (or menu might have consumed it)
       // The actual behavior might clear the value or change it

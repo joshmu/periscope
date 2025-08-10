@@ -7,10 +7,11 @@ import {
   waitForQuickPick,
   waitForCondition,
   withConfiguration,
+  TEST_TIMEOUTS,
 } from '../utils/periscopeTestHelper';
 
 suite('Ripgrep Integration', function () {
-  this.timeout(10000);
+  this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
 
   let sandbox: sinon.SinonSandbox;
 
@@ -33,7 +34,7 @@ suite('Ripgrep Integration', function () {
 
     sandbox.restore();
     cx.resetContext();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
   });
 
   suite('Basic Ripgrep Functionality', () => {
@@ -311,15 +312,15 @@ suite('Ripgrep Integration', function () {
 
   suite('Command Construction Verification', () => {
     test('constructs ripgrep command with required flags', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Perform a search and intercept the command
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       // Trigger a search
       cx.qp.value = 'test';
-      await waitForCondition(() => cx.qp.items.length >= 0, 500);
+      await waitForCondition(() => cx.qp.items.length >= 0, TEST_TIMEOUTS.SEARCH_COMPLEX);
 
       // The command should include required flags
       // In a real test, we would intercept the spawn call to capture the command
@@ -332,7 +333,7 @@ suite('Ripgrep Integration', function () {
     });
 
     test('includes configuration options in command', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       await withConfiguration(
         {
@@ -361,7 +362,7 @@ suite('Ripgrep Integration', function () {
     });
 
     test('applies exclusion globs to command', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       await withConfiguration(
         {
@@ -382,7 +383,7 @@ suite('Ripgrep Integration', function () {
     });
 
     test('includes current file path in currentFile mode', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Open a specific file
       const filePath = 'src/utils/helpers.ts';
@@ -395,7 +396,7 @@ suite('Ripgrep Integration', function () {
     });
 
     test('includes menu actions in command', async function () {
-      this.timeout(5000);
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Search with a menu action that filters file types
       const results = await periscopeTestHelpers.searchWithMenuAction('function', {

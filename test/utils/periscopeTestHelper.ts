@@ -4,11 +4,69 @@ import { context as cx } from '../../src/lib/context';
 import { AllQPItemVariants } from '../../src/types';
 
 /**
+ * Centralized timeout configuration for tests
+ * These values are optimized based on test performance analysis
+ */
+export const TEST_TIMEOUTS = {
+  // === Basic Operations (fast) ===
+
+  // QuickPick initialization - optimized from 150ms
+  QUICKPICK_INIT: 50,
+
+  // Small delays for UI stabilization - optimized from 50ms
+  UI_STABILIZATION: 25,
+
+  // Configuration changes - removed (was 50ms)
+  CONFIG_APPLY: 0,
+
+  // Default condition wait - optimized from 100ms
+  CONDITION_DEFAULT: 50,
+
+  // Cursor positioning delay in preview - optimized from 100ms
+  CURSOR_POSITION: 50,
+
+  // === Search Operations (variable speed) ===
+
+  // Basic search results - optimized from 500ms
+  SEARCH_RESULTS: 200,
+
+  // Complex searches (regex, filters, large results) - needs more time
+  SEARCH_COMPLEX: 300,
+
+  // === Editor Operations ===
+
+  // Preview update - optimized from 500ms
+  PREVIEW_UPDATE: 200,
+
+  // Editor opening/switching - variable based on file size
+  EDITOR_OPEN: 300,
+
+  // Editor activation check - faster than full open
+  EDITOR_ACTIVE: 200,
+
+  // === State Changes ===
+
+  // Mode switching (e.g., 'all' to 'files' mode)
+  MODE_SWITCH: 200,
+
+  // QuickPick disposal/cleanup
+  QUICKPICK_DISPOSE: 200,
+
+  // === Test Suite Timeouts ===
+
+  // Suite timeout for most tests - optimized from 5000ms
+  SUITE_DEFAULT: 3000,
+
+  // Suite timeout for complex tests - optimized from 10000ms
+  SUITE_EXTENDED: 5000,
+};
+
+/**
  * Wait for a condition to be true
  */
 export async function waitForCondition(
   condition: () => boolean,
-  maxWait = 100,
+  maxWait = TEST_TIMEOUTS.CONDITION_DEFAULT,
   checkInterval = 10,
 ): Promise<boolean> {
   const start = Date.now();
@@ -21,7 +79,9 @@ export async function waitForCondition(
 /**
  * Wait for QuickPick to be initialized
  */
-export async function waitForQuickPick(maxWait = 100): Promise<vscode.QuickPick<any> | undefined> {
+export async function waitForQuickPick(
+  maxWait = TEST_TIMEOUTS.QUICKPICK_INIT,
+): Promise<vscode.QuickPick<any> | undefined> {
   await waitForCondition(() => cx.qp !== undefined, maxWait);
   return cx.qp;
 }
@@ -31,7 +91,7 @@ export async function waitForQuickPick(maxWait = 100): Promise<vscode.QuickPick<
  */
 export async function waitForSearchResults(
   minResults = 1,
-  maxWait = 1000,
+  maxWait = TEST_TIMEOUTS.SEARCH_RESULTS,
 ): Promise<readonly any[] | undefined> {
   await waitForCondition(() => (cx.qp?.items.length ?? 0) >= minResults, maxWait, 20);
   return cx.qp?.items;
@@ -107,7 +167,7 @@ export async function openFileAtPosition(
  */
 export async function waitForPreviewUpdate(
   previousEditor?: vscode.TextEditor | undefined,
-  maxWait = 1000,
+  maxWait = TEST_TIMEOUTS.PREVIEW_UPDATE,
 ): Promise<vscode.TextEditor | undefined> {
   await waitForCondition(() => {
     const currentEditor = vscode.window.activeTextEditor;
@@ -123,7 +183,7 @@ export async function waitForPreviewUpdate(
   }, maxWait);
 
   // Add small delay for cursor positioning to complete
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.CURSOR_POSITION));
 
   return vscode.window.activeTextEditor;
 }
@@ -155,7 +215,7 @@ export async function withConfiguration<T>(
   }
 
   // Wait for config to apply
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.CONFIG_APPLY));
 
   try {
     // Run the test
@@ -166,7 +226,7 @@ export async function withConfiguration<T>(
       await config.update(key, originalValue, vscode.ConfigurationTarget.Workspace);
     }
     // Wait for config to restore
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.CONFIG_APPLY));
   }
 }
 
@@ -293,7 +353,7 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
   await vscode.commands.executeCommand(command);
 
   // Wait for QuickPick to be ready using smart waiting
-  const qp = await waitForQuickPick(300);
+  const qp = await waitForQuickPick();
 
   if (!qp) {
     throw new Error('QuickPick not initialized after command execution');
@@ -321,7 +381,7 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
     // This is important when running multiple searches with the same query
     cx.qp.value = '';
     // Small delay to ensure the clear is processed
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
     // Now set the actual query
     cx.qp.value = query;
@@ -336,11 +396,13 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
   // Wait for results to appear using smart waiting
   if (query || command === 'periscope.searchFiles') {
     // Small delay for ripgrep to start
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
     await waitForSearchResults(1, actualWaitTime);
   } else {
     // If no query, just wait a bit for UI to stabilize
-    await new Promise((resolve) => setTimeout(resolve, Math.min(actualWaitTime, 100)));
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.min(actualWaitTime, TEST_TIMEOUTS.UI_STABILIZATION)),
+    );
   }
 
   // Collect results

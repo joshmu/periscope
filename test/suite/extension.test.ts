@@ -7,6 +7,7 @@ import {
   waitForQuickPick,
   waitForCondition,
   openDocumentWithContent,
+  TEST_TIMEOUTS,
 } from '../utils/periscopeTestHelper';
 
 suite('Periscope Extension', () => {
@@ -71,7 +72,7 @@ suite('Periscope Extension', () => {
       await vscode.commands.executeCommand('periscope.search');
 
       // Wait for QuickPick to be ready
-      await waitForQuickPick(200);
+      await waitForQuickPick();
 
       // Assert the mode and title set by the command
       assert.strictEqual(cx.searchMode, 'all');
@@ -95,7 +96,7 @@ suite('Periscope Extension', () => {
       await vscode.commands.executeCommand('periscope.searchCurrentFile');
 
       // Wait for QuickPick to be ready
-      await waitForQuickPick(200);
+      await waitForQuickPick();
 
       // Assert the mode and title set by the command
       assert.strictEqual(cx.searchMode, 'currentFile');
@@ -115,7 +116,7 @@ suite('Periscope Extension', () => {
       await vscode.commands.executeCommand('periscope.searchFiles');
 
       // Wait for QuickPick to be ready
-      await waitForQuickPick(200);
+      await waitForQuickPick();
 
       // Assert the mode and title set by the command
       assert.strictEqual(cx.searchMode, 'files');
@@ -135,7 +136,7 @@ suite('Periscope Extension', () => {
       await vscode.commands.executeCommand('periscope.search');
 
       // Wait for QuickPick to be ready
-      await waitForQuickPick(200);
+      await waitForQuickPick();
 
       // Simulate user typing --files
       if (cx.qp) {
@@ -143,7 +144,7 @@ suite('Periscope Extension', () => {
 
         // The extension should detect the --files flag and switch modes
         // Wait for the mode to switch
-        await waitForCondition(() => cx.searchMode === 'files', 300);
+        await waitForCondition(() => cx.searchMode === 'files', TEST_TIMEOUTS.MODE_SWITCH);
 
         // Assert that the mode switched and title changed
         assert.strictEqual(cx.searchMode, 'files');
@@ -166,7 +167,7 @@ suite('Periscope Extension', () => {
       await vscode.commands.executeCommand('periscope.search');
 
       // Wait for QuickPick to be ready
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       assert.ok(cx.qp, 'QuickPick should be initialized');
       // QuickPick is visible after being shown
@@ -183,21 +184,21 @@ suite('Periscope Extension', () => {
     test('resume search restores last query', async () => {
       // First, perform a search with a specific query
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       const originalQuery = 'original test query';
       cx.qp.value = originalQuery;
 
       // Wait for search to process
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.QUICKPICK_INIT));
 
       // Hide the search
       cx.qp.hide();
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
 
       // Now resume the search
       await vscode.commands.executeCommand('periscope.resumeSearch');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       // Verify the query was restored
       assert.strictEqual(cx.qp.value, originalQuery, 'Should restore previous query');
@@ -210,10 +211,10 @@ suite('Periscope Extension', () => {
     test('horizontal split opens document in new column', async () => {
       // Perform a real search first
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       cx.qp.value = 'function';
-      await waitForCondition(() => cx.qp.items.length > 0, 500);
+      await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SEARCH_COMPLEX);
 
       assert.ok(cx.qp.items.length > 0, 'Should have search results');
 
@@ -230,7 +231,7 @@ suite('Periscope Extension', () => {
       await waitForCondition(() => {
         const currentEditor = vscode.window.activeTextEditor;
         return !!(currentEditor && currentEditor !== editorBefore);
-      }, 500);
+      }, TEST_TIMEOUTS.EDITOR_OPEN);
 
       const editorAfter = vscode.window.activeTextEditor;
       assert.ok(editorAfter, 'Should have opened a new editor');
@@ -250,13 +251,13 @@ suite('Periscope Extension', () => {
 
       // Start periscope search
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       // Set query with native search suffix
       cx.qp.value = 'search term>>>';
 
       // Wait a bit for the suffix to be processed
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.CURSOR_POSITION));
 
       // Check if native search was triggered
       // Note: The actual implementation should handle this
@@ -274,10 +275,10 @@ suite('Periscope Extension', () => {
     test('handles multi-root workspace search', async () => {
       // Execute search in multi-root workspace
       await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick(300);
+      await waitForQuickPick();
 
       cx.qp.value = 'function';
-      await waitForCondition(() => cx.qp.items.length > 0, 1000);
+      await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SEARCH_COMPLEX);
 
       // Check that we have results from multiple directories
       const filePaths = new Set<string>();
