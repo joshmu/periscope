@@ -27,6 +27,9 @@ suite('Configuration Tests', () => {
       'solid',
       'Default peekMatchBorderStyle should be solid',
     );
+
+    // showLineNumbers should default to true
+    assert.strictEqual(config.showLineNumbers, true, 'showLineNumbers should default to true');
   });
 
   // ... rest of the tests ...

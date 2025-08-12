@@ -350,4 +350,87 @@ suite('formatPathLabel Tests', () => {
       assert.strictEqual(formatPathLabel(testPath), expected);
     });
   });
+
+  suite('Line Number Suffix', () => {
+    test('appends :line when enabled (with workspace folder)', () => {
+      const getConfigModule = require('../../utils/getConfig');
+      const stub = sandbox.stub(getConfigModule, 'getConfig').returns({
+        showWorkspaceFolderInFilePath: true,
+        startFolderDisplayDepth: 1,
+        endFolderDisplayDepth: 4,
+        startFolderDisplayIndex: 0,
+        showLineNumbers: true,
+      });
+
+      const testPath = createWorkspacePath('src', 'utils', 'file.ts');
+      const expected = createExpectedPath('workspace', 'src', 'utils', 'file.ts');
+      assert.strictEqual(formatPathLabel(testPath, { lineNumber: 99 }), `${expected}:99`);
+
+      stub.restore();
+    });
+
+    test('appends :line when enabled (no workspace folders)', () => {
+      const getConfigModule = require('../../utils/getConfig');
+      const stub = sandbox.stub(getConfigModule, 'getConfig').returns({
+        showWorkspaceFolderInFilePath: true,
+        startFolderDisplayDepth: 1,
+        endFolderDisplayDepth: 4,
+        startFolderDisplayIndex: 0,
+        showLineNumbers: true,
+      });
+      workspaceFoldersStub.get(() => undefined);
+
+      const testPath = createWorkspacePath('src', 'utils', 'file.ts');
+      const actual = formatPathLabel(testPath, { lineNumber: 7 });
+      assert.strictEqual(actual.endsWith(`${testPath}:7`), true);
+
+      stub.restore();
+    });
+
+    test('appends :line when enabled for file outside workspace', () => {
+      const getConfigModule = require('../../utils/getConfig');
+      const stub = sandbox.stub(getConfigModule, 'getConfig').returns({
+        showWorkspaceFolderInFilePath: true,
+        startFolderDisplayDepth: 1,
+        endFolderDisplayDepth: 4,
+        startFolderDisplayIndex: 0,
+        showLineNumbers: true,
+      });
+
+      // Build a path outside the mocked workspace
+      const outsidePath = vscode.Uri.file(
+        path.join('different', 'workspace', 'src', 'file.ts'),
+      ).fsPath;
+
+      const expectedBase = createExpectedPath(
+        'workspace',
+        '...',
+        'different',
+        'workspace',
+        'src',
+        'file.ts',
+      );
+      const result = formatPathLabel(outsidePath, { lineNumber: 321 });
+      assert.strictEqual(result, `${expectedBase}:321`);
+
+      stub.restore();
+    });
+
+    test('does not append when disabled', () => {
+      const getConfigModule = require('../../utils/getConfig');
+      const stub = sandbox.stub(getConfigModule, 'getConfig').returns({
+        showWorkspaceFolderInFilePath: true,
+        startFolderDisplayDepth: 1,
+        endFolderDisplayDepth: 4,
+        startFolderDisplayIndex: 0,
+        showLineNumbers: false,
+      });
+
+      const testPath = createWorkspacePath('src', 'utils', 'file.ts');
+      const expected = createExpectedPath('workspace', 'src', 'utils', 'file.ts');
+      assert.strictEqual(formatPathLabel(testPath, { lineNumber: 3 }), expected);
+
+      stub.restore();
+    });
+  });
 });
