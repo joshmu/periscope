@@ -698,21 +698,97 @@ suite('Advanced Features', function () {
 
   suite('File Search Mode', () => {
     test('searchFiles command sets file search mode', async () => {
-      // Test that the searchFiles command properly sets up file search mode
-      await vscode.commands.executeCommand('periscope.searchFiles');
-
-      // Wait for QuickPick to be ready
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
+      // Use test helper which handles waiting and initialization
+      const results = await periscopeTestHelpers.searchFiles('');
 
       // Verify file search mode is active
       assert.strictEqual(cx.searchMode, 'files', 'Should be in file search mode');
       assert.strictEqual(cx.qp.title, 'File Search', 'Title should indicate file search');
+    });
 
-      // Clean up
-      if (cx.qp) {
-        cx.qp.hide();
-        cx.qp.dispose();
-      }
+    test('dynamically switches search modes when --files flag is added or removed from query', async () => {
+      // Start regular search using test helper
+      await periscopeTestHelpers.search('');
+
+      // Initially should be in 'all' mode
+      assert.strictEqual(cx.searchMode, 'all', 'Should start in all search mode');
+
+      // === Test adding --files to switch to file mode ===
+
+      // Type a query with --files flag to search for Button components
+      cx.qp.value = '--files Button';
+
+      // Give time for the change handler to process
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
+
+      // Should dynamically switch to file search mode
+      assert.strictEqual(
+        cx.searchMode,
+        'files',
+        'Should switch to file search mode when --files is typed',
+      );
+      assert.strictEqual(cx.qp.title, 'File Search', 'Title should update to indicate file search');
+
+      // Wait for file search results
+      await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SEARCH_RESULTS);
+
+      // Verify we get file items
+      const fileItems = cx.qp.items;
+      assert.ok(fileItems.length > 0, 'Should have file search results');
+
+      // All items should be file items
+      const allFileItems = fileItems.every((item) => item._type === 'QuickPickItemFile');
+      assert.ok(allFileItems, 'All items should be QuickPickItemFile type when in file mode');
+
+      // Should find Button files
+      const buttonFiles = fileItems.filter(
+        (item: any) => item.label?.includes('Button') || item.data?.filePath?.includes('Button'),
+      );
+      assert.ok(
+        buttonFiles.length > 0,
+        `Should find Button file(s). Found ${fileItems.length} files`,
+      );
+
+      // === Test removing --files to switch back to content mode ===
+
+      // Remove --files from the query
+      cx.qp.value = 'Button';
+
+      // Give time for the change handler to process and search to run
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SEARCH_RESULTS));
+
+      // Should switch back to default 'all' mode
+      assert.strictEqual(
+        cx.searchMode,
+        'all',
+        'Should switch back to all mode when --files is removed',
+      );
+
+      // Title should reset
+      assert.ok(
+        !cx.qp.title || cx.qp.title !== 'File Search',
+        'Title should no longer indicate file search',
+      );
+
+      // Wait for content search results
+      await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SEARCH_RESULTS);
+
+      // Should now have content search items (QuickPickItemQuery)
+      const contentItems = cx.qp.items;
+      assert.ok(contentItems.length > 0, 'Should have content search results');
+      assert.ok(
+        contentItems.some((item) => item._type === 'QuickPickItemQuery'),
+        'Should have query items after removing --files',
+      );
+
+      // Verify we're finding content matches for "Button"
+      const buttonMatches = contentItems.filter((item: any) =>
+        item.data?.textResult?.includes('Button'),
+      );
+      assert.ok(
+        buttonMatches.length > 0,
+        `Should find content matches for "Button". Found ${contentItems.length} results`,
+      );
     });
   });
 });

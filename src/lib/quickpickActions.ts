@@ -43,8 +43,26 @@ function onDidChangeValue(value: string) {
     return;
   }
 
+  // Check if user wants to search for files using --files flag
+  const hasFilesFlag = value.includes('--files');
+
+  // If --files flag is present and we're not already in file search mode, switch to it
+  if (hasFilesFlag && cx.searchMode !== 'files') {
+    setSearchMode('files');
+  } else if (
+    !hasFilesFlag &&
+    cx.searchMode === 'files' &&
+    !cx.injectedRgFlags.includes('--files')
+  ) {
+    // If --files was removed and we're in file mode (but not from injected flags), switch back
+    resetSearchMode();
+  }
+
+  // Remove --files from the query as it's handled by search mode
+  const cleanedValue = hasFilesFlag ? value.replace('--files', '').trim() : value;
+
   // update the query if rgQueryParams are available and found
-  const { rgQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(value);
+  const { rgQuery, extraRgFlags } = checkAndExtractRgFlagsFromQuery(cleanedValue);
   cx.query = rgQuery;
 
   // jump to rg custom menu if the prefix is found in the query
