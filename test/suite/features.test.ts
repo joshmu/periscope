@@ -770,8 +770,13 @@ suite('Advanced Features', function () {
         'Title should no longer indicate file search',
       );
 
-      // Wait for content search results
-      await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SEARCH_RESULTS);
+      // Wait specifically for content search results (QuickPickItemQuery items)
+      // This ensures we wait for the search to complete and replace file items with query items
+      await waitForCondition(
+        () =>
+          cx.qp.items.length > 0 && cx.qp.items.some((item) => item._type === 'QuickPickItemQuery'),
+        TEST_TIMEOUTS.SEARCH_COMPLEX,
+      );
 
       // Should now have content search items (QuickPickItemQuery)
       const contentItems = cx.qp.items;
