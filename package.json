@@ -248,6 +248,11 @@
           ],
           "default": "solid",
           "description": "Border style for highlighted matching text"
+        },
+        "periscope.showLineNumbers": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show the line number of each match alongside the file path in results."
         }
       }
     }

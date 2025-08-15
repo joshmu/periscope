@@ -130,6 +130,46 @@ suite('QuickPick UI', () => {
     assert.deepStrictEqual(createResultItem(searchResult), expected);
   });
 
+  test('should include line number in detail when enabled', () => {
+    // Enable line numbers in results via config stub
+    const getConfigModule = require('../../utils/getConfig');
+    const getConfigStub = sandbox.stub(getConfigModule, 'getConfig').returns({
+      showLineNumbers: true,
+    });
+
+    const rawResult: RgMatchResult['rawResult'] = {
+      type: 'match',
+      data: {
+        path: { text: 'src/test.ts' },
+        lines: { text: 'const x = 1;' },
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        line_number: 7,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        absolute_offset: 10,
+        submatches: [
+          {
+            match: { text: 'x' },
+            start: 6,
+            end: 7,
+          },
+        ],
+      },
+    };
+
+    const searchResult: RgMatchResult = {
+      filePath: 'src/test.ts',
+      linePos: 7,
+      colPos: 6,
+      textResult: 'const x = 1;',
+      rawResult,
+    };
+
+    const item = createResultItem(searchResult);
+    assert.strictEqual(item.detail, 'src/test.ts:7');
+
+    getConfigStub.restore();
+  });
+
   test('should handle preview functionality', async () => {
     // Mock path.resolve to return the input path
     sandbox.stub(path, 'resolve').callsFake((p) => p);
@@ -271,7 +311,7 @@ suite('QuickPick UI', () => {
       peekMinHeight: 3,
       peekLineNumbers: true,
       peekWrapText: true,
-      showLineNumbers: true,
+      showLineNumbers: false,
       showColumnNumbers: true,
       showFullPath: true,
       endFolderDisplayDepth: 2,
