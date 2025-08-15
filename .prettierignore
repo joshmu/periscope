@@ -15,3 +15,6 @@ coverage
 
 # Ignore all files with a .min.css extension
 *.min.css
+
+# Ignore test fixtures
+test/fixtures/**/*

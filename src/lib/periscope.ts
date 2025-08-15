@@ -3,7 +3,7 @@ import { context as cx } from './context';
 import { onDidHide, setupQuickPickForQuery, setupRgMenuActions } from './quickpickActions';
 import { start } from './globalActions';
 import { openInHorizontalSplit } from './editorActions';
-import { setCurrentFileContext } from '../utils/searchCurrentFile';
+import { setSearchMode } from '../utils/searchCurrentFile';
 import { getLastQuery } from './storage';
 
 function search(
@@ -11,15 +11,22 @@ function search(
   {
     currentFileOnly = false,
     initialQuery = '',
-  }: { currentFileOnly?: boolean; initialQuery?: string } = {},
+    rgFlags = [],
+  }: { currentFileOnly?: boolean; initialQuery?: string; rgFlags?: string[] } = {},
 ) {
   start();
 
   // Store the extension context for storage operations
   cx.extensionContext = extensionContext;
 
+  // Store injected ripgrep flags in context
+  cx.injectedRgFlags = rgFlags || [];
+
   if (currentFileOnly) {
-    setCurrentFileContext();
+    setSearchMode('currentFile');
+  } else if (rgFlags?.includes('--files')) {
+    // Detect file search mode from injected flags
+    setSearchMode('files');
   }
 
   // if ripgrep actions are available then open preliminary quickpick

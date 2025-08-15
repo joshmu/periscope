@@ -23,31 +23,17 @@ To get started with contributing, please follow these steps:
 
 ### Running Tests
 
-The project uses Mocha for testing. To run the test suite:
+- Run all tests: `npm test`
+- Run tests matching a pattern: `npm run test:single --grep="pattern"`
+- Run a specific test file: `npm run test:file --file=extension` (omit .test.ts)
+- Run tests without linting: `npm run test:no-lint`
+- Tests run against the fixture workspace in `test/fixtures/workspace/`
+- Test helpers are available in `test/utils/periscopeTestHelper.ts`
+- If a test needs specific files/content, add them to the fixtures workspace
 
-1. Run all tests: `npm test`
-2. Run specific test file: `npm test -- path/to/test`
+Test files go in `test/suite/` with naming convention `*.test.ts`
 
-When writing tests:
-
-- Place test files in `src/test/suite/`
-- Use the naming convention `*.test.ts`
-- Group related tests using `suite()` and `test()`
-- Keep tests focused and simple
-- Mock external dependencies
-- Use descriptive test names that explain the expected behavior
-
-Example test structure:
-
-```typescript
-suite('Feature Name', () => {
-  test('should handle specific case', async () => {
-    // Arrange
-    // Act
-    // Assert
-  });
-});
-```
+For detailed testing documentation, see [docs/TESTING.md](docs/TESTING.md)
 
 ### Running the extension
 
@@ -71,7 +57,10 @@ You can read through the [Running and debugging your extension](https://code.vis
 
 #### Run tests
 
-- Open the debug viewlet (`Ctrl+Shift+D` or `Cmd+Shift+D` on Mac) and from the launch configuration dropdown pick `Extension Tests`.
+- Open the debug viewlet (`Ctrl+Shift+D` or `Cmd+Shift+D` on Mac) and from the launch configuration dropdown:
+  - `Extension Tests` - runs all tests
+  - `Extension Tests (Single)` - prompts for pattern to filter tests
+  - `Extension Tests (File)` - prompts for specific test file
 - Press `F5` to run the tests in a new window with your extension loaded.
 - See the output of the test result in the debug console.
 - Make changes to `src/test/suite/extension.test.ts` or create new test files inside the `test/suite` folder.

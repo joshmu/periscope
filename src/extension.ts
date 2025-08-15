@@ -13,8 +13,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   log('activate');
 
-  const periscopeQpCmd = vscode.commands.registerCommand('periscope.search', () =>
-    PERISCOPE.search(context),
+  const periscopeQpCmd = vscode.commands.registerCommand(
+    'periscope.search',
+    (args?: { rgFlags?: string[] }) => PERISCOPE.search(context, { rgFlags: args?.rgFlags }),
   );
 
   const periscopeSearchCurrentFileQpCmd = vscode.commands.registerCommand(
@@ -35,12 +36,17 @@ export function activate(context: vscode.ExtensionContext) {
     () => PERISCOPE.resumeSearchCurrentFile(context),
   );
 
+  const periscopeSearchFilesCmd = vscode.commands.registerCommand('periscope.searchFiles', () =>
+    vscode.commands.executeCommand('periscope.search', { rgFlags: ['--files'] }),
+  );
+
   context.subscriptions.push(
     periscopeQpCmd,
     periscopeSearchCurrentFileQpCmd,
     periscopeSplitCmd,
     periscopeResumeCmd,
     periscopeResumeCurrentFileCmd,
+    periscopeSearchFilesCmd,
   );
 }
 

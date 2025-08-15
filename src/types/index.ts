@@ -16,11 +16,20 @@ export interface QPItemRgMenuAction extends vscode.QuickPickItem {
     rgOption: string;
   };
 }
+export interface QPItemFile extends vscode.QuickPickItem {
+  _type: 'QuickPickItemFile';
+  // custom payload
+  data: {
+    filePath: string;
+  };
+}
 
-export type AllQPItemVariants = QPItemDefault | QPItemQuery | QPItemRgMenuAction;
+export type AllQPItemVariants = QPItemDefault | QPItemQuery | QPItemRgMenuAction | QPItemFile;
 
 export type DisposablesMap = {
   general: vscode.Disposable[];
   rgMenuActions: vscode.Disposable[];
   query: vscode.Disposable[];
 };
+
+export type SearchMode = 'all' | 'currentFile' | 'files';

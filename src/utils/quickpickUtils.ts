@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { QPItemQuery } from '../types';
+import { QPItemQuery, QPItemFile } from '../types';
 import { RgMatchResult } from '../types/ripgrep';
 import { formatPathLabel } from './formatPathLabel';
 
@@ -15,6 +15,22 @@ export function createResultItem(searchResult: RgMatchResult): QPItemQuery {
      * ! required to support regex
      * otherwise quick pick will automatically remove results that don't have an exact match
      */
+    alwaysShow: true,
+    buttons: [
+      {
+        iconPath: new vscode.ThemeIcon('split-horizontal'),
+        tooltip: 'Open in Horizontal split',
+      },
+    ],
+  };
+}
+
+// create a quick pick item for file path results
+export function createFileItem(filePath: string): QPItemFile {
+  return {
+    _type: 'QuickPickItemFile',
+    label: formatPathLabel(filePath),
+    data: { filePath },
     alwaysShow: true,
     buttons: [
       {
