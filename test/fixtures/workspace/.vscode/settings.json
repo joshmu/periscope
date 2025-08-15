@@ -2,8 +2,6 @@
     "periscope.rgGlobExcludes": [],
     "periscope.rgOptions": [],
     "periscope.showPreviousResultsWhenNoMatches": false,
-    "periscope.peekBorderColor": "#0000FF",
-    "periscope.peekMatchColor": "#FFFF00",
     "periscope.rgQueryParams": [],
     "periscope.rgMenuActions": [],
     "periscope.alwaysShowRgMenuActions": false,

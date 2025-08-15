@@ -10,8 +10,8 @@ import { AllQPItemVariants } from '../../src/types';
 export const TEST_TIMEOUTS = {
   // === Basic Operations (fast) ===
   QUICKPICK_INIT: 100,
-  UI_STABILIZATION: 75,
-  CONFIG_APPLY: 50,
+  UI_STABILIZATION: 100,
+  CONFIG_APPLY: 100,
   CONDITION_DEFAULT: 100,
   CURSOR_POSITION: 100,
 
@@ -29,8 +29,8 @@ export const TEST_TIMEOUTS = {
   QUICKPICK_DISPOSE: 250,
 
   // === Test Suite Timeouts ===
-  SUITE_DEFAULT: 3050,
-  SUITE_EXTENDED: 5050,
+  SUITE_DEFAULT: 3000,
+  SUITE_EXTENDED: 5000,
 };
 
 /**
