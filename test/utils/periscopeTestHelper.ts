@@ -3,11 +3,26 @@ import * as path from 'path';
 import { context as cx } from '../../src/lib/context';
 import { AllQPItemVariants } from '../../src/types';
 
+// Detect CI environment
+const isCI = process.env.CI === 'true';
+const isWindows = process.platform === 'win32';
+
+// CI needs longer timeouts, especially on Windows
+// Windows CI: 2.5x slower, Other CI: 1.5x slower, Local: 1x (normal speed)
+const CI_TIMEOUT_MULTIPLIER = isCI ? (isWindows ? 2.5 : 1.5) : 1;
+
+// Log environment for debugging CI issues
+if (isCI) {
+  console.log(
+    `[Test Environment] Running in CI (Platform: ${process.platform}, Windows: ${isWindows}, Timeout Multiplier: ${CI_TIMEOUT_MULTIPLIER}x)`,
+  );
+}
+
 /**
- * Centralized timeout configuration for tests
+ * Base timeout values for tests (in milliseconds)
  * These values are optimized based on test performance analysis
  */
-export const TEST_TIMEOUTS = {
+const BASE_TIMEOUTS = {
   // === Basic Operations (fast) ===
   QUICKPICK_INIT: 100,
   UI_STABILIZATION: 100,
@@ -32,6 +47,18 @@ export const TEST_TIMEOUTS = {
   SUITE_DEFAULT: 3000,
   SUITE_EXTENDED: 5000,
 };
+
+/**
+ * Centralized timeout configuration for tests
+ * Automatically adjusted for CI environments
+ */
+export const TEST_TIMEOUTS = Object.entries(BASE_TIMEOUTS).reduce(
+  (acc, [key, value]) => ({
+    ...acc,
+    [key]: value * CI_TIMEOUT_MULTIPLIER,
+  }),
+  {} as Record<keyof typeof BASE_TIMEOUTS, number>,
+);
 
 /**
  * Wait for a condition to be true
