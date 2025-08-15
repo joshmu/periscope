@@ -6,5 +6,7 @@
     "periscope.rgMenuActions": [],
     "periscope.alwaysShowRgMenuActions": false,
     "periscope.enableGotoNativeSearch": true,
-    "periscope.gotoNativeSearchSuffix": ">>"
+    "periscope.gotoNativeSearchSuffix": ">>",
+    "periscope.peekBorderColor": null,
+    "periscope.peekMatchColor": null
 }

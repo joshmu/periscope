@@ -370,44 +370,59 @@ suite('Configuration Options - Real Behavior', function () {
     test('updates peek decoration colors dynamically', async function () {
       this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
-      const config = vscode.workspace.getConfiguration('periscope');
+      // Use withConfiguration to ensure proper cleanup
+      await withConfiguration(
+        {
+          peekBorderColor: '#FF0000',
+          peekMatchColor: '#00FF00',
+        },
+        async () => {
+          // Perform search
+          await vscode.commands.executeCommand('periscope.search');
+          await waitForQuickPick();
 
-      // Set initial peek colors
-      await config.update('peekBorderColor', '#FF0000', vscode.ConfigurationTarget.Workspace);
-      await config.update('peekMatchColor', '#00FF00', vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
+          cx.qp.value = 'TODO';
+          await waitForSearchResults(1);
 
-      // Perform search
-      await vscode.commands.executeCommand('periscope.search');
-      await waitForQuickPick();
+          // Navigate to a result (would apply decorations)
+          if (cx.qp.items.length > 0) {
+            cx.qp.activeItems = [cx.qp.items[0]];
+            await waitForCondition(
+              () => !!vscode.window.activeTextEditor,
+              TEST_TIMEOUTS.EDITOR_OPEN,
+            );
+          }
 
-      cx.qp.value = 'TODO';
-      await waitForSearchResults(1);
+          // Update peek colors within the test
+          await withConfiguration(
+            {
+              peekBorderColor: '#0000FF',
+              peekMatchColor: '#FFFF00',
+            },
+            async () => {
+              // Navigate to another result (should use new colors)
+              if (cx.qp.items.length > 1) {
+                cx.qp.activeItems = [cx.qp.items[1]];
+                await waitForCondition(
+                  () => !!vscode.window.activeTextEditor,
+                  TEST_TIMEOUTS.EDITOR_OPEN,
+                );
+              }
 
-      // Navigate to a result (would apply decorations)
-      if (cx.qp.items.length > 0) {
-        cx.qp.activeItems = [cx.qp.items[0]];
-        await waitForCondition(() => !!vscode.window.activeTextEditor, TEST_TIMEOUTS.EDITOR_OPEN);
-      }
+              // The new decorations should be applied
+              // In actual implementation, this would check the decoration styles
+              assert.ok(
+                vscode.window.activeTextEditor,
+                'Should have active editor with decorations',
+              );
+            },
+          );
 
-      // Update peek colors
-      await config.update('peekBorderColor', '#0000FF', vscode.ConfigurationTarget.Workspace);
-      await config.update('peekMatchColor', '#FFFF00', vscode.ConfigurationTarget.Workspace);
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
-
-      // Navigate to another result (should use new colors)
-      if (cx.qp.items.length > 1) {
-        cx.qp.activeItems = [cx.qp.items[1]];
-        await waitForCondition(() => !!vscode.window.activeTextEditor, TEST_TIMEOUTS.EDITOR_OPEN);
-      }
-
-      // The new decorations should be applied
-      // In actual implementation, this would check the decoration styles
-      assert.ok(vscode.window.activeTextEditor, 'Should have active editor with decorations');
-
-      // Clean up
-      cx.qp.hide();
-      cx.qp.dispose();
+          // Clean up
+          cx.qp.hide();
+          cx.qp.dispose();
+        },
+      );
     });
   });
 
