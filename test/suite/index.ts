@@ -32,11 +32,20 @@ async function verifyWorkspace(): Promise<void> {
 }
 
 export function run(): Promise<void> {
-  // Create the mocha test
-  const mocha = new Mocha({
+  // Configure Mocha with optional grep pattern from environment
+  const mochaOptions: Mocha.MochaOptions = {
     ui: 'tdd',
     color: true,
-  });
+  };
+
+  // Support filtering tests by pattern via MOCHA_GREP environment variable
+  if (process.env.MOCHA_GREP) {
+    mochaOptions.grep = process.env.MOCHA_GREP;
+    console.log(`[Test Suite] Filtering tests with pattern: ${process.env.MOCHA_GREP}`);
+  }
+
+  // Create the mocha test
+  const mocha = new Mocha(mochaOptions);
 
   const testsRoot = path.resolve(__dirname, '..');
 
@@ -49,13 +58,36 @@ export function run(): Promise<void> {
       return e(error);
     }
 
-    glob('**/**.test.js', { cwd: testsRoot, ignore: '**/fixtures/**' }, (err, files) => {
+    // Support filtering by specific test file via TEST_FILE environment variable
+    const testFilePattern = process.env.TEST_FILE
+      ? `**/${process.env.TEST_FILE}.test.js`
+      : '**/**.test.js';
+
+    if (process.env.TEST_FILE) {
+      console.log(`[Test Suite] Running specific test file: ${process.env.TEST_FILE}`);
+    }
+
+    glob(testFilePattern, { cwd: testsRoot, ignore: '**/fixtures/**' }, (err, files) => {
       if (err) {
         return e(err);
       }
 
+      if (files.length === 0) {
+        const errorMsg = process.env.TEST_FILE
+          ? `No test file found matching: ${process.env.TEST_FILE}`
+          : 'No test files found';
+        console.error(`[Test Suite] ${errorMsg}`);
+        return e(new Error(errorMsg));
+      }
+
+      console.log(`[Test Suite] Found ${files.length} test file(s)`);
+
       // Add files to the test suite
-      files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
+      files.forEach((f) => {
+        const fullPath = path.resolve(testsRoot, f);
+        console.log(`[Test Suite] Adding test file: ${f}`);
+        mocha.addFile(fullPath);
+      });
 
       try {
         // Run the mocha test
