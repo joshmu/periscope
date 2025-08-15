@@ -288,9 +288,11 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
 
   // Open start file if specified
   if (startFile) {
-    const filePath = path.isAbsolute(startFile)
-      ? startFile
-      : path.join(vscode.workspace.rootPath || '', startFile);
+    // Normalize the path to use correct separators for the platform
+    const normalizedStartFile = startFile.split('/').join(path.sep);
+    const filePath = path.isAbsolute(normalizedStartFile)
+      ? normalizedStartFile
+      : path.join(vscode.workspace.rootPath || '', normalizedStartFile);
     const doc = await vscode.workspace.openTextDocument(filePath);
     const editor = await vscode.window.showTextDocument(doc);
 
