@@ -1,4 +1,5 @@
 import * as assert from 'assert';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { context as cx } from '../../src/lib/context';
 import {
@@ -258,7 +259,7 @@ suite('Configuration Options - Real Behavior', function () {
       const directories = new Set<string>();
       results.items.forEach((item: any) => {
         if (item.data?.filePath) {
-          const parts = item.data.filePath.split('/');
+          const parts = item.data.filePath.split(path.sep);
           if (parts.length > 1) {
             directories.add(parts[parts.length - 2]); // Get parent directory
           }

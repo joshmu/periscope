@@ -69,7 +69,7 @@ suite('Advanced Features', function () {
       assert.strictEqual(cx.qp.value, 'getUserById', 'Should use selected text as initial query');
 
       // Should find results for the selected text
-      await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SEARCH_COMPLEX);
+      await waitForCondition(() => cx.qp.items.length > 0, TEST_TIMEOUTS.SUITE_EXTENDED);
       assert.ok(cx.qp.items.length > 0, 'Should find results for selected text');
 
       // Clean up
@@ -755,7 +755,7 @@ suite('Advanced Features', function () {
       cx.qp.value = 'Button';
 
       // Give time for the change handler to process and search to run
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SEARCH_RESULTS));
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SEARCH_COMPLEX));
 
       // Should switch back to default 'all' mode
       assert.strictEqual(

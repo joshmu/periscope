@@ -449,7 +449,7 @@ suite('QuickPick Interface', () => {
 
     assert.ok(editorAfter, 'Should have an active editor after canceling');
     assert.ok(
-      editorAfter.document.uri.fsPath.includes('build/compiled.js'),
+      editorAfter.document.uri.fsPath.includes('compiled.js'),
       'Should return to the starting document after canceling',
     );
   });

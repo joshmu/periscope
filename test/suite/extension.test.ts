@@ -1,4 +1,5 @@
 import * as assert from 'assert';
+import * as path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { activate } from '../../src/extension';
@@ -282,10 +283,10 @@ suite('Periscope Extension', () => {
       const filePaths = new Set<string>();
       cx.qp.items.forEach((item: any) => {
         if (item.data?.filePath) {
-          const parts = item.data.filePath.split('/');
+          const parts = item.data.filePath.split(path.sep);
           if (parts.length > 2) {
             // Get the directory structure
-            filePaths.add(parts.slice(0, -1).join('/'));
+            filePaths.add(parts.slice(0, -1).join(path.sep));
           }
         }
       });
