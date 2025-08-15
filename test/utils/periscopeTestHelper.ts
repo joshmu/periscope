@@ -391,8 +391,8 @@ export async function executePeriscopeTest(options: TestOptions): Promise<TestRe
     }
   }
 
-  // Calculate wait time based on operation type
-  const actualWaitTime = waitTime ?? calculateWaitTime(command, query, isRegex);
+  // Use provided wait time or default to SEARCH_RESULTS timeout (already CI-adjusted)
+  const actualWaitTime = waitTime ?? TEST_TIMEOUTS.SEARCH_RESULTS;
 
   // Wait for results to appear using smart waiting
   if (query || command === 'periscope.searchFiles') {
@@ -499,34 +499,6 @@ function processResults(items: AllQPItemVariants[]): TestResults {
       types,
     },
   };
-}
-
-/**
- * Calculate appropriate wait time based on operation type
- */
-function calculateWaitTime(command: string, query: string, isRegex: boolean): number {
-  // File operations are generally faster
-  if (command === 'periscope.searchFiles') {
-    return 500;
-  }
-
-  // Current file search is fastest
-  if (command === 'periscope.searchCurrentFile') {
-    return 300;
-  }
-
-  // Resume search doesn't need to wait for new results
-  if (command === 'periscope.resumeSearch' || command === 'periscope.resumeSearchCurrentFile') {
-    return 200;
-  }
-
-  // Regular search needs more time, especially for regex
-  if (isRegex || query.includes('.*') || query.includes('\\')) {
-    return 800;
-  }
-
-  // Default for regular text search
-  return 600;
 }
 
 /**
