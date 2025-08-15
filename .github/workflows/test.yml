@@ -55,9 +55,9 @@ jobs:
         if: runner.os != 'Linux'
         run: npm test
 
-      # Report test status on PR
+      # Report test status on PR (only for PRs from the main repository)
       - name: Update PR Status
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |
