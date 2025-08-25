@@ -8,12 +8,17 @@ import { getConfig } from './getConfig';
  * exposes initial folder display depth and end folder display depth
  * workspace folder name is displayed at the start of the path to provide additional context
  */
-export function formatPathLabel(filePath: string) {
+export function formatPathLabel(filePath: string, options?: { lineNumber?: number }) {
   const { workspaceFolders } = vscode.workspace;
   const config = getConfig();
 
+  let lineNumberSuffix = '';
+  if (typeof options?.lineNumber === 'number' && config.showLineNumbers) {
+    lineNumberSuffix = `:${options.lineNumber}`;
+  }
+
   if (!workspaceFolders) {
-    return filePath;
+    return `${filePath}${lineNumberSuffix}`;
   }
 
   // Handle root path consistently across platforms
@@ -54,5 +59,6 @@ export function formatPathLabel(filePath: string) {
     folders.splice(0, folders.length - config.endFolderDisplayDepth);
     folders.unshift(...initialFolders, '...');
   }
-  return folders.join(path.sep);
+
+  return `${folders.join(path.sep)}${lineNumberSuffix}`;
 }

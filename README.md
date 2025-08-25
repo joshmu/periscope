@@ -68,6 +68,7 @@ If you use vim within vscode you can bind `periscope.search` in your `settings.j
 - `gotoRgMenuActionsPrefix`: If the query starts with this prefix, then open rg menu actions.
 - `enableGotoNativeSearch`: If true, then swap to native vscode search if the custom suffix is entered using the current query.
 - `gotoNativeSearchSuffix`: If the query ends with this suffix, then swap to the native search with the query applied.
+- `showLineNumbers`: If true enabled, append `:<line>` to file path details in results (default: `true`)
 - `peekBorderColor`: Color of the peek border. If not set, uses the editor's find match highlight border color.
 - `peekBorderWidth`: Width of the peek border (default: '2px')
 - `peekBorderStyle`: Style of the peek border (solid, dashed, inset, double, groove, outset, ridge)
