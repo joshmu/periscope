@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+# [1.14.0](https://github.com/joshmu/periscope/compare/v1.13.3...v1.14.0) (2025-08-31)
+
+### Features
+
+- **results:** add option to show line numbers (on by default) ([fc46707](https://github.com/joshmu/periscope/commit/fc4670765d0256c4b4ec1036b2cc8e97073acc7a))
+
+## [1.13.3](https://github.com/joshmu/periscope/compare/v1.13.2...v1.13.3) (2025-08-15)
+
+### Bug Fixes
+
+- **ci:** prevent comment posting errors for external contributor PRs ([e7103ee](https://github.com/joshmu/periscope/commit/e7103ee06a44cc5c2ee25958784a270b1682c430))
+
 ## [1.13.2](https://github.com/joshmu/periscope/compare/v1.13.1...v1.13.2) (2025-08-10)
 
 ### Bug Fixes

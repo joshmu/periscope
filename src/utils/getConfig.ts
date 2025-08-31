@@ -37,5 +37,6 @@ export function getConfig() {
     peekMatchBorderColor: vsConfig.get<string | null>('peekMatchBorderColor', null),
     peekMatchBorderWidth: vsConfig.get<string>('peekMatchBorderWidth', '1px'),
     peekMatchBorderStyle: vsConfig.get<string>('peekMatchBorderStyle', 'solid'),
+    showLineNumbers: vsConfig.get<boolean>('showLineNumbers', false),
   };
 }
