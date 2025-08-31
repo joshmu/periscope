@@ -2,10 +2,14 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as sinon from 'sinon';
 import { context as cx } from '../../src/lib/context';
+import { QPItemQuery } from '../../src/types';
 import {
   periscopeTestHelpers,
   waitForCondition,
   waitForPreviewUpdate,
+  withConfiguration,
+  hasLineNumbersInDetails,
+  LINE_NUMBER_REGEX,
   TEST_TIMEOUTS,
 } from '../utils/periscopeTestHelper';
 
@@ -335,6 +339,105 @@ suite('Search Functionality with Fixtures', function () {
         fileResults.items.some((item) => item._type === 'QuickPickItemFile'),
         `File search should create QuickPickItemFile items. Types found: ${[...new Set(fileResults.items.map((i) => i._type))].join(', ')}`,
       );
+    });
+  });
+
+  suite('Line Number Display in Search Results', () => {
+    test('verifies line numbers appear in search result details by default', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
+
+      // Test default behavior - no configuration override needed
+      // Search for something that will have multiple results
+      const results = await periscopeTestHelpers.search('function');
+      assert.ok(results.count > 0, 'Should find results');
+
+      // Check the QuickPick items
+      const items = cx.qp.items as QPItemQuery[];
+      const queryItems = items.filter((item) => item._type === 'QuickPickItemQuery');
+      assert.ok(queryItems.length > 0, 'Should have query items');
+
+      // Verify that items have line numbers in their details
+      const itemsWithLineNumbers = queryItems.filter(
+        (item) => item.detail && LINE_NUMBER_REGEX.test(item.detail),
+      );
+      assert.ok(
+        itemsWithLineNumbers.length > 0,
+        `Should have items with line numbers by default. Found ${itemsWithLineNumbers.length} items with line numbers out of ${queryItems.length} total query items`,
+      );
+
+      // Verify specific line number format
+      const firstItemWithLineNumber = itemsWithLineNumbers[0];
+      if (firstItemWithLineNumber && firstItemWithLineNumber.detail) {
+        const lineNumberMatch = firstItemWithLineNumber.detail.match(LINE_NUMBER_REGEX);
+        assert.ok(lineNumberMatch, 'Should have line number at end of detail');
+        if (lineNumberMatch) {
+          const lineNumber = parseInt(lineNumberMatch[1], 10);
+          assert.ok(lineNumber > 0, `Line number should be positive: ${lineNumber}`);
+        }
+      }
+    });
+
+    test('verifies line numbers are hidden when disabled', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
+
+      // Configure to hide line numbers
+      await withConfiguration(
+        {
+          showLineNumbers: false,
+        },
+        async () => {
+          // Search for something that will have multiple results
+          const results = await periscopeTestHelpers.search('function');
+          assert.ok(results.count > 0, 'Should find results');
+
+          // Check the QuickPick items
+          const items = cx.qp.items as QPItemQuery[];
+          const queryItems = items.filter((item) => item._type === 'QuickPickItemQuery');
+          assert.ok(queryItems.length > 0, 'Should have query items');
+
+          // Verify that items DO NOT have line numbers in their details
+          const itemsWithLineNumbers = queryItems.filter(
+            (item) => item.detail && /:\d+$/.test(item.detail),
+          );
+          assert.strictEqual(
+            itemsWithLineNumbers.length,
+            0,
+            `Should not have items with line numbers when disabled. Found ${itemsWithLineNumbers.length} items with line numbers`,
+          );
+        },
+      );
+    });
+
+    test('verifies correct line numbers for specific matches', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
+
+      // Test default behavior - no configuration override needed
+      // Search for a specific known pattern in our test fixtures
+      const results = await periscopeTestHelpers.search('export function');
+      assert.ok(results.count > 0, 'Should find export function declarations');
+
+      // Get the items with line numbers
+      const items = cx.qp.items as QPItemQuery[];
+      const queryItems = items.filter((item) => item._type === 'QuickPickItemQuery');
+
+      // Each match should have a line number that makes sense (> 0)
+      queryItems.forEach((item) => {
+        if (item.detail) {
+          const lineNumberMatch = item.detail.match(LINE_NUMBER_REGEX);
+          if (lineNumberMatch) {
+            const lineNumber = parseInt(lineNumberMatch[1], 10);
+            assert.ok(
+              lineNumber > 0 && lineNumber < 10000,
+              `Line number should be reasonable: ${lineNumber}`,
+            );
+          }
+        }
+
+        // Also verify that the line position in the data matches
+        if (item.data && typeof item.data.linePos === 'number') {
+          assert.ok(item.data.linePos > 0, 'Line position in data should be positive');
+        }
+      });
     });
   });
 });

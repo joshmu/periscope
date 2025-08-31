@@ -7,6 +7,9 @@ import { AllQPItemVariants } from '../../src/types';
 const isCI = process.env.CI === 'true';
 const isWindows = process.platform === 'win32';
 
+// Common regex patterns
+export const LINE_NUMBER_REGEX = /:(\d+)$/;
+
 // CI needs longer timeouts, especially on Windows
 // Windows CI: 2.5x slower, Other CI: 1.5x slower, Local: 1x (normal speed)
 const CI_TIMEOUT_MULTIPLIER = isCI ? (isWindows ? 2.5 : 1.5) : 1;
@@ -59,6 +62,13 @@ export const TEST_TIMEOUTS = Object.entries(BASE_TIMEOUTS).reduce(
   }),
   {} as Record<keyof typeof BASE_TIMEOUTS, number>,
 );
+
+/**
+ * Check if QuickPick items have line numbers in their details
+ */
+export function hasLineNumbersInDetails(items: any[]): boolean {
+  return items.filter((item) => item.detail).some((item) => LINE_NUMBER_REGEX.test(item.detail));
+}
 
 /**
  * Wait for a condition to be true
@@ -254,6 +264,7 @@ export interface TestResults {
     details: string[];
     types: string[];
   };
+  lineNumbers?: number[];
 }
 
 /**
@@ -456,6 +467,7 @@ function processResults(items: AllQPItemVariants[]): TestResults {
   const labels: string[] = [];
   const details: string[] = [];
   const types: string[] = [];
+  const lineNumbers: number[] = [];
 
   for (const item of items) {
     // Collect raw data
@@ -464,6 +476,12 @@ function processResults(items: AllQPItemVariants[]): TestResults {
     }
     if (item.detail) {
       details.push(item.detail);
+
+      // Extract line number from detail if present
+      const lineNumberMatch = item.detail.match(/:(\d+)$/);
+      if (lineNumberMatch) {
+        lineNumbers.push(parseInt(lineNumberMatch[1], 10));
+      }
     }
     types.push(item._type);
 
@@ -472,6 +490,12 @@ function processResults(items: AllQPItemVariants[]): TestResults {
 
     if (item._type === 'QuickPickItemQuery' && item.data?.filePath) {
       filePath = item.data.filePath;
+      // Also collect line numbers from data
+      if (item.data.linePos) {
+        if (!lineNumbers.includes(item.data.linePos)) {
+          lineNumbers.push(item.data.linePos);
+        }
+      }
     } else if (item._type === 'QuickPickItemFile' && item.data?.filePath) {
       filePath = item.data.filePath;
     }
@@ -498,6 +522,7 @@ function processResults(items: AllQPItemVariants[]): TestResults {
       details,
       types,
     },
+    lineNumbers: lineNumbers.length > 0 ? lineNumbers : undefined,
   };
 }
 

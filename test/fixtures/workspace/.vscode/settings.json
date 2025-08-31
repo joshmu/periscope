@@ -8,5 +8,6 @@
     "periscope.enableGotoNativeSearch": true,
     "periscope.gotoNativeSearchSuffix": ">>",
     "periscope.peekBorderColor": null,
-    "periscope.peekMatchColor": null
+    "periscope.peekMatchColor": null,
+    "periscope.showLineNumbers": true
 }

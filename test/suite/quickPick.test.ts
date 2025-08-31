@@ -8,6 +8,9 @@ import {
   waitForQuickPick,
   waitForCondition,
   waitForPreviewUpdate,
+  withConfiguration,
+  hasLineNumbersInDetails,
+  LINE_NUMBER_REGEX,
   TEST_TIMEOUTS,
 } from '../utils/periscopeTestHelper';
 
@@ -504,5 +507,108 @@ suite('QuickPick Interface', () => {
     // Clean up
     qp.hide();
     qp.dispose();
+  });
+
+  suite('Line Number Display', () => {
+    test('shows line numbers in quickpick item details by default', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
+
+      // Test default behavior - no configuration override needed
+      // Perform search
+      const results = await periscopeTestHelpers.search('function');
+      assert.ok(results.count > 0, 'Should find results');
+
+      // Check QuickPick items
+      const items = cx.qp.items as QPItemQuery[];
+      const itemsWithDetail = items.filter((item) => item.detail);
+      assert.ok(itemsWithDetail.length > 0, 'Should have items with detail');
+
+      // Verify line numbers are present using helper
+      assert.ok(
+        hasLineNumbersInDetails(itemsWithDetail),
+        'Should show line numbers in details by default',
+      );
+    });
+
+    test('excludes line numbers in quickpick item details when disabled', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
+
+      // Use withConfiguration to properly set the config
+      await withConfiguration(
+        {
+          showLineNumbers: false,
+        },
+        async () => {
+          // Perform search
+          const results = await periscopeTestHelpers.search('function');
+          assert.ok(results.count > 0, 'Should find results');
+
+          // Check QuickPick items
+          const items = cx.qp.items as QPItemQuery[];
+          const itemsWithDetail = items.filter((item) => item.detail);
+
+          if (itemsWithDetail.length > 0) {
+            // Verify line numbers are NOT present using helper
+            assert.ok(
+              !hasLineNumbersInDetails(itemsWithDetail),
+              'Should not show line numbers in details when disabled',
+            );
+          }
+        },
+      );
+    });
+
+    test('formatPathLabel includes line numbers when configured', async function () {
+      // Test the formatPathLabel function directly
+      const { formatPathLabel } = require('../../utils/formatPathLabel');
+      const getConfigModule = require('../../utils/getConfig');
+      const originalGetConfig = getConfigModule.getConfig;
+
+      // Mock config to enable line numbers
+      sandbox.stub(getConfigModule, 'getConfig').returns({
+        showLineNumbers: true,
+        showWorkspaceFolderInFilePath: true,
+        startFolderDisplayDepth: 2,
+        endFolderDisplayDepth: 1,
+        startFolderDisplayIndex: 0,
+      });
+
+      // Test with line number
+      const filePath = '/test/workspace/src/utils/file.ts';
+      const result = formatPathLabel(filePath, { lineNumber: 42 });
+
+      // Should contain :42 at the end
+      assert.ok(result.endsWith(':42'), `Path should end with :42, got: ${result}`);
+
+      // Restore original getConfig
+      getConfigModule.getConfig = originalGetConfig;
+    });
+
+    test('formatPathLabel excludes line numbers when disabled', async function () {
+      // Test the formatPathLabel function directly
+      const { formatPathLabel } = require('../../utils/formatPathLabel');
+      const getConfigModule = require('../../utils/getConfig');
+      const originalGetConfig = getConfigModule.getConfig;
+
+      // Mock config to disable line numbers
+      sandbox.stub(getConfigModule, 'getConfig').returns({
+        showLineNumbers: false,
+        showWorkspaceFolderInFilePath: true,
+        startFolderDisplayDepth: 2,
+        endFolderDisplayDepth: 1,
+        startFolderDisplayIndex: 0,
+      });
+
+      // Test with line number (should be ignored)
+      const filePath = '/test/workspace/src/utils/file.ts';
+      const result = formatPathLabel(filePath, { lineNumber: 42 });
+
+      // Should NOT contain :42
+      assert.ok(!result.includes(':42'), `Path should not contain :42, got: ${result}`);
+      assert.ok(!result.endsWith(':42'), `Path should not end with :42, got: ${result}`);
+
+      // Restore original getConfig
+      getConfigModule.getConfig = originalGetConfig;
+    });
   });
 });

@@ -8,6 +8,8 @@ import {
   waitForSearchResults,
   waitForCondition,
   withConfiguration,
+  hasLineNumbersInDetails,
+  LINE_NUMBER_REGEX,
   TEST_TIMEOUTS,
 } from '../utils/periscopeTestHelper';
 
@@ -455,6 +457,116 @@ suite('Configuration Options - Real Behavior', function () {
         `Search should complete in under 1 second, took ${searchTime}ms`,
       );
       assert.ok(results.count > 0, 'Should still find results with performance settings');
+    });
+  });
+
+  suite('showLineNumbers Configuration', () => {
+    test('shows line numbers by default', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
+
+      // Test default behavior - no configuration override needed
+      const results = await periscopeTestHelpers.search('function');
+      assert.ok(results.count > 0, 'Should find results');
+
+      // Check that QuickPick items have line numbers in detail
+      const qp = cx.qp;
+      assert.ok(qp, 'QuickPick should be active');
+
+      const items = qp.items as any[];
+      const itemsWithDetail = items.filter((item) => item.detail);
+      assert.ok(itemsWithDetail.length > 0, 'Should have items with detail');
+
+      // Verify line numbers appear in details using helper
+      assert.ok(
+        hasLineNumbersInDetails(itemsWithDetail),
+        'Should have line numbers in details by default',
+      );
+    });
+
+    test('hides line numbers when disabled', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
+
+      await withConfiguration(
+        {
+          showLineNumbers: false,
+        },
+        async () => {
+          const results = await periscopeTestHelpers.search('function');
+          assert.ok(results.count > 0, 'Should find results');
+
+          // Check that QuickPick items don't have line numbers in detail
+          const qp = cx.qp;
+          assert.ok(qp, 'QuickPick should be active');
+
+          const items = qp.items as any[];
+          const itemsWithDetail = items.filter((item) => item.detail);
+
+          if (itemsWithDetail.length > 0) {
+            // Check that none of the details end with a line number pattern
+            assert.ok(
+              !hasLineNumbersInDetails(itemsWithDetail),
+              'Should not have line numbers in details when disabled',
+            );
+          }
+        },
+      );
+    });
+
+    test('updates line numbers display during active search', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
+
+      // Start search with default settings (line numbers enabled)
+      const results = await periscopeTestHelpers.search('function', { keepOpen: true });
+      assert.ok(results.count > 0, 'Should find results');
+
+      const qp = cx.qp;
+      assert.ok(qp, 'QuickPick should be active');
+
+      // Check initial state (line numbers should be shown by default)
+      let items = qp.items as any[];
+      let itemsWithDetail = items.filter((item) => item.detail);
+      assert.ok(itemsWithDetail.length > 0, 'Should have items with detail');
+      assert.ok(hasLineNumbersInDetails(itemsWithDetail), 'Should have line numbers by default');
+
+      // Disable line numbers using withConfiguration
+      await withConfiguration(
+        {
+          showLineNumbers: false,
+        },
+        async () => {
+          // Trigger a new search to refresh results
+          qp.value = '';
+          await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
+          qp.value = 'function';
+          await waitForSearchResults(1, TEST_TIMEOUTS.SEARCH_RESULTS);
+
+          // Check updated state (no line numbers)
+          items = qp.items as any[];
+          itemsWithDetail = items.filter((item) => item.detail);
+          if (itemsWithDetail.length > 0) {
+            assert.ok(
+              !hasLineNumbersInDetails(itemsWithDetail),
+              'Should not have line numbers after disabling',
+            );
+          }
+        },
+      );
+
+      // After withConfiguration completes, settings are automatically restored
+      // Verify restoration by triggering another search
+      qp.value = '';
+      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.UI_STABILIZATION));
+      qp.value = 'function';
+      await waitForSearchResults(1, TEST_TIMEOUTS.SEARCH_RESULTS);
+
+      // Check that line numbers are back (default behavior)
+      items = qp.items as any[];
+      itemsWithDetail = items.filter((item) => item.detail);
+      assert.ok(itemsWithDetail.length > 0, 'Should have items with detail after restoration');
+      assert.ok(
+        hasLineNumbersInDetails(itemsWithDetail),
+        'Should have line numbers after restoration to default',
+      );
     });
   });
 });
