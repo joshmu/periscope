@@ -23,6 +23,48 @@
       ],
       "outFiles": ["${workspaceFolder}/out/test/**/*.js"],
       "preLaunchTask": "${defaultBuildTask}"
+    },
+    {
+      "name": "Extension Tests (Single)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+      ],
+      "outFiles": ["${workspaceFolder}/out/test/**/*.js"],
+      "preLaunchTask": "${defaultBuildTask}",
+      "env": {
+        "MOCHA_GREP": "${input:testGrep}"
+      }
+    },
+    {
+      "name": "Extension Tests (File)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+      ],
+      "outFiles": ["${workspaceFolder}/out/test/**/*.js"],
+      "preLaunchTask": "${defaultBuildTask}",
+      "env": {
+        "TEST_FILE": "${input:testFile}"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "testGrep",
+      "type": "promptString",
+      "description": "Enter test pattern to match (e.g., 'should handle', 'Configuration')",
+      "default": ""
+    },
+    {
+      "id": "testFile",
+      "type": "promptString",
+      "description": "Enter test file name without .test.ts extension (e.g., 'extension', 'search')",
+      "default": ""
     }
   ]
 }

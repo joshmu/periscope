@@ -13,7 +13,9 @@ async function main() {
     const extensionTestsPath = path.resolve(__dirname, './suite/index');
 
     // Set environment variables for testing
-    const launchArgs: string[] = [];
+    // Open the fixture workspace for testing - use source directory not compiled
+    const testWorkspace = path.resolve(__dirname, '../../test/fixtures/workspace');
+    const launchArgs: string[] = [testWorkspace];
     const env = {
       ...process.env,
       NODE_ENV: 'test',
@@ -33,4 +35,4 @@ async function main() {
   }
 }
 
-main();
+void main();

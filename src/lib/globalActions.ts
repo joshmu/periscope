@@ -3,7 +3,7 @@ import * as path from 'path';
 import { log } from '../utils/log';
 import { checkKillProcess } from './ripgrep';
 import { context as cx, updateAppState } from './context';
-import { QPItemQuery } from '../types';
+import { QPItemFile, QPItemQuery } from '../types';
 import { closePreviewEditor, setCursorPosition } from './editorActions';
 
 type ConfirmPayload = ConfirmPayloadDefault | ConfirmHorizontalSplitPayload;
@@ -11,14 +11,14 @@ type ConfirmPayload = ConfirmPayloadDefault | ConfirmHorizontalSplitPayload;
 type ConfirmPayloadDefault = { context: 'unknown' };
 
 type ConfirmHorizontalSplitPayload = {
-  item: QPItemQuery;
+  item: QPItemQuery | QPItemFile;
   context: 'openInHorizontalSplit';
 };
 
 export function confirm(payload: ConfirmPayload = { context: 'unknown' }) {
   checkKillProcess();
 
-  let currentItem = cx.qp.selectedItems[0] as QPItemQuery;
+  let currentItem = cx.qp.selectedItems[0] as QPItemQuery | QPItemFile;
   if (payload.context === 'openInHorizontalSplit') {
     currentItem = payload.item;
   }
@@ -27,20 +27,44 @@ export function confirm(payload: ConfirmPayload = { context: 'unknown' }) {
     return;
   }
 
-  const { filePath, linePos, colPos, rawResult } = currentItem.data;
-  vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
-    const options: vscode.TextDocumentShowOptions = {};
+  // Handle file items differently from query items
+  if (currentItem._type === 'QuickPickItemFile') {
+    const { filePath } = currentItem.data;
+    vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
+      const options: vscode.TextDocumentShowOptions = {};
 
-    if (payload.context === 'openInHorizontalSplit') {
-      options.viewColumn = vscode.ViewColumn.Beside;
-      closePreviewEditor();
-    }
+      if (payload.context === 'openInHorizontalSplit') {
+        options.viewColumn = vscode.ViewColumn.Beside;
+        closePreviewEditor();
+      }
 
-    vscode.window.showTextDocument(document, options).then((editor) => {
-      setCursorPosition(editor, linePos, colPos, rawResult);
-      cx.qp.dispose();
+      vscode.window.showTextDocument(document, options).then((editor) => {
+        // For file items, position at the beginning of the file
+        const position = new vscode.Position(0, 0);
+        editor.selection = new vscode.Selection(position, position);
+        editor.revealRange(
+          new vscode.Range(position, position),
+          vscode.TextEditorRevealType.InCenter,
+        );
+        cx.qp.dispose();
+      });
     });
-  });
+  } else {
+    const { filePath, linePos, colPos, rawResult } = currentItem.data;
+    vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
+      const options: vscode.TextDocumentShowOptions = {};
+
+      if (payload.context === 'openInHorizontalSplit') {
+        options.viewColumn = vscode.ViewColumn.Beside;
+        closePreviewEditor();
+      }
+
+      vscode.window.showTextDocument(document, options).then((editor) => {
+        setCursorPosition(editor, linePos, colPos, rawResult);
+        cx.qp.dispose();
+      });
+    });
+  }
 }
 
 // start periscope extension/search

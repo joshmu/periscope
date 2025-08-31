@@ -53,6 +53,10 @@
       {
         "command": "periscope.resumeSearchCurrentFile",
         "title": "Periscope: Resume Search (Current File)"
+      },
+      {
+        "command": "periscope.searchFiles",
+        "title": "Periscope: Search Files"
       }
     ],
     "configuration": {
@@ -259,12 +263,16 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && node scripts/postCompile.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
     "lint": "eslint src --ext ts && prettier --check .",
     "lint:fix": "eslint src --ext ts --fix && prettier --write .",
     "test": "npm run lint && node ./out/test/runTest.js",
+    "test:single": "npm run compile && MOCHA_GREP=\"$npm_config_grep\" node ./out/test/runTest.js",
+    "test:file": "npm run compile && TEST_FILE=\"$npm_config_file\" node ./out/test/runTest.js",
+    "test:watch": "npm run compile && TEST_FILE=\"$npm_config_file\" MOCHA_GREP=\"$npm_config_grep\" nodemon --watch src --watch test --ext ts --exec \"npm run compile && node ./out/test/runTest.js\"",
+    "test:no-lint": "node ./out/test/runTest.js",
     "prepare": "husky"
   },
   "dependencies": {

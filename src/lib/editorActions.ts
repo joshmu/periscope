@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { AllQPItemVariants, QPItemQuery } from '../types';
+import { AllQPItemVariants, QPItemFile, QPItemQuery } from '../types';
 import { context as cx } from './context';
 import { RgMatchResult } from '../types/ripgrep';
 
@@ -18,7 +18,7 @@ export const openInHorizontalSplit = async () => {
   }
 
   // grab the current selected item
-  const currentItem = cx.qp.activeItems[0] as QPItemQuery;
+  const currentItem = cx.qp.activeItems[0] as QPItemQuery | QPItemFile;
 
   if (!currentItem?.data) {
     return;
@@ -30,13 +30,31 @@ export const openInHorizontalSplit = async () => {
 
   closePreviewEditor();
 
-  const { filePath, linePos, colPos, rawResult } = currentItem.data;
-  const document = await vscode.workspace.openTextDocument(filePath);
-  const editor = await vscode.window.showTextDocument(document, options);
+  // Handle file items differently from query items
+  if (currentItem._type === 'QuickPickItemFile') {
+    const { filePath } = currentItem.data;
+    const document = await vscode.workspace.openTextDocument(filePath);
+    const editor = await vscode.window.showTextDocument(document, options);
 
-  if (editor) {
-    setCursorPosition(editor, linePos, colPos, rawResult);
+    if (editor) {
+      // For file items, just position at the beginning of the file
+      const position = new vscode.Position(0, 0);
+      editor.selection = new vscode.Selection(position, position);
+      editor.revealRange(
+        new vscode.Range(position, position),
+        vscode.TextEditorRevealType.InCenter,
+      );
+    }
+  } else {
+    const { filePath, linePos, colPos, rawResult } = currentItem.data;
+    const document = await vscode.workspace.openTextDocument(filePath);
+    const editor = await vscode.window.showTextDocument(document, options);
+
+    if (editor) {
+      setCursorPosition(editor, linePos, colPos, rawResult);
+    }
   }
+
   cx.qp?.dispose();
 };
 
@@ -75,25 +93,24 @@ export function setCursorPosition(
   colPos: number,
   rgLine: RgMatchResult['rawResult'],
 ) {
-  const selection = new vscode.Selection(0, 0, 0, 0);
-  editor.selection = selection;
+  // Check if editor is still valid
+  if (!editor || editor.document.isClosed) {
+    return;
+  }
 
   const lineNumber = Math.max(linePos ? linePos - 1 : 0, 0);
   const charNumber = Math.max(colPos ? colPos - 1 : 0, 0);
 
-  editor
-    .edit((editBuilder) => {
-      editBuilder.insert(selection.active, '');
-    })
-    .then(() => {
-      const newPosition = new vscode.Position(lineNumber, charNumber);
-      const { range } = editor.document.lineAt(newPosition);
-      editor.selection = new vscode.Selection(newPosition, newPosition);
-      editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
-      // Extract submatches from rgLine
-      const matches = rgLine.data.submatches.map(({ start, end }) => ({ start, end }));
-      cx.matchDecoration.set(editor, matches);
-    });
+  const newPosition = new vscode.Position(lineNumber, charNumber);
+  const { range } = editor.document.lineAt(newPosition);
+
+  // Set cursor position and reveal range synchronously
+  editor.selection = new vscode.Selection(newPosition, newPosition);
+  editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+
+  // Extract submatches from rgLine and apply decorations
+  const matches = rgLine.data.submatches.map(({ start, end }) => ({ start, end }));
+  cx.matchDecoration.set(editor, matches);
 }
 
 export function handleNoResultsFound() {
@@ -117,7 +134,7 @@ export function showPreviewOfOriginDocument() {
   });
 }
 
-export function peekItem(items: readonly QPItemQuery[]) {
+export function peekItem(items: readonly (QPItemQuery | QPItemFile)[]) {
   if (items.length === 0) {
     return;
   }
@@ -127,15 +144,36 @@ export function peekItem(items: readonly QPItemQuery[]) {
     return;
   }
 
-  const { filePath, linePos, colPos, rawResult } = currentItem.data;
-  vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
-    vscode.window
-      .showTextDocument(document, {
-        preview: true,
-        preserveFocus: true,
-      })
-      .then((editor) => {
-        setCursorPosition(editor, linePos, colPos, rawResult);
-      });
-  });
+  // Handle file items differently from query items
+  if (currentItem._type === 'QuickPickItemFile') {
+    const { filePath } = currentItem.data;
+    vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
+      vscode.window
+        .showTextDocument(document, {
+          preview: true,
+          preserveFocus: true,
+        })
+        .then((editor) => {
+          // For file items, position at the beginning of the file
+          const position = new vscode.Position(0, 0);
+          editor.selection = new vscode.Selection(position, position);
+          editor.revealRange(
+            new vscode.Range(position, position),
+            vscode.TextEditorRevealType.InCenter,
+          );
+        });
+    });
+  } else {
+    const { filePath, linePos, colPos, rawResult } = currentItem.data;
+    vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
+      vscode.window
+        .showTextDocument(document, {
+          preview: true,
+          preserveFocus: true,
+        })
+        .then((editor) => {
+          setCursorPosition(editor, linePos, colPos, rawResult);
+        });
+    });
+  }
 }

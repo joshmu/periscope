@@ -1,0 +1,13 @@
+{
+    "periscope.rgGlobExcludes": [],
+    "periscope.rgOptions": [],
+    "periscope.showPreviousResultsWhenNoMatches": false,
+    "periscope.rgQueryParams": [],
+    "periscope.rgMenuActions": [],
+    "periscope.alwaysShowRgMenuActions": false,
+    "periscope.enableGotoNativeSearch": true,
+    "periscope.gotoNativeSearchSuffix": ">>",
+    "periscope.peekBorderColor": null,
+    "periscope.peekMatchColor": null,
+    "periscope.showLineNumbers": true
+}

@@ -3,46 +3,71 @@ import * as vscode from 'vscode';
 import { getConfig } from '../utils/getConfig';
 import { context as cx, updateAppState } from './context';
 import { tryJsonParse } from '../utils/jsonUtils';
-import { QPItemQuery } from '../types';
+import { QPItemFile, QPItemQuery } from '../types';
 import { RgMatchResult } from '../types/ripgrep';
 import { log, notifyError } from '../utils/log';
-import { createResultItem } from '../utils/quickpickUtils';
+import { createResultItem, createFileItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
 import { getCurrentFilePath } from '../utils/searchCurrentFile';
 
 function getRgCommand(value: string, extraFlags?: string[]) {
   const config = getConfig();
   const { workspaceFolders } = vscode.workspace;
-
   const { rgPath } = config;
 
-  const rgRequiredFlags = [
-    '--line-number',
-    '--column',
-    '--no-heading',
-    '--with-filename',
-    '--color=never',
-    '--json',
-  ];
-
   const rootPaths = workspaceFolders ? workspaceFolders.map((folder) => folder.uri.fsPath) : [];
-  const paths = cx.currentFileOnly ? [getCurrentFilePath()] : rootPaths;
-
+  const paths = cx.searchMode === 'currentFile' ? [getCurrentFilePath()] : rootPaths;
   const excludes = config.rgGlobExcludes.map((exclude) => `--glob "!${exclude}"`);
 
-  const rgFlags = [
-    ...rgRequiredFlags,
-    ...config.rgOptions,
+  // Check if this is a file search (either from searchMode or injected flags)
+  const isFileSearch = cx.searchMode === 'files' || cx.injectedRgFlags.includes('--files');
+
+  // Common flags for both search modes
+  const commonFlags = [
     ...cx.rgMenuActionsSelected,
-    ...paths.filter((path) => typeof path === 'string').map(ensureQuotedPath),
+    ...paths.filter((path): path is string => typeof path === 'string').map(ensureQuotedPath),
     ...config.addSrcPaths.map(ensureQuotedPath),
-    ...(extraFlags || []),
     ...excludes,
   ];
 
-  const normalizedQuery = handleSearchTermWithAdditionalRgParams(value);
+  let searchPattern = '';
+  let modeSpecificFlags: string[];
 
-  return `"${rgPath}" ${normalizedQuery} ${rgFlags.join(' ')}`;
+  if (isFileSearch) {
+    // File search mode - use --files flag and glob pattern
+    const fileGlob = value ? `--glob "*${value}*"` : '';
+    // Only add --files if it's not already in injectedRgFlags
+    const filesFlag = cx.injectedRgFlags.includes('--files') ? [] : ['--files'];
+
+    modeSpecificFlags = [
+      ...filesFlag,
+      ...cx.injectedRgFlags,
+      fileGlob,
+      ...config.rgOptions.filter((opt) => !opt.includes('--json')), // remove json flag if present
+    ];
+  } else {
+    // Content search mode - use standard flags with search pattern
+    searchPattern = handleSearchTermWithAdditionalRgParams(value);
+
+    const rgRequiredFlags = [
+      '--line-number',
+      '--column',
+      '--no-heading',
+      '--with-filename',
+      '--color=never',
+      '--json',
+    ];
+
+    modeSpecificFlags = [
+      ...rgRequiredFlags,
+      ...config.rgOptions,
+      ...cx.injectedRgFlags,
+      ...(extraFlags || []),
+    ];
+  }
+
+  const rgFlags = [...modeSpecificFlags, ...commonFlags].filter(Boolean);
+  return `"${rgPath}" ${searchPattern} ${rgFlags.join(' ')}`.trim();
 }
 
 /**
@@ -58,12 +83,23 @@ function handleSearchTermWithAdditionalRgParams(query: string): string {
 }
 
 export function rgSearch(value: string, rgExtraFlags?: string[]) {
+  performSearch(value, rgExtraFlags);
+}
+
+function performSearch(value: string, rgExtraFlags?: string[]) {
   updateAppState('SEARCHING');
   cx.qp.busy = true;
+
+  const isFileSearch = cx.searchMode === 'files' || cx.injectedRgFlags.includes('--files');
   const rgCmd = getRgCommand(value, rgExtraFlags);
-  log('rgCmd:', rgCmd);
+
+  log(isFileSearch ? 'rgCmd (files):' : 'rgCmd:', rgCmd);
+  cx.lastRgCommand = rgCmd;
   checkKillProcess();
+
+  // Storage for results based on search type
   const searchResults: RgMatchResult[] = [];
+  const fileResults: string[] = [];
 
   const spawnProcess = spawn(rgCmd, [], { shell: true });
   cx.spawnRegistry.push(spawnProcess);
@@ -71,65 +107,93 @@ export function rgSearch(value: string, rgExtraFlags?: string[]) {
   spawnProcess.stdout.on('data', (data: Buffer) => {
     const lines = data.toString().split('\n').filter(Boolean);
 
-    lines.forEach((line) => {
-      const parsedLine = tryJsonParse<RgMatchResult['rawResult']>(line);
-
-      if (parsedLine?.type === 'match') {
-        searchResults.push(normaliseRgResult(parsedLine));
-      }
-    });
+    if (isFileSearch) {
+      // File search - just collect file paths
+      fileResults.push(...lines);
+    } else {
+      // Content search - parse JSON results
+      lines.forEach((line) => {
+        const parsedLine = tryJsonParse<RgMatchResult['rawResult']>(line);
+        if (parsedLine?.type === 'match') {
+          searchResults.push(normaliseRgResult(parsedLine));
+        }
+      });
+    }
   });
 
   spawnProcess.stderr.on('data', (data: Buffer) => {
-    const errorMsg = data.toString();
-
-    // additional UI feedback for common errors
-    if (errorMsg.includes('unrecognized')) {
-      cx.qp.title = errorMsg;
-    }
-
-    log.error(data.toString());
-    handleNoResultsFound();
+    handleRipgrepError(data);
   });
 
   spawnProcess.on('exit', (code: number) => {
-    /**
-     * we need to additionally check 'SEARCHING' state as the user might have cancelled the search
-     * but the process may still be running (eg: go back to the rg menu actions view)
-     */
-    if (code === 0 && searchResults.length && cx.appState === 'SEARCHING') {
-      cx.qp.items = searchResults
-        .map((searchResult) => {
-          const { filePath, linePos, colPos, textResult } = searchResult;
-
-          // if all data is not available then remove the item
-          if (!filePath || !linePos || !colPos || !textResult) {
-            return false;
-          }
-
-          return createResultItem(searchResult);
-        })
-        .filter(Boolean) as QPItemQuery[];
-    } else if (code === null || code === 0) {
-      // do nothing if no code provided or process is success but nothing needs to be done
-      log('Nothing to do...');
-      return;
-    } else if (code === 127) {
-      notifyError(
-        `PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`,
-      );
-    } else if (code === 1) {
-      log(`Ripgrep exited with code ${code} (no results found)`);
-      handleNoResultsFound();
-    } else if (code === 2) {
-      log.error(`Ripgrep exited with code ${code} (error during search operation)`);
-    } else {
-      const msg = `Ripgrep exited with code ${code}`;
-      log.error(msg);
-      notifyError(`PERISCOPE: ${msg}`);
-    }
-    cx.qp.busy = false;
+    handleRipgrepExit(code, () => {
+      if (isFileSearch) {
+        processFileResults(fileResults);
+      } else {
+        processContentResults(searchResults);
+      }
+    });
   });
+}
+
+// Common error handler for ripgrep processes
+function handleRipgrepError(data: Buffer) {
+  const errorMsg = data.toString();
+
+  if (errorMsg.includes('unrecognized')) {
+    cx.qp.title = errorMsg;
+  }
+
+  log.error(errorMsg);
+  handleNoResultsFound();
+}
+
+// Process file search results and update QuickPick items
+function processFileResults(fileResults: string[]) {
+  if (fileResults.length) {
+    cx.qp.items = fileResults.map((filePath) => createFileItem(filePath.trim())) as QPItemFile[];
+  }
+}
+
+// Process content search results and update QuickPick items
+function processContentResults(searchResults: RgMatchResult[]) {
+  if (searchResults.length) {
+    cx.qp.items = searchResults
+      .map((searchResult) => {
+        const { filePath, linePos, colPos, textResult } = searchResult;
+
+        // if all data is not available then remove the item
+        if (!filePath || !linePos || !colPos || !textResult) {
+          return false;
+        }
+
+        return createResultItem(searchResult);
+      })
+      .filter(Boolean) as QPItemQuery[];
+  }
+}
+
+// Common exit handler for ripgrep processes
+function handleRipgrepExit(code: number | null, onSuccess: () => void) {
+  if (code === 0 && cx.appState === 'SEARCHING') {
+    onSuccess();
+  } else if (code === null || code === 0) {
+    log('Nothing to do...');
+  } else if (code === 127) {
+    notifyError(
+      `PERISCOPE: Ripgrep exited with code ${code} (Ripgrep not found. Please install ripgrep)`,
+    );
+  } else if (code === 1) {
+    log(`Ripgrep exited with code ${code} (no results found)`);
+    handleNoResultsFound();
+  } else if (code === 2) {
+    log.error(`Ripgrep exited with code ${code} (error during search operation)`);
+  } else {
+    const msg = `Ripgrep exited with code ${code}`;
+    log.error(msg);
+    notifyError(`PERISCOPE: ${msg}`);
+  }
+  cx.qp.busy = false;
 }
 
 function normaliseRgResult(parsedLine: RgMatchResult['rawResult']): RgMatchResult {

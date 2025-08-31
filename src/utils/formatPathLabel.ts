@@ -12,10 +12,14 @@ export function formatPathLabel(filePath: string, options?: { lineNumber?: numbe
   const { workspaceFolders } = vscode.workspace;
   const config = getConfig();
 
-  let lineNumberSuffix = '';
-  if (typeof options?.lineNumber === 'number' && config.showLineNumbers) {
-    lineNumberSuffix = `:${options.lineNumber}`;
-  }
+  // Validate and format line number with proper checks
+  const lineNumberSuffix =
+    config.showLineNumbers &&
+    typeof options?.lineNumber === 'number' &&
+    Number.isInteger(options.lineNumber) &&
+    options.lineNumber > 0
+      ? `:${options.lineNumber}`
+      : '';
 
   if (!workspaceFolders) {
     return `${filePath}${lineNumberSuffix}`;
