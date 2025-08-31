@@ -11,8 +11,8 @@ const isWindows = process.platform === 'win32';
 export const LINE_NUMBER_REGEX = /:(\d+)$/;
 
 // CI needs longer timeouts, especially on Windows
-// Windows CI: 2.5x slower, Other CI: 1.5x slower, Local: 1x (normal speed)
-const CI_TIMEOUT_MULTIPLIER = isCI ? (isWindows ? 2.5 : 1.5) : 1;
+// Windows CI: 3x slower, Other CI: 1.5x slower, Local: 1x (normal speed)
+const CI_TIMEOUT_MULTIPLIER = isCI ? (isWindows ? 3 : 1.5) : 1;
 
 // Log environment for debugging CI issues
 if (isCI) {
