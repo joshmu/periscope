@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+# [1.15.0](https://github.com/joshmu/periscope/compare/v1.14.0...v1.15.0) (2025-08-31)
+
+### Bug Fixes
+
+- **editor:** remove unnecessary async edit in setCursorPosition ([018dce6](https://github.com/joshmu/periscope/commit/018dce690a2be74d56543424428bdc5f302ae572))
+- **search:** restore dynamic --files flag detection in query ([35140f5](https://github.com/joshmu/periscope/commit/35140f5d7d4a1066e2c19f02b57e5d9e1462de15))
+- **test:** increase Windows CI timeout multiplier to 3x for stability ([f4124e2](https://github.com/joshmu/periscope/commit/f4124e20b06b827be891d9a2cead609ff97832eb))
+- **test:** normalize startFile paths for cross-platform compatibility ([456d92b](https://github.com/joshmu/periscope/commit/456d92b86a5e82578d41afb10d823195554db500))
+- **test:** prevent settings.json modifications after test runs ([cfa6a61](https://github.com/joshmu/periscope/commit/cfa6a61816338fe0e01f2031b3a040b66e8a459c))
+- **test:** remove color overrides causing config test failures ([0168064](https://github.com/joshmu/periscope/commit/0168064898b504260275477979be8b77e5e0197f))
+- **test:** resolve CI race condition in file search mode test ([27283d7](https://github.com/joshmu/periscope/commit/27283d7479dcc0416250a7cc9935392966a2fa63))
+- **test:** resolve failing escape key test with proper editor state setup ([596368c](https://github.com/joshmu/periscope/commit/596368c60d07bad855f7979130e00288f513d3b9))
+- **test:** resolve flaky preview tests and enhance waitForPreviewUpdate helper ([4b3518b](https://github.com/joshmu/periscope/commit/4b3518b8cf79067ee20ed1d9266ba05b496cb932))
+- **test:** resolve Windows CI test failures ([5da81c2](https://github.com/joshmu/periscope/commit/5da81c2ad260934d74d7cdfd64892bedad0719ab))
+- **tests:** simplify wait time calculation for CI-aware timeouts ([e6145b0](https://github.com/joshmu/periscope/commit/e6145b09e1bc081dbcbabad3a26913a62cf95f0d))
+
+### Features
+
+- implement file search with improved architecture ([#89](https://github.com/joshmu/periscope/issues/89)) ([43ae1b2](https://github.com/joshmu/periscope/commit/43ae1b223068307f02789feb41b774f48daf91c4))
+- merge master branch with line numbers feature from PR [#97](https://github.com/joshmu/periscope/issues/97) ([5ebe3cd](https://github.com/joshmu/periscope/commit/5ebe3cdd9633701a59e2b9849f3c4b07c6ba34b4))
+- **search:** add injectable arguments for flexible ripgrep configuration ([b119b2e](https://github.com/joshmu/periscope/commit/b119b2e1fca16a4882e2ad53934703a0344a8ea4))
+- **search:** integrate line numbers feature with updated test architecture ([4b4e929](https://github.com/joshmu/periscope/commit/4b4e929b170f6f7c3065a45cd986551bbb4879b1))
+- **test:** add CI-aware timeout multipliers ([dbfbb3e](https://github.com/joshmu/periscope/commit/dbfbb3ef029a347e27c7d607b07ff601e17a1c63))
+- **test:** add single test execution capabilities ([d92b208](https://github.com/joshmu/periscope/commit/d92b208561569cf8539a0961663a7436569dce3e))
+- **test:** fix configuration exclusion test and improve test helper ([34c3e72](https://github.com/joshmu/periscope/commit/34c3e728541825103e2d0f945ae11ab56e27bbb5))
+
+### Performance Improvements
+
+- **test:** reduce test execution time by 58% with optimized timeouts ([7cae1a4](https://github.com/joshmu/periscope/commit/7cae1a4b248e4e944f9f6cd6f382769fb0e12e41))
+
 # [1.14.0](https://github.com/joshmu/periscope/compare/v1.13.3...v1.14.0) (2025-08-31)
 
 ### Features
