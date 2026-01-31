@@ -192,13 +192,9 @@ export function getRgQueryParamsTitle(rgQuery: string, extraRgFlags: string[]): 
 
 // setup QuickPick for buffer list (open documents)
 export function setupQuickPickForBufferList() {
-  cx.qp.items = [];
   cx.qp.canSelectMany = false;
   cx.qp.value = '';
-
-  // Get all open text documents and create buffer items
-  const bufferItems = getOpenBufferItems();
-  cx.qp.items = bufferItems;
+  cx.qp.items = getOpenBufferItems();
 
   cx.disposables.query.push(
     cx.qp.onDidChangeValue(onDidChangeValueBufferList),
@@ -208,58 +204,45 @@ export function setupQuickPickForBufferList() {
   );
 }
 
-// Get all open buffer items
-function getOpenBufferItems(): QPItemBuffer[] {
-  const documents = vscode.workspace.textDocuments;
-  return documents
-    .filter((doc) => !doc.uri.scheme.startsWith('output') && doc.uri.scheme !== 'debug')
-    .map((doc) => createBufferItem(doc));
+function isUserDocument(doc: vscode.TextDocument): boolean {
+  return !doc.uri.scheme.startsWith('output') && doc.uri.scheme !== 'debug';
 }
 
-// Filter buffer items based on query
+function getOpenBufferItems(): QPItemBuffer[] {
+  return vscode.workspace.textDocuments.filter(isUserDocument).map(createBufferItem);
+}
+
+function matchesQuery(item: QPItemBuffer, query: string): boolean {
+  const lowerQuery = query.toLowerCase();
+  return (
+    item.label?.toLowerCase().includes(lowerQuery) ||
+    item.detail?.toLowerCase().includes(lowerQuery) ||
+    item.description?.toLowerCase().includes(lowerQuery) ||
+    false
+  );
+}
+
 function onDidChangeValueBufferList(value: string) {
   const allBuffers = getOpenBufferItems();
-
-  if (!value) {
-    cx.qp.items = allBuffers;
-    return;
-  }
-
-  // Filter buffers based on query (case-insensitive matching on label and detail)
-  const query = value.toLowerCase();
-  const filteredBuffers = allBuffers.filter((item) => {
-    const labelMatch = item.label?.toLowerCase().includes(query);
-    const detailMatch = item.detail?.toLowerCase().includes(query);
-    const descMatch = item.description?.toLowerCase().includes(query);
-    return labelMatch || detailMatch || descMatch;
-  });
-
-  cx.qp.items = filteredBuffers;
+  cx.qp.items = value ? allBuffers.filter((item) => matchesQuery(item, value)) : allBuffers;
 }
 
-// Preview buffer when navigating
 function onDidChangeActiveBufferList(items: readonly AllQPItemVariants[]) {
   const bufferItems = items.filter(
-    (item) => item._type === 'QuickPickItemBuffer',
-  ) as readonly QPItemBuffer[];
-
+    (item): item is QPItemBuffer => item._type === 'QuickPickItemBuffer',
+  );
   if (bufferItems.length > 0) {
     peekBufferItem(bufferItems);
   }
 }
 
-// Open buffer when selected
 function onDidAcceptBufferList() {
   confirmBuffer();
 }
 
-// Handle item button trigger for buffer list
 function onDidTriggerItemButtonBufferList(e: vscode.QuickPickItemButtonEvent<AllQPItemVariants>) {
-  log('buffer item button triggered');
-  if (e.item._type === 'QuickPickItemBuffer') {
-    confirmBuffer({
-      context: 'openInHorizontalSplit',
-      item: e.item,
-    });
+  if (e.item._type !== 'QuickPickItemBuffer') {
+    return;
   }
+  confirmBuffer({ context: 'openInHorizontalSplit', item: e.item });
 }

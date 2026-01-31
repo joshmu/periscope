@@ -77,28 +77,24 @@ export function confirm(payload: ConfirmPayload = { context: 'unknown' }) {
 }
 
 export function confirmBuffer(payload: ConfirmBufferPayload = { context: 'unknown' }) {
-  let currentItem = cx.qp.selectedItems[0] as QPItemBuffer;
-  if (payload.context === 'openInHorizontalSplit') {
-    currentItem = payload.item;
-  }
+  const currentItem =
+    payload.context === 'openInHorizontalSplit'
+      ? payload.item
+      : (cx.qp.selectedItems[0] as QPItemBuffer);
 
   if (!currentItem?.data?.uri) {
     return;
   }
 
-  const { uri } = currentItem.data;
+  const options: vscode.TextDocumentShowOptions =
+    payload.context === 'openInHorizontalSplit' ? { viewColumn: vscode.ViewColumn.Beside } : {};
 
-  vscode.workspace.openTextDocument(uri).then((document) => {
-    const options: vscode.TextDocumentShowOptions = {};
+  if (payload.context === 'openInHorizontalSplit') {
+    closePreviewEditor();
+  }
 
-    if (payload.context === 'openInHorizontalSplit') {
-      options.viewColumn = vscode.ViewColumn.Beside;
-      closePreviewEditor();
-    }
-
-    vscode.window.showTextDocument(document, options).then(() => {
-      cx.qp.dispose();
-    });
+  vscode.workspace.openTextDocument(currentItem.data.uri).then((document) => {
+    vscode.window.showTextDocument(document, options).then(() => cx.qp.dispose());
   });
 }
 

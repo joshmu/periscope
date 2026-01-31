@@ -42,27 +42,19 @@ export function createFileItem(filePath: string): QPItemFile {
   };
 }
 
-// create a quick pick item for buffer/open document
 export function createBufferItem(document: vscode.TextDocument): QPItemBuffer {
-  const isDirty = document.isDirty;
   const fileName = path.basename(document.uri.fsPath) || document.uri.fsPath;
-  const dirtyIndicator = isDirty ? ' $(circle-filled)' : '';
+  const dirtyIndicator = document.isDirty ? ' $(circle-filled)' : '';
 
   return {
     _type: 'QuickPickItemBuffer',
     label: `${fileName}${dirtyIndicator}`,
     description: document.languageId,
     detail: formatPathLabel(document.uri.fsPath),
-    data: {
-      uri: document.uri,
-      isDirty,
-    },
+    data: { uri: document.uri, isDirty: document.isDirty },
     alwaysShow: true,
     buttons: [
-      {
-        iconPath: new vscode.ThemeIcon('split-horizontal'),
-        tooltip: 'Open in Horizontal split',
-      },
+      { iconPath: new vscode.ThemeIcon('split-horizontal'), tooltip: 'Open in Horizontal split' },
     ],
   };
 }
