@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { QPItemQuery, QPItemFile } from '../types';
+import * as path from 'path';
+import { QPItemQuery, QPItemFile, QPItemBuffer } from '../types';
 import { RgMatchResult } from '../types/ripgrep';
 import { formatPathLabel } from './formatPathLabel';
 
@@ -31,6 +32,31 @@ export function createFileItem(filePath: string): QPItemFile {
     _type: 'QuickPickItemFile',
     label: formatPathLabel(filePath),
     data: { filePath },
+    alwaysShow: true,
+    buttons: [
+      {
+        iconPath: new vscode.ThemeIcon('split-horizontal'),
+        tooltip: 'Open in Horizontal split',
+      },
+    ],
+  };
+}
+
+// create a quick pick item for buffer/open document
+export function createBufferItem(document: vscode.TextDocument): QPItemBuffer {
+  const isDirty = document.isDirty;
+  const fileName = path.basename(document.uri.fsPath) || document.uri.fsPath;
+  const dirtyIndicator = isDirty ? ' $(circle-filled)' : '';
+
+  return {
+    _type: 'QuickPickItemBuffer',
+    label: `${fileName}${dirtyIndicator}`,
+    description: document.languageId,
+    detail: formatPathLabel(document.uri.fsPath),
+    data: {
+      uri: document.uri,
+      isDirty,
+    },
     alwaysShow: true,
     buttons: [
       {
