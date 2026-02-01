@@ -13,6 +13,7 @@ _Inspired by nvim's [telescope](https://github.com/nvim-telescope/telescope.nvim
 - **Customizable**: Extensive configuration options to tailor search behavior and UI to your needs.
 - **Resume Search**: Quickly resume your last search with a single command.
 - **File Search**: Dedicated file search mode to quickly find files by name across your workspace.
+- **Buffer List**: View and filter all open buffers/tabs with real-time preview - similar to neovim's buffer list experience.
 
 ![Demo](https://github.com/joshmu/periscope/blob/master/assets/demo.gif?raw=true)
 
@@ -35,6 +36,7 @@ For optimal performance, ensure that the VSCode configuration _Editor: Enable Pr
 - **Search Current File Only**: Use `periscope.searchCurrentFile` command if you wish to narrow your search to the current file only
 - **Resume Last Search**: Use `periscope.resumeSearch` to instantly restore your previous search query, or `periscope.resumeSearchCurrentFile` to resume in the current file.
 - **File Search**: Use `periscope.searchFiles` command for dedicated file name searching, or add `--files` flag to your regular search query (e.g., `--files mycomponent` will find all files with "mycomponent" in their path).
+- **Buffer List**: Use `periscope.bufferList` to view all open buffers/tabs. Filter by typing to quickly find the buffer you need. Dirty (unsaved) buffers are marked with a filled circle indicator.
 
 If you use vim within vscode you can bind `periscope.search` in your `settings.json`:
 
@@ -45,6 +47,15 @@ If you use vim within vscode you can bind `periscope.search` in your `settings.j
     "commands": [
       {
         "command": "periscope.search",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  {
+    "before": ["<leader>", "b"],
+    "commands": [
+      {
+        "command": "periscope.bufferList",
         "when": "editorTextFocus"
       }
     ]
@@ -156,6 +167,7 @@ This extension contributes the following settings:
 - `periscope.resumeSearchCurrentFile`: Resume the last search query (current file)
 - `periscope.openInHorizontalSplit`: Open the result preview in a horizontal split.
 - `periscope.searchFiles`: Enable Periscope File Search (search for file names only)
+- `periscope.bufferList`: Open Buffer List to view and filter all open buffers/tabs
 
 ## Troubleshooting
 
