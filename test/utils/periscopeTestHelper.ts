@@ -674,11 +674,11 @@ export const periscopeTestHelpers = {
   },
 
   /**
-   * Open buffer list QuickPick
+   * Open search buffers QuickPick
    */
-  bufferList: (opts?: Partial<TestOptions>) =>
+  searchBuffers: (opts?: Partial<TestOptions>) =>
     executePeriscopeTest({
-      command: 'periscope.bufferList',
+      command: 'periscope.searchBuffers',
       ...opts,
     }),
 };

@@ -59,8 +59,8 @@
         "title": "Periscope: Search Files"
       },
       {
-        "command": "periscope.bufferList",
-        "title": "Periscope: Buffer List"
+        "command": "periscope.searchBuffers",
+        "title": "Periscope: Search Buffers"
       }
     ],
     "configuration": {

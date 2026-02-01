@@ -24,7 +24,7 @@ function updateSearchModeUI(mode: SearchMode) {
       cx.qp.placeholder = '🫧 Search for files...';
       break;
     case 'buffers':
-      cx.qp.title = 'Buffer List';
+      cx.qp.title = 'Search Buffers';
       cx.qp.placeholder = '🫧 Filter open buffers...';
       break;
     case 'all':

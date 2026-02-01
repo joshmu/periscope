@@ -40,8 +40,8 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand('periscope.search', { rgFlags: ['--files'] }),
   );
 
-  const periscopeBufferListCmd = vscode.commands.registerCommand('periscope.bufferList', () =>
-    PERISCOPE.bufferList(),
+  const periscopeSearchBuffersCmd = vscode.commands.registerCommand('periscope.searchBuffers', () =>
+    PERISCOPE.searchBuffers(),
   );
 
   context.subscriptions.push(
@@ -51,7 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
     periscopeResumeCmd,
     periscopeResumeCurrentFileCmd,
     periscopeSearchFilesCmd,
-    periscopeBufferListCmd,
+    periscopeSearchBuffersCmd,
   );
 }
 

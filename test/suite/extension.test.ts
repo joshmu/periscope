@@ -40,7 +40,7 @@ suite('Periscope Extension', () => {
         'periscope.resumeSearch',
         'periscope.resumeSearchCurrentFile',
         'periscope.searchFiles',
-        'periscope.bufferList',
+        'periscope.searchBuffers',
       ];
 
       assert.strictEqual(registerCommandStub.callCount, expectedCommands.length);

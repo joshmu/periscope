@@ -10,7 +10,7 @@ import {
 } from '../utils/periscopeTestHelper';
 import { QPItemBuffer } from '../../src/types';
 
-suite('Buffer List Feature', () => {
+suite('Search Buffers Feature', () => {
   let sandbox: sinon.SinonSandbox;
 
   setup(() => {
@@ -30,36 +30,36 @@ suite('Buffer List Feature', () => {
   });
 
   suite('Command Registration', () => {
-    test('periscope.bufferList command is registered', async function () {
+    test('periscope.searchBuffers command is registered', async function () {
       this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Get all registered commands
       const commands = await vscode.commands.getCommands(true);
 
       assert.ok(
-        commands.includes('periscope.bufferList'),
-        'periscope.bufferList command should be registered',
+        commands.includes('periscope.searchBuffers'),
+        'periscope.searchBuffers command should be registered',
       );
     });
   });
 
   suite('Search Mode', () => {
-    test('periscope.bufferList uses "buffers" mode', async function () {
+    test('periscope.searchBuffers uses "buffers" mode', async function () {
       this.timeout(TEST_TIMEOUTS.SUITE_DEFAULT);
 
       // Open some files first
       await openDocumentWithContent('content 1', 'typescript');
       await openDocumentWithContent('content 2', 'javascript');
 
-      // Execute the buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      // Execute the search buffers command
+      await vscode.commands.executeCommand('periscope.searchBuffers');
 
       // Wait for QuickPick to be ready
       await waitForQuickPick();
 
       // Assert the mode is set correctly
       assert.strictEqual(cx.searchMode, 'buffers');
-      assert.strictEqual(cx.qp?.title, 'Buffer List');
+      assert.strictEqual(cx.qp?.title, 'Search Buffers');
     });
   });
 
@@ -82,7 +82,7 @@ suite('Buffer List Feature', () => {
       });
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
       await waitForCondition(() => cx.qp?.items.length >= 1, TEST_TIMEOUTS.SEARCH_RESULTS);
 
@@ -105,7 +105,7 @@ suite('Buffer List Feature', () => {
       const doc3 = await openDocumentWithContent('content for file 3', 'python');
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for items to be populated
@@ -129,7 +129,7 @@ suite('Buffer List Feature', () => {
       const doc = editor.document;
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for items
@@ -159,7 +159,7 @@ suite('Buffer List Feature', () => {
       });
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for items
@@ -187,7 +187,7 @@ suite('Buffer List Feature', () => {
       await openDocumentWithContent('python code here', 'python');
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for all items to appear
@@ -215,7 +215,7 @@ suite('Buffer List Feature', () => {
       await openDocumentWithContent('content 2', 'javascript');
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for items
@@ -242,7 +242,7 @@ suite('Buffer List Feature', () => {
       await openDocumentWithContent('TypeScript content', 'typescript');
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for items
@@ -269,7 +269,7 @@ suite('Buffer List Feature', () => {
       const doc2Uri = editor2.document.uri.toString();
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for items
@@ -310,7 +310,7 @@ suite('Buffer List Feature', () => {
       await openDocumentWithContent('other content', 'javascript');
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for items
@@ -344,7 +344,7 @@ suite('Buffer List Feature', () => {
       await openDocumentWithContent('content', 'typescript');
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for items
@@ -369,7 +369,7 @@ suite('Buffer List Feature', () => {
       await vscode.commands.executeCommand('workbench.action.closeAllEditors');
 
       // Execute buffer list command with no open buffers
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Should show QuickPick even with no buffers
@@ -385,7 +385,7 @@ suite('Buffer List Feature', () => {
       await openDocumentWithContent('initial content', 'typescript');
 
       // Execute buffer list command
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for items
@@ -401,7 +401,7 @@ suite('Buffer List Feature', () => {
       await openDocumentWithContent('new content', 'javascript');
 
       // Re-open buffer list
-      await vscode.commands.executeCommand('periscope.bufferList');
+      await vscode.commands.executeCommand('periscope.searchBuffers');
       await waitForQuickPick();
 
       // Wait for items

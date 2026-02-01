@@ -74,7 +74,7 @@ function resumeSearchCurrentFile(extensionContext: vscode.ExtensionContext) {
   }
 }
 
-function bufferList() {
+function searchBuffers() {
   start();
 
   setSearchMode('buffers');
@@ -90,5 +90,5 @@ export const PERISCOPE = {
   resumeSearch,
   resumeSearchCurrentFile,
   openInHorizontalSplit,
-  bufferList,
+  searchBuffers,
 };
