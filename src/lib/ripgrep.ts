@@ -74,7 +74,7 @@ function getRgCommand(value: string, extraFlags?: string[]) {
  * Support for passing raw ripgrep queries by detection of a search_term within quotes within the input query
  * if found we can assume the rest of the query are additional ripgrep parameters
  */
-function handleSearchTermWithAdditionalRgParams(query: string): string {
+export function handleSearchTermWithAdditionalRgParams(query: string): string {
   const valueWithinQuotes = /".*?"/.exec(query);
   if (valueWithinQuotes) {
     return query;
@@ -196,7 +196,7 @@ function handleRipgrepExit(code: number | null, onSuccess: () => void) {
   cx.qp.busy = false;
 }
 
-function normaliseRgResult(parsedLine: RgMatchResult['rawResult']): RgMatchResult {
+export function normaliseRgResult(parsedLine: RgMatchResult['rawResult']): RgMatchResult {
   // eslint-disable-next-line camelcase, @typescript-eslint/naming-convention
   const { path, lines, line_number } = parsedLine.data;
   const filePath = path.text;
@@ -260,7 +260,7 @@ export function checkAndExtractRgFlagsFromQuery(userInput: string): {
  * Ensure that the src path provided is quoted
  * Required when config paths contain whitespace
  */
-function ensureQuotedPath(path: string): string {
+export function ensureQuotedPath(path: string): string {
   // support for paths already quoted via config
   if (path.startsWith('"') && path.endsWith('"')) {
     return path;
