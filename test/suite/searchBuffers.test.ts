@@ -210,7 +210,10 @@ suite('Search Buffers Feature', () => {
     test('shows all buffers when filter is cleared', async function () {
       this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
 
-      // Open multiple documents
+      // Close all editors first to ensure clean state
+      await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+
+      // Open exactly 2 documents
       await openDocumentWithContent('content 1', 'typescript');
       await openDocumentWithContent('content 2', 'javascript');
 
