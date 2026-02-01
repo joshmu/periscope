@@ -1,6 +1,11 @@
 import * as vscode from 'vscode';
 import { context as cx } from './context';
-import { onDidHide, setupQuickPickForQuery, setupRgMenuActions } from './quickpickActions';
+import {
+  onDidHide,
+  setupQuickPickForQuery,
+  setupRgMenuActions,
+  setupQuickPickForBufferList,
+} from './quickpickActions';
 import { start } from './globalActions';
 import { openInHorizontalSplit } from './editorActions';
 import { setSearchMode } from '../utils/searchCurrentFile';
@@ -69,9 +74,21 @@ function resumeSearchCurrentFile(extensionContext: vscode.ExtensionContext) {
   }
 }
 
+function bufferList() {
+  start();
+
+  setSearchMode('buffers');
+  setupQuickPickForBufferList();
+
+  cx.disposables.general.push(cx.qp.onDidHide(onDidHide));
+
+  cx.qp.show();
+}
+
 export const PERISCOPE = {
   search,
   resumeSearch,
   resumeSearchCurrentFile,
   openInHorizontalSplit,
+  bufferList,
 };

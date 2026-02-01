@@ -40,6 +40,7 @@ suite('Periscope Extension', () => {
         'periscope.resumeSearch',
         'periscope.resumeSearchCurrentFile',
         'periscope.searchFiles',
+        'periscope.bufferList',
       ];
 
       assert.strictEqual(registerCommandStub.callCount, expectedCommands.length);
@@ -60,8 +61,8 @@ suite('Periscope Extension', () => {
 
       activate(mockContext);
 
-      // 6 commands + 1 output channel
-      assert.strictEqual(mockContext.subscriptions.length, 7);
+      // 7 commands + 1 output channel
+      assert.strictEqual(mockContext.subscriptions.length, 8);
     });
   });
 

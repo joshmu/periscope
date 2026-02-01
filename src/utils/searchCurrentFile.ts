@@ -23,6 +23,10 @@ function updateSearchModeUI(mode: SearchMode) {
       cx.qp.title = 'File Search';
       cx.qp.placeholder = '🫧 Search for files...';
       break;
+    case 'buffers':
+      cx.qp.title = 'Buffer List';
+      cx.qp.placeholder = '🫧 Filter open buffers...';
+      break;
     case 'all':
     default:
       // Show injected flags in title if any are present (and not already handled by mode)
