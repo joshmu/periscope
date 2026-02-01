@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { AllQPItemVariants, QPItemFile, QPItemQuery } from '../types';
+import { AllQPItemVariants, QPItemBuffer, QPItemFile, QPItemQuery } from '../types';
 import { context as cx } from './context';
 import { RgMatchResult } from '../types/ripgrep';
 
@@ -176,4 +176,15 @@ export function peekItem(items: readonly (QPItemQuery | QPItemFile)[]) {
         });
     });
   }
+}
+
+export function peekBufferItem(items: readonly QPItemBuffer[]) {
+  const currentItem = items[0];
+  if (!currentItem?.data?.uri) {
+    return;
+  }
+
+  vscode.workspace.openTextDocument(currentItem.data.uri).then((document) => {
+    vscode.window.showTextDocument(document, { preview: true, preserveFocus: true });
+  });
 }

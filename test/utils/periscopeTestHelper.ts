@@ -672,4 +672,13 @@ export const periscopeTestHelpers = {
     await waitForQuickPick();
     return cx.qp;
   },
+
+  /**
+   * Open search buffers QuickPick
+   */
+  searchBuffers: (opts?: Partial<TestOptions>) =>
+    executePeriscopeTest({
+      command: 'periscope.searchBuffers',
+      ...opts,
+    }),
 };

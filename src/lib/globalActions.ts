@@ -3,7 +3,7 @@ import * as path from 'path';
 import { log } from '../utils/log';
 import { checkKillProcess } from './ripgrep';
 import { context as cx, updateAppState } from './context';
-import { QPItemFile, QPItemQuery } from '../types';
+import { QPItemBuffer, QPItemFile, QPItemQuery } from '../types';
 import { closePreviewEditor, setCursorPosition } from './editorActions';
 
 type ConfirmPayload = ConfirmPayloadDefault | ConfirmHorizontalSplitPayload;
@@ -12,6 +12,15 @@ type ConfirmPayloadDefault = { context: 'unknown' };
 
 type ConfirmHorizontalSplitPayload = {
   item: QPItemQuery | QPItemFile;
+  context: 'openInHorizontalSplit';
+};
+
+type ConfirmBufferPayload = ConfirmBufferPayloadDefault | ConfirmBufferHorizontalSplitPayload;
+
+type ConfirmBufferPayloadDefault = { context: 'unknown' };
+
+type ConfirmBufferHorizontalSplitPayload = {
+  item: QPItemBuffer;
   context: 'openInHorizontalSplit';
 };
 
@@ -65,6 +74,28 @@ export function confirm(payload: ConfirmPayload = { context: 'unknown' }) {
       });
     });
   }
+}
+
+export function confirmBuffer(payload: ConfirmBufferPayload = { context: 'unknown' }) {
+  const currentItem =
+    payload.context === 'openInHorizontalSplit'
+      ? payload.item
+      : (cx.qp.selectedItems[0] as QPItemBuffer);
+
+  if (!currentItem?.data?.uri) {
+    return;
+  }
+
+  const options: vscode.TextDocumentShowOptions =
+    payload.context === 'openInHorizontalSplit' ? { viewColumn: vscode.ViewColumn.Beside } : {};
+
+  if (payload.context === 'openInHorizontalSplit') {
+    closePreviewEditor();
+  }
+
+  vscode.workspace.openTextDocument(currentItem.data.uri).then((document) => {
+    vscode.window.showTextDocument(document, options).then(() => cx.qp.dispose());
+  });
 }
 
 // start periscope extension/search

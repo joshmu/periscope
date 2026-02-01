@@ -1,13 +1,20 @@
 import * as vscode from 'vscode';
-import { AllQPItemVariants, QPItemFile, QPItemQuery, QPItemRgMenuAction } from '../types';
-import { openNativeVscodeSearch, peekItem } from './editorActions';
+import {
+  AllQPItemVariants,
+  QPItemBuffer,
+  QPItemFile,
+  QPItemQuery,
+  QPItemRgMenuAction,
+} from '../types';
+import { openNativeVscodeSearch, peekItem, peekBufferItem } from './editorActions';
 import { checkKillProcess, checkAndExtractRgFlagsFromQuery, rgSearch } from './ripgrep';
 import { context as cx, updateAppState } from './context';
 import { getSelectedText } from '../utils/getSelectedText';
 import { log } from '../utils/log';
-import { confirm, finished } from './globalActions';
+import { confirm, confirmBuffer, finished } from './globalActions';
 import { saveQuery } from './storage';
 import { setSearchMode, resetSearchMode } from '../utils/searchCurrentFile';
+import { createBufferItem } from '../utils/quickpickUtils';
 
 // update quickpick event listeners for the query
 export function setupQuickPickForQuery(initialQuery: string = '') {
@@ -181,4 +188,77 @@ export function getRgQueryParamsTitle(rgQuery: string, extraRgFlags: string[]): 
 
   // hint in the title the expanded rgQueryParams command
   return `rg '${rgQuery}' ${extraRgFlags.join(' ')}`;
+}
+
+// setup QuickPick for buffer list (open documents)
+export function setupQuickPickForBufferList() {
+  cx.qp.canSelectMany = false;
+  cx.qp.value = '';
+  cx.qp.items = getOpenBufferItems();
+
+  cx.disposables.query.push(
+    cx.qp.onDidChangeValue(onDidChangeValueBufferList),
+    cx.qp.onDidChangeActive(onDidChangeActiveBufferList),
+    cx.qp.onDidAccept(onDidAcceptBufferList),
+    cx.qp.onDidTriggerItemButton(onDidTriggerItemButtonBufferList),
+  );
+}
+
+function isUserDocument(doc: vscode.TextDocument): boolean {
+  return !doc.uri.scheme.startsWith('output') && doc.uri.scheme !== 'debug';
+}
+
+function getOpenBufferItems(): QPItemBuffer[] {
+  const bufferItems: QPItemBuffer[] = [];
+
+  for (const tabGroup of vscode.window.tabGroups.all) {
+    for (const tab of tabGroup.tabs) {
+      if (tab.input instanceof vscode.TabInputText) {
+        const uri = tab.input.uri;
+        const document = vscode.workspace.textDocuments.find(
+          (doc) => doc.uri.toString() === uri.toString(),
+        );
+        if (document && isUserDocument(document)) {
+          bufferItems.push(createBufferItem(document));
+        }
+      }
+    }
+  }
+
+  return bufferItems;
+}
+
+function matchesQuery(item: QPItemBuffer, query: string): boolean {
+  const lowerQuery = query.toLowerCase();
+  return (
+    item.label?.toLowerCase().includes(lowerQuery) ||
+    item.detail?.toLowerCase().includes(lowerQuery) ||
+    item.description?.toLowerCase().includes(lowerQuery) ||
+    false
+  );
+}
+
+function onDidChangeValueBufferList(value: string) {
+  const allBuffers = getOpenBufferItems();
+  cx.qp.items = value ? allBuffers.filter((item) => matchesQuery(item, value)) : allBuffers;
+}
+
+function onDidChangeActiveBufferList(items: readonly AllQPItemVariants[]) {
+  const bufferItems = items.filter(
+    (item): item is QPItemBuffer => item._type === 'QuickPickItemBuffer',
+  );
+  if (bufferItems.length > 0) {
+    peekBufferItem(bufferItems);
+  }
+}
+
+function onDidAcceptBufferList() {
+  confirmBuffer();
+}
+
+function onDidTriggerItemButtonBufferList(e: vscode.QuickPickItemButtonEvent<AllQPItemVariants>) {
+  if (e.item._type !== 'QuickPickItemBuffer') {
+    return;
+  }
+  confirmBuffer({ context: 'openInHorizontalSplit', item: e.item });
 }

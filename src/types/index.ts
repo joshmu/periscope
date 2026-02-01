@@ -24,7 +24,21 @@ export interface QPItemFile extends vscode.QuickPickItem {
   };
 }
 
-export type AllQPItemVariants = QPItemDefault | QPItemQuery | QPItemRgMenuAction | QPItemFile;
+export interface QPItemBuffer extends vscode.QuickPickItem {
+  _type: 'QuickPickItemBuffer';
+  // custom payload
+  data: {
+    uri: vscode.Uri;
+    isDirty: boolean;
+  };
+}
+
+export type AllQPItemVariants =
+  | QPItemDefault
+  | QPItemQuery
+  | QPItemRgMenuAction
+  | QPItemFile
+  | QPItemBuffer;
 
 export type DisposablesMap = {
   general: vscode.Disposable[];
@@ -32,4 +46,4 @@ export type DisposablesMap = {
   query: vscode.Disposable[];
 };
 
-export type SearchMode = 'all' | 'currentFile' | 'files';
+export type SearchMode = 'all' | 'currentFile' | 'files' | 'buffers';
