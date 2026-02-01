@@ -64,6 +64,38 @@ suite('Buffer List Feature', () => {
   });
 
   suite('Buffer Display', () => {
+    test('shows only files open as tabs, not all loaded documents', async function () {
+      this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
+
+      // Close all editors first
+      await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+
+      // Open exactly 2 files as visible tabs
+      await openDocumentWithContent('file 1 content', 'typescript');
+      await openDocumentWithContent('file 2 content', 'javascript');
+
+      // Load a 3rd document WITHOUT showing it as a tab
+      // This simulates VSCode loading documents in background (e.g., go-to-definition)
+      await vscode.workspace.openTextDocument({
+        content: 'hidden document content',
+        language: 'python',
+      });
+
+      // Execute buffer list command
+      await vscode.commands.executeCommand('periscope.bufferList');
+      await waitForQuickPick();
+      await waitForCondition(() => cx.qp?.items.length >= 1, TEST_TIMEOUTS.SEARCH_RESULTS);
+
+      // Should show exactly 2 items (only the visible tabs, NOT the hidden document)
+      const bufferItems = cx.qp.items.filter((item: any) => item._type === 'QuickPickItemBuffer');
+
+      assert.strictEqual(
+        bufferItems.length,
+        2,
+        `Should show exactly 2 buffer items for 2 open tabs, but got ${bufferItems.length}`,
+      );
+    });
+
     test('shows all open buffers in QuickPick', async function () {
       this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
 

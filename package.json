@@ -269,6 +269,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./ && node scripts/postCompile.js",
     "watch": "tsc -watch -p ./",
+    "dev": "npm run compile && code --new-window --extensionDevelopmentPath=\"$PWD\"",
     "pretest": "npm run compile",
     "lint": "eslint src --ext ts && prettier --check .",
     "lint:fix": "eslint src --ext ts --fix && prettier --write .",

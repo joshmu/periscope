@@ -209,7 +209,23 @@ function isUserDocument(doc: vscode.TextDocument): boolean {
 }
 
 function getOpenBufferItems(): QPItemBuffer[] {
-  return vscode.workspace.textDocuments.filter(isUserDocument).map(createBufferItem);
+  const bufferItems: QPItemBuffer[] = [];
+
+  for (const tabGroup of vscode.window.tabGroups.all) {
+    for (const tab of tabGroup.tabs) {
+      if (tab.input instanceof vscode.TabInputText) {
+        const uri = tab.input.uri;
+        const document = vscode.workspace.textDocuments.find(
+          (doc) => doc.uri.toString() === uri.toString(),
+        );
+        if (document && isUserDocument(document)) {
+          bufferItems.push(createBufferItem(document));
+        }
+      }
+    }
+  }
+
+  return bufferItems;
 }
 
 function matchesQuery(item: QPItemBuffer, query: string): boolean {
