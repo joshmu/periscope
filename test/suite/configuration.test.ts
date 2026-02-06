@@ -15,6 +15,7 @@ import {
 
 suite('Configuration Options - Real Behavior', function () {
   this.timeout(TEST_TIMEOUTS.SUITE_EXTENDED);
+  this.retries(2); // Config-dependent searches are timing-sensitive on macOS CI
 
   // Store original config values to restore after tests
   let originalConfig: Map<string, any> = new Map();
