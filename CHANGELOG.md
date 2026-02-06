@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+# [1.16.0](https://github.com/joshmu/periscope/compare/v1.15.1...v1.16.0) (2026-02-06)
+
+### Bug Fixes
+
+- add retry for config-dependent tests on macOS CI ([3f40a54](https://github.com/joshmu/periscope/commit/3f40a54f17b6aa1e4644d4d137834518835cad8d))
+- add search infrastructure readiness gate to prevent flaky CI tests ([bd2eabc](https://github.com/joshmu/periscope/commit/bd2eabc56286e217788b259cca9e3a223ac393b6))
+- buffer list shows only visible tabs instead of all loaded documents ([074f44f](https://github.com/joshmu/periscope/commit/074f44facd52905dafb52516f73f012041fb7028))
+- resolve flaky test by closing editors before test ([68f4eda](https://github.com/joshmu/periscope/commit/68f4eda106d1aa7f2bd941a28962e5d93aafdc48))
+
+### Features
+
+- add buffer list feature with filtering ([aa12e8d](https://github.com/joshmu/periscope/commit/aa12e8d5cd58bc66bda90beaf8f4ddaca5d9dd6d))
+
 ## [1.15.1](https://github.com/joshmu/periscope/compare/v1.15.0...v1.15.1) (2025-08-31)
 
 # [1.15.0](https://github.com/joshmu/periscope/compare/v1.14.0...v1.15.0) (2025-08-31)
