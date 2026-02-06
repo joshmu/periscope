@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org) for commit guidelines.
 
+## [1.16.1](https://github.com/joshmu/periscope/compare/v1.16.0...v1.16.1) (2026-02-06)
+
+### Bug Fixes
+
+- apply smart-case behavior to searchFiles glob patterns ([a2e5380](https://github.com/joshmu/periscope/commit/a2e53806ec4645d87dcf51154d469145d521a65c))
+
 # [1.16.0](https://github.com/joshmu/periscope/compare/v1.15.1...v1.16.0) (2026-02-06)
 
 ### Bug Fixes
