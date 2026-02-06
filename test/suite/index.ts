@@ -29,6 +29,25 @@ async function verifyWorkspace(): Promise<void> {
     await ext.activate();
     console.log('[Test Suite] Periscope extension activated');
   }
+
+  // Wait for search infrastructure to be ready (prevents flaky tests on slower CI runners)
+  const maxAttempts = 5;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const files = await vscode.workspace.findFiles('**/*.ts', '**/node_modules/**', 1);
+    if (files.length > 0) {
+      console.log(`[Test Suite] Search infrastructure ready (attempt ${attempt})`);
+      break;
+    }
+    if (attempt === maxAttempts) {
+      throw new Error(
+        'Search infrastructure not ready: findFiles returned 0 results after retries',
+      );
+    }
+    console.log(
+      `[Test Suite] Waiting for search infrastructure (attempt ${attempt}/${maxAttempts})...`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
 }
 
 export function run(): Promise<void> {

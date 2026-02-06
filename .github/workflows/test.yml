@@ -13,8 +13,8 @@ jobs:
   test:
     name: Test (${{ matrix.os }})
     strategy:
-      # Keep fail-fast true to ensure all tests must pass
-      fail-fast: true
+      # Collect results from all platforms even if one fails (aids flaky test diagnosis)
+      fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
         node-version: [20.x]
