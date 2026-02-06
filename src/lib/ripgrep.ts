@@ -35,16 +35,21 @@ function getRgCommand(value: string, extraFlags?: string[]) {
 
   if (isFileSearch) {
     // File search mode - use --files flag and glob pattern
-    const fileGlob = value ? `--glob "*${value}*"` : '';
+    // --smart-case only affects regex pattern matching, not glob patterns.
+    // To replicate smart-case behavior for file search, use --iglob (case-insensitive)
+    // when the query is all lowercase, and --glob (case-sensitive) when it contains uppercase.
+    const globFlag = getFileSearchGlobFlag(value, config.rgOptions);
+    const fileGlob = value ? `${globFlag} "*${value}*"` : '';
     // Only add --files if it's not already in injectedRgFlags
     const filesFlag = cx.injectedRgFlags.includes('--files') ? [] : ['--files'];
 
-    modeSpecificFlags = [
-      ...filesFlag,
-      ...cx.injectedRgFlags,
-      fileGlob,
-      ...config.rgOptions.filter((opt) => !opt.includes('--json')), // remove json flag if present
-    ];
+    // Filter out case-sensitivity flags that don't apply to glob-based file search
+    const caseFlags = ['--smart-case', '--ignore-case', '--case-sensitive', '-i', '-s', '-S'];
+    const filteredRgOptions = config.rgOptions.filter(
+      (opt) => !opt.includes('--json') && !caseFlags.includes(opt),
+    );
+
+    modeSpecificFlags = [...filesFlag, ...cx.injectedRgFlags, fileGlob, ...filteredRgOptions];
   } else {
     // Content search mode - use standard flags with search pattern
     searchPattern = handleSearchTermWithAdditionalRgParams(value);
@@ -254,6 +259,36 @@ export function checkAndExtractRgFlagsFromQuery(userInput: string): {
   // prefer the first query match or the original one
   const rgQuery = queries.length > 1 ? queries[1] : queries[0];
   return { rgQuery, extraRgFlags };
+}
+
+/**
+ * Determine the appropriate glob flag for file search based on case-sensitivity options.
+ * Ripgrep's --smart-case only applies to regex patterns, not globs.
+ * This function replicates smart-case behavior for glob patterns by choosing
+ * --iglob (case-insensitive) or --glob (case-sensitive) accordingly.
+ */
+function getFileSearchGlobFlag(query: string, rgOptions: string[]): string {
+  const hasSmartCase = rgOptions.includes('--smart-case') || rgOptions.includes('-S');
+  const hasIgnoreCase = rgOptions.includes('--ignore-case') || rgOptions.includes('-i');
+  const hasCaseSensitive = rgOptions.includes('--case-sensitive') || rgOptions.includes('-s');
+
+  // --case-sensitive takes precedence (same as ripgrep behavior when flags conflict)
+  if (hasCaseSensitive) {
+    return '--glob';
+  }
+
+  // --ignore-case always uses case-insensitive glob
+  if (hasIgnoreCase) {
+    return '--iglob';
+  }
+
+  // --smart-case: case-insensitive if query is all lowercase, case-sensitive otherwise
+  if (hasSmartCase) {
+    const isAllLowercase = query === query.toLowerCase();
+    return isAllLowercase ? '--iglob' : '--glob';
+  }
+
+  return '--glob';
 }
 
 /**
