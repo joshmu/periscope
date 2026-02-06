@@ -6,18 +6,19 @@ import { AllQPItemVariants } from '../../src/types';
 // Detect CI environment
 const isCI = process.env.CI === 'true';
 const isWindows = process.platform === 'win32';
+const isMacOS = process.platform === 'darwin';
 
 // Common regex patterns
 export const LINE_NUMBER_REGEX = /:(\d+)$/;
 
-// CI needs longer timeouts, especially on Windows
-// Windows CI: 3x slower, Other CI: 1.5x slower, Local: 1x (normal speed)
-const CI_TIMEOUT_MULTIPLIER = isCI ? (isWindows ? 3 : 1.5) : 1;
+// CI needs longer timeouts, especially on Windows and macOS
+// Windows CI: 3x slower, macOS CI: 2x slower, Other CI: 1.5x slower, Local: 1x (normal speed)
+const CI_TIMEOUT_MULTIPLIER = isCI ? (isWindows ? 3 : isMacOS ? 2 : 1.5) : 1;
 
 // Log environment for debugging CI issues
 if (isCI) {
   console.log(
-    `[Test Environment] Running in CI (Platform: ${process.platform}, Windows: ${isWindows}, Timeout Multiplier: ${CI_TIMEOUT_MULTIPLIER}x)`,
+    `[Test Environment] Running in CI (Platform: ${process.platform}, Windows: ${isWindows}, macOS: ${isMacOS}, Timeout Multiplier: ${CI_TIMEOUT_MULTIPLIER}x)`,
   );
 }
 
