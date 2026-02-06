@@ -115,6 +115,50 @@ suite('Search Functionality with Fixtures', function () {
       );
     });
 
+    test('searchFiles respects --smart-case option for lowercase queries', async function () {
+      // With --smart-case, an all-lowercase query should match case-insensitively
+      // e.g. "dockerfile" should match a file named "Dockerfile"
+      await withConfiguration(
+        {
+          rgOptions: ['--smart-case'],
+        },
+        async () => {
+          const results = await periscopeTestHelpers.searchFiles('dockerfile');
+
+          assert.ok(
+            results.count > 0,
+            'searchFiles with --smart-case should find "Dockerfile" when querying "dockerfile" (lowercase)',
+          );
+          assert.ok(
+            results.files.includes('Dockerfile'),
+            `Should find Dockerfile in results. Found files: ${results.files.join(', ')}`,
+          );
+        },
+      );
+    });
+
+    test('searchFiles respects --smart-case option for mixed-case queries', async function () {
+      // With --smart-case, a query with uppercase should match case-sensitively
+      // e.g. "Docker" should match "Dockerfile" but not "dockerfile"
+      await withConfiguration(
+        {
+          rgOptions: ['--smart-case'],
+        },
+        async () => {
+          const results = await periscopeTestHelpers.searchFiles('Docker');
+
+          assert.ok(
+            results.count > 0,
+            'searchFiles with --smart-case should find "Dockerfile" when querying "Docker" (has uppercase)',
+          );
+          assert.ok(
+            results.files.includes('Dockerfile'),
+            `Should find Dockerfile in results. Found files: ${results.files.join(', ')}`,
+          );
+        },
+      );
+    });
+
     test('finds test files using periscope.searchFiles', async () => {
       const results = await periscopeTestHelpers.searchFiles('.test');
 

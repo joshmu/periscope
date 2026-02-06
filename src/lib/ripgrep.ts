@@ -10,6 +10,23 @@ import { createResultItem, createFileItem } from '../utils/quickpickUtils';
 import { handleNoResultsFound } from './editorActions';
 import { getCurrentFilePath } from '../utils/searchCurrentFile';
 
+const CASE_FLAG_GROUPS = {
+  smartCase: ['--smart-case', '-S'],
+  ignoreCase: ['--ignore-case', '-i'],
+  caseSensitive: ['--case-sensitive', '-s'],
+} as const;
+
+const ALL_CASE_FLAGS: string[] = Object.values(CASE_FLAG_GROUPS).flat();
+
+function parseCaseFlags(rgOptions: string[]) {
+  const has = (flags: readonly string[]) => flags.some((f) => rgOptions.includes(f));
+  return {
+    hasSmartCase: has(CASE_FLAG_GROUPS.smartCase),
+    hasIgnoreCase: has(CASE_FLAG_GROUPS.ignoreCase),
+    hasCaseSensitive: has(CASE_FLAG_GROUPS.caseSensitive),
+  };
+}
+
 function getRgCommand(value: string, extraFlags?: string[]) {
   const config = getConfig();
   const { workspaceFolders } = vscode.workspace;
@@ -35,16 +52,16 @@ function getRgCommand(value: string, extraFlags?: string[]) {
 
   if (isFileSearch) {
     // File search mode - use --files flag and glob pattern
-    const fileGlob = value ? `--glob "*${value}*"` : '';
+    const globFlag = getFileSearchGlobFlag(value, config.rgOptions);
+    const fileGlob = value ? `${globFlag} "*${value}*"` : '';
     // Only add --files if it's not already in injectedRgFlags
     const filesFlag = cx.injectedRgFlags.includes('--files') ? [] : ['--files'];
 
-    modeSpecificFlags = [
-      ...filesFlag,
-      ...cx.injectedRgFlags,
-      fileGlob,
-      ...config.rgOptions.filter((opt) => !opt.includes('--json')), // remove json flag if present
-    ];
+    const filteredRgOptions = config.rgOptions.filter(
+      (opt) => !opt.includes('--json') && !ALL_CASE_FLAGS.includes(opt),
+    );
+
+    modeSpecificFlags = [...filesFlag, ...cx.injectedRgFlags, fileGlob, ...filteredRgOptions];
   } else {
     // Content search mode - use standard flags with search pattern
     searchPattern = handleSearchTermWithAdditionalRgParams(value);
@@ -254,6 +271,34 @@ export function checkAndExtractRgFlagsFromQuery(userInput: string): {
   // prefer the first query match or the original one
   const rgQuery = queries.length > 1 ? queries[1] : queries[0];
   return { rgQuery, extraRgFlags };
+}
+
+/**
+ * Determine the appropriate glob flag for file search based on case-sensitivity options.
+ * Ripgrep's --smart-case only applies to regex patterns, not globs.
+ * This function replicates smart-case behavior for glob patterns by choosing
+ * --iglob (case-insensitive) or --glob (case-sensitive) accordingly.
+ */
+function getFileSearchGlobFlag(query: string, rgOptions: string[]): string {
+  const { hasSmartCase, hasIgnoreCase, hasCaseSensitive } = parseCaseFlags(rgOptions);
+
+  // --case-sensitive takes precedence (same as ripgrep behavior when flags conflict)
+  if (hasCaseSensitive) {
+    return '--glob';
+  }
+
+  // --ignore-case always uses case-insensitive glob
+  if (hasIgnoreCase) {
+    return '--iglob';
+  }
+
+  // --smart-case: case-insensitive if query is all lowercase, case-sensitive otherwise
+  if (hasSmartCase) {
+    const isAllLowercase = query === query.toLowerCase();
+    return isAllLowercase ? '--iglob' : '--glob';
+  }
+
+  return '--glob';
 }
 
 /**
