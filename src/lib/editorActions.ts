@@ -154,6 +154,7 @@ export function peekItem(items: readonly (QPItemQuery | QPItemFile)[]) {
           preserveFocus: true,
         })
         .then((editor) => {
+          cx.previewOpenedUris.add(editor.document.uri.toString());
           // For file items, position at the beginning of the file
           const position = new vscode.Position(0, 0);
           editor.selection = new vscode.Selection(position, position);
@@ -172,6 +173,7 @@ export function peekItem(items: readonly (QPItemQuery | QPItemFile)[]) {
           preserveFocus: true,
         })
         .then((editor) => {
+          cx.previewOpenedUris.add(editor.document.uri.toString());
           setCursorPosition(editor, linePos, colPos, rawResult);
         });
     });
@@ -185,6 +187,10 @@ export function peekBufferItem(items: readonly QPItemBuffer[]) {
   }
 
   vscode.workspace.openTextDocument(currentItem.data.uri).then((document) => {
-    vscode.window.showTextDocument(document, { preview: true, preserveFocus: true });
+    vscode.window
+      .showTextDocument(document, { preview: true, preserveFocus: true })
+      .then((editor) => {
+        cx.previewOpenedUris.add(editor.document.uri.toString());
+      });
   });
 }

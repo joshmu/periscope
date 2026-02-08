@@ -133,6 +133,24 @@ function onDidTriggerItemButton(e: vscode.QuickPickItemButtonEvent<AllQPItemVari
 
 // when prompt is 'CANCELLED'
 export function onDidHide() {
+  // Close any tabs that were opened for preview but not picked by the user
+  const tabsToClose: vscode.Tab[] = [];
+  const pickedUri = cx.pickedUri;
+  const previewUris = cx.previewOpenedUris;
+  for (const tabGroup of vscode.window.tabGroups.all) {
+    for (const tab of tabGroup.tabs) {
+      if (tab.input instanceof vscode.TabInputText) {
+        const uriString = tab.input.uri.toString();
+        if (previewUris.has(uriString) && uriString !== pickedUri) {
+          tabsToClose.push(tab);
+        }
+      }
+    }
+  }
+  if (tabsToClose.length > 0) {
+    vscode.window.tabGroups.close(tabsToClose, true);
+  }
+
   if (!cx.qp.selectedItems[0]) {
     if (cx.previousActiveEditor) {
       vscode.window.showTextDocument(

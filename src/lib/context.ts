@@ -49,6 +49,14 @@ export const context = {
    * Injected ripgrep flags from command arguments
    */
   injectedRgFlags: [] as string[],
+  /**
+   * URIs of documents opened for preview (peek) during this search session
+   */
+  previewOpenedUris: new Set<string>(),
+  /**
+   * URI of the document the user picked by selecting from the list (if any)
+   */
+  pickedUri: undefined as string | undefined,
 };
 
 // reset the context
@@ -68,6 +76,8 @@ function resetContext() {
   };
   context.searchMode = 'all';
   context.injectedRgFlags = [];
+  context.previewOpenedUris = new Set();
+  context.pickedUri = undefined;
   // Keep 'extensionContext' across resets to preserve search history
 }
 

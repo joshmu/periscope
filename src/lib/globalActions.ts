@@ -40,6 +40,7 @@ export function confirm(payload: ConfirmPayload = { context: 'unknown' }) {
   if (currentItem._type === 'QuickPickItemFile') {
     const { filePath } = currentItem.data;
     vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
+      cx.pickedUri = document.uri.toString();
       const options: vscode.TextDocumentShowOptions = {};
 
       if (payload.context === 'openInHorizontalSplit') {
@@ -61,6 +62,7 @@ export function confirm(payload: ConfirmPayload = { context: 'unknown' }) {
   } else {
     const { filePath, linePos, colPos, rawResult } = currentItem.data;
     vscode.workspace.openTextDocument(path.resolve(filePath)).then((document) => {
+      cx.pickedUri = document.uri.toString();
       const options: vscode.TextDocumentShowOptions = {};
 
       if (payload.context === 'openInHorizontalSplit') {
@@ -94,6 +96,7 @@ export function confirmBuffer(payload: ConfirmBufferPayload = { context: 'unknow
   }
 
   vscode.workspace.openTextDocument(currentItem.data.uri).then((document) => {
+    cx.pickedUri = document.uri.toString();
     vscode.window.showTextDocument(document, options).then(() => cx.qp.dispose());
   });
 }
